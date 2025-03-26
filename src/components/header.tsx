@@ -7,10 +7,9 @@ import { createClient } from '@/lib/supabase/server';
 import { UserMenu } from '@/components/UserMenu';
 
 export async function Header() {
-  // Get user data from server-side
+  // Get user data from server-side securely
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user || null;
+  const { data: { user } } = await supabase.auth.getUser();
   
   // Pre-compute the user initials on the server side
   const userInitials = !user || !user.email ? '?' : user.email.charAt(0).toUpperCase();

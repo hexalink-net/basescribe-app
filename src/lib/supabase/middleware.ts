@@ -37,11 +37,11 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired - required for Server Components
+  // Get user data securely - required for Server Components
   // https://supabase.com/docs/guides/auth/auth-helpers/nextjs#managing-session-with-middleware
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // If no session andÍ
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
@@ -51,13 +51,13 @@ export async function middleware(request: NextRequest) {
   // Check if it's an auth page
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
 
-  if (!session && isProtectedRoute) {
-    // Redirect to login page if accessing protected route without session
+  if (!user && isProtectedRoute) {
+    // Redirect to login page if accessing protected route without authentication
     const redirectUrl = new URL('/auth', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (session && isAuthPage) {
+  if (user && isAuthPage) {
     // Redirect to dashboard if already logged in and trying to access auth page
     const redirectUrl = new URL('/dashboard', request.url)
     return NextResponse.redirect(redirectUrl)
