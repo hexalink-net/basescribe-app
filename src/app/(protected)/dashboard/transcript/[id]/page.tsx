@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Download, Clock, Calendar } from 'lucide-react';
 
-export default function TranscriptPage({ params }: { params: { id: string } }) {
+export default async function TranscriptPage({ params }: { params: { id: string } }) {
+  const supabase = await createClient();
   const [upload, setUpload] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();

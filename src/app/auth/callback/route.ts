@@ -53,7 +53,6 @@ export async function GET(req: Request) {
       // Check if user exists in our database (only for OAuth sign-ins)
       if (data.session.user) {
         log('Checking if user exists in database');
-        log(data.session.user.id)
         const { data: existingUser } = await supabase
           .from('users')
           .select('id')
@@ -62,8 +61,16 @@ export async function GET(req: Request) {
         
         if (!existingUser) {
           log('Creating new user record');
-          log(data.session.user.id)
-          const { error } = await createUser(data.session.user.id, data.session.user.email);
+          const { error } = await supabase.from('users')
+          .insert([
+            { 
+              id: data.session.user.id,
+              email: data.session.user.email,
+              plan_type: 'free',
+              total_usage_minutes: 0,
+              monthly_usage_minutes: 0,
+            }
+          ]);
           if (error) {
             log("Error creating user:", error.message);
             throw new Error("Failed to create user: " + error.message);
