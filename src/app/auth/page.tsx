@@ -1,13 +1,12 @@
-"use client";
-
+"use client"
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword } from './action';
 
 export default function AuthPage() {
   const searchParams = useSearchParams();
@@ -23,53 +22,43 @@ export default function AuthPage() {
     setLoading(true);
     
     try {
+      // Create a FormData object from the form
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('password', password);
+      
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
+        const result = await signUpWithEmailPassword(formData);
         
-        if (error) throw error;
-        
-        // Create user record in the database
-        if (data.user) {
-          const { error: profileError } = await supabase
-            .from('users')
-            .insert([
-              { 
-                id: data.user.id,
-                email: data.user.email,
-                plan_type: 'free',
-                total_usage_minutes: 0,
-                monthly_usage_minutes: 0,
-              }
-            ]);
-            
-          if (profileError) console.error('Error creating user profile:', profileError);
+        if (result.error) {
+          throw new Error(result.error);
         }
         
         toast({
           title: "Check your email",
-          description: "We've sent you a confirmation link to complete your signup.",
+          description: result.message || "We've sent you a confirmation link to complete your signup.",
         });
         
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        console.log('Attempting sign in with password');
         
-        if (error) throw error;
+        const result = await signInWithEmailPassword(formData);
         
-        toast({
-          title: "Signed in successfully",
-          description: "Welcome back to BaseScribe!",
-        });
+        if (result.error) {
+          throw new Error(result.error);
+        }
         
-        router.push('/dashboard');
+        if (result.success) {
+          console.log('Sign-in successful, redirecting to dashboard');
+          
+          toast({
+            title: "Signed in successfully",
+            description: "Welcome back to BaseScribe!",
+          });
+          
+          // Redirect directly to dashboard
+          router.push('/dashboard');
+        }
       }
     } catch (error: any) {
       toast({
@@ -79,25 +68,6 @@ export default function AuthPage() {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during Google authentication",
-        variant: "destructive",
-      });
     }
   };
 
@@ -149,7 +119,7 @@ export default function AuthPage() {
               type="button"
               variant="outline"
               className="w-full"
-              onClick={handleGoogleAuth}
+              onClick={signInWithGoogle}
             >
               Google
             </Button>

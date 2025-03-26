@@ -1,69 +1,19 @@
-"use client";
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useToast } from '@/components/ui/use-toast';
+import { createClient } from '@/lib/supabase/server';
 
-export function Header() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const { toast } = useToast();
+// Dynamic imports for client components
+// These will be resolved after a full build
+import { UserMenu } from '@/components/UserMenu';
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-      setLoading(false);
-    };
-
-    getUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({
-        title: 'Signed out',
-        description: 'You have been successfully signed out.',
-      });
-      router.push('/');
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'An error occurred during sign out',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const getUserInitials = () => {
-    if (!user || !user.email) return '?';
-    return user.email.charAt(0).toUpperCase();
-  };
+export async function Header() {
+  // Get user data from server-side
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user || null;
+  
+  // Pre-compute the user initials on the server side
+  const userInitials = !user || !user.email ? '?' : user.email.charAt(0).toUpperCase();
 
   return (
     <header className="border-b">
@@ -82,33 +32,8 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          {loading ? (
-            <div className="h-10 w-20 bg-muted animate-pulse rounded"></div>
-          ) : user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar>
-                    <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard">Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {user ? (
+            <UserMenu user={user} userInitials={userInitials} />
           ) : (
             <>
               <Button variant="ghost" asChild>

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import { getUserById, getUserUploads, updateUserUsage, updateUploadStatus } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
+import { getUserById, getUserUploads, updateUserUsage, updateUploadStatus } from '@/lib/supabase/client';
 import { FileUpload } from '@/components/file-upload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -42,6 +42,7 @@ export default function DashboardPage() {
           } else {
             setUserProfile(profileData);
           }
+          console.log(userProfile)
           
           // Get user uploads
           const { data: uploadsData, error: uploadsError } = await getUserUploads(user.id);

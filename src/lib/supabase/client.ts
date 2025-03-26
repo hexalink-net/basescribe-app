@@ -36,7 +36,7 @@ export type Tables = {
 /**
  * Create a new user record in the database
  */
-export async function createUser(userId: string, email: string) {
+export async function createUser(userId: string, email: string | undefined) {
   return supabase
     .from('users')
     .insert([
@@ -133,4 +133,21 @@ export async function updateUploadStatus(uploadId: string, status: 'pending' | '
     .from('uploads')
     .update(updates)
     .eq('id', uploadId);
+}
+
+/**
+ * Create an authenticated Supabase client with a provided access token
+ */
+export function createAuthenticatedSupabaseClient(accessToken: string) {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
 }

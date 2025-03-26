@@ -1,32 +1,45 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { createUser } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server';
 
-export async function GET(req: NextRequest) {
-  const requestUrl = new URL(req.url);
-  const code = requestUrl.searchParams.get('code');
-  const cookies = req.cookies;
+// Simple console log helper
+function log(message: string, data?: any) {
+  console.log(`[Auth Callback] ${message}`, data || '');
+}
+
+export async function GET(req: Request) {
+  log('Route triggered');
+  
+  // Get the code from the URL
+  const { searchParams } = new URL(req.url)
+  const code = searchParams.get('code')
+  
+  // Prepare the redirect response
   const response = NextResponse.redirect(new URL('/dashboard', req.url));
   
-  if (code) {
-    // Create a Supabase client configured to use cookies
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          flowType: 'pkce',
-          autoRefreshToken: true,
-          detectSessionInUrl: false,
-          persistSession: true,
-        },
-      }
-    );
-    
+  // If no code is provided, redirect to auth page with error
+  if (!code) {
+    log('No auth code provided');
+    return NextResponse.redirect(new URL('/auth?error=No authentication code provided', req.url));
+  }
+  
+  try {
+    log('Exchanging code for session');
     // Exchange the code for a session
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error && data.session) {
-      // Set cookies for the session
+    // Handle authentication errors
+    if (error) {
+      log('Auth error', error.message);
+      return NextResponse.redirect(new URL(`/auth?error=${encodeURIComponent(error.message)}`, req.url));
+    }
+    
+    // If we have a session, set the cookies
+    if (data.session) {
+      log('Session obtained successfully');
+      
+      // Set session cookies
       response.cookies.set('sb-access-token', data.session.access_token, {
         path: '/',
         maxAge: data.session.expires_in,
@@ -37,49 +50,32 @@ export async function GET(req: NextRequest) {
         maxAge: data.session.expires_in,
       });
       
-      // Check if user exists in our database
-      if (data.user) {
-        // Create a new Supabase client with the session
-        const authenticatedSupabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false,
-            },
-            global: {
-              headers: {
-                Authorization: `Bearer ${data.session.access_token}`,
-              },
-            },
-          }
-        );
-        
-        // Check if user record exists
-        const { data: existingUser, error: userError } = await authenticatedSupabase
+      // Check if user exists in our database (only for OAuth sign-ins)
+      if (data.session.user) {
+        log('Checking if user exists in database');
+        log(data.session.user.id)
+        const { data: existingUser } = await supabase
           .from('users')
-          .select('*')
-          .eq('id', data.user.id)
+          .select('id')
+          .eq('id', data.session.user.id)
           .single();
         
-        // If user doesn't exist in our database, create a record
-        if (!existingUser && !userError) {
-          await authenticatedSupabase
-            .from('users')
-            .insert([
-              { 
-                id: data.user.id,
-                email: data.user.email,
-                plan_type: 'free',
-                total_usage_minutes: 0,
-                monthly_usage_minutes: 0,
-              }
-            ]);
+        if (!existingUser) {
+          log('Creating new user record');
+          log(data.session.user.id)
+          const { error } = await createUser(data.session.user.id, data.session.user.email);
+          if (error) {
+            log("Error creating user:", error.message);
+            throw new Error("Failed to create user: " + error.message);
+          }
+          log('User record created successfully');
         }
       }
     }
+    log('Redirecting to dashboard');
+    return response;
+  } catch (error) {
+    log('Unexpected error', error);
+    return NextResponse.redirect(new URL('/auth?error=An unexpected error occurred', req.url));
   }
-  
-  return response;
 }
