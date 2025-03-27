@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getUserUploadSSR } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -27,12 +27,7 @@ export default async function TranscriptPage({ params }: { params: { id: string 
         }
         
         // Get the upload details
-        const { data, error } = await supabase
-          .from('uploads')
-          .select('*')
-          .eq('id', params.id)
-          .eq('user_id', user.id)
-          .single();
+        const { data, error } = await getUserUploadSSR(supabase, user.id, params.id);
           
         if (error) {
           console.error('Error fetching transcript:', error);

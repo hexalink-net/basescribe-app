@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -69,18 +69,10 @@ export default async function DashboardPage() {
   const userInitials = !user || !user.email ? '?' : user.email.charAt(0).toUpperCase();
   
   // Get user profile from database
-  const { data: userProfile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const userProfile = await getUserProfileSSR(supabase, user.id);
     
   // Get user's uploads
-  const { data: allUploads = [] } = await supabase
-    .from('uploads')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+  const allUploads = await getAllUserUploadsSSR(supabase, user.id);
     
   // Separate uploads by status - ensure allUploads is always an array
   const uploads = allUploads || [];

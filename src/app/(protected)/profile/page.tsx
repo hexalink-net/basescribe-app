@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getUserProfileSSR } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/UserMenu';
@@ -20,14 +20,10 @@ export default async function ProfilePage() {
   const userInitials = !user.email ? '?' : user.email.charAt(0).toUpperCase();
   
   // Get user profile from database
-  const { data: userProfile, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const userProfile = await getUserProfileSSR(supabase, user.id);
     
-  if (error || !userProfile) {
-    console.error('Error fetching user profile:', error);
+  if (!userProfile) {
+    console.error('Error fetching user profile:');
     throw new Error('Unable to load profile data');
   }
 

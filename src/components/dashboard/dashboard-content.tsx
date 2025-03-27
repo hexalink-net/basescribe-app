@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import { formatFileSize } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
+import { getAllUserUploadsSSR, getUserProfileSSR } from '@/lib/supabase/server';
 
 interface UserProfile {
   id: string;
@@ -48,11 +49,7 @@ export function DashboardContent() {
         }
 
         // Get user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userData.user.id)
-          .single();
+        const { data: profileData, error: profileError } = await getUserProfileSSR(supabase, userData.user.id);
 
         if (profileError) {
           if (profileError.code === 'PGRST116') {
@@ -80,13 +77,8 @@ export function DashboardContent() {
         }
 
         // Get user uploads
-        const { data: uploadsData, error: uploadsError } = await supabase
-          .from('uploads')
-          .select('*')
-          .eq('user_id', userData.user.id)
-          .order('created_at', { ascending: false });
-
-        if (uploadsError) throw uploadsError;
+        const uploadsData = await getAllUserUploadsSSR(supabase, userData.user.id);
+        if (!uploadsData) throw new Error('Failed to load user uploads');
         
         setUploads(uploadsData as Upload[]);
       } catch (error) {

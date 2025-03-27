@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createUser } from '@/lib/supabase/client'
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getUserProfileSSR } from '@/lib/supabase/server';
 
 // Simple console log helper
 function log(message: string, data?: any) {
@@ -53,11 +53,7 @@ export async function GET(req: Request) {
       // Check if user exists in our database (only for OAuth sign-ins)
       if (data.session.user) {
         log('Checking if user exists in database');
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', data.session.user.id)
-          .single();
+        const existingUser = await getUserProfileSSR(supabase, data.session.user.id);
         
         if (!existingUser) {
           log('Creating new user record');

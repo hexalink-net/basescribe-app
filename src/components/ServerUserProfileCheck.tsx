@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getUserProfileSSR } from "@/lib/supabase/server";
 
 export default async function ServerUserProfileCheck({ 
   children, 
@@ -11,11 +11,7 @@ export default async function ServerUserProfileCheck({
   const supabase = await createClient();
   
   // Check if user exists in database
-  const { data: existingUser, error: userError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  const { data: existingUser, error: userError } = await getUserProfileSSR(supabase, userId);
   
   // If user doesn't exist, create a new record
   if (!existingUser && !userError) {
