@@ -6,7 +6,7 @@ import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { formatFileSize, isAudioOrVideoFile } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/UseToast';
 
 interface FileUploadProps {
   onFileSelected: (file: File) => Promise<void>;

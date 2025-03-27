@@ -6,7 +6,7 @@ import { updateUserUsage, updateUploadStatus } from '@/lib/supabase/client';
 import { FileUpload } from '@/components/file-upload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/UseToast';
 import { Upload } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 
@@ -72,7 +72,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       if (uploadError) throw uploadError;
       
       // Update user usage
-      await updateUserUsage(user.id, fileSize);
+      await updateUserUsage(user.id, fileSize, 0);
       
       // Create upload record in database
       const { data, error } = await supabase

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { createClient, getUserUploadSSR } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/UseToast';
 import { ArrowLeft, Download, Clock, Calendar } from 'lucide-react';
 
 export default async function TranscriptPage({ params }: { params: { id: string } }) {

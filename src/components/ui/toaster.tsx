@@ -10,7 +10,7 @@ import {
   type ToastActionElement, 
   type ToastProps
 } from "./toast"
-import { useToast } from "./use-toast"
+import { useToast } from "./UseToast"
 
 type ToasterToast = ToastProps & {
   id: string

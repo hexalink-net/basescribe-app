@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/components/ui/use-toast';
+import { DropdownMenuItem } from '@/components/ui/DropdownMenu';
+import { useToast } from '@/components/ui/UseToast';
 import { signOut } from '@/app/auth/action';
 
 export function SignOutButton() {

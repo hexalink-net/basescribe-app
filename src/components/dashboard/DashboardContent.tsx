@@ -5,7 +5,7 @@ import { FileUpload } from '@/components/file-upload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/UseToast';
 import { formatFileSize } from '@/lib/utils';
 import { v4 as uuidv4 } from 'uuid';
 import { getAllUserUploadsSSR, getUserProfileSSR } from '@/lib/supabase/server';
