@@ -53,7 +53,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
     return data;
   }
 
-  export async function getUserUploadSSR(supabase: SupabaseClient, userId: string, uploadId: string) {
+export async function getUserUploadSSR(supabase: SupabaseClient, userId: string, uploadId: string) {
     const { data = [], error } = await supabase
     .from('uploads')
     .select('*')
@@ -67,4 +67,25 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
     }
   
     return data;
+  }
+
+  export async function createNewUserSSR(supabase: SupabaseClient, userId: string, userEmail: string | undefined) {
+    const { data, error } = await supabase
+    .from('users')
+    .insert([
+      { 
+        id: userId,
+        email: userEmail,
+        plan_type: 'free',
+        total_usage_minutes: 0,
+        monthly_usage_minutes: 0,
+      }
+    ]);
+
+    if (error) {
+      console.error("Error creating user profile:", error);
+    }
+    
+    // Return a consistent structure with both data and error
+    return { data, error };
   }

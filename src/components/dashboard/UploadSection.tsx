@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/UseToast';
 import { Upload } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { getMediaDuration } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 // 100MB max file size for free users
 const MAX_FILE_SIZE_FREE = 100 * 1024 * 1024;
@@ -31,6 +32,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
   const [uploads, setUploads] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleFileUpload = async (file: File): Promise<void> => {
     console.log('UploadSection: handleFileUpload called with file:', file.name);
@@ -136,6 +138,8 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
           );
         }
       }, 5000);
+
+      router.refresh();
       
     } catch (error: any) {
       console.error('Upload failed:', error);

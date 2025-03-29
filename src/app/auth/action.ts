@@ -1,5 +1,5 @@
 "use server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createNewUserSSR } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : "http://localhost:3000"
@@ -77,20 +77,9 @@ export async function signUpWithEmailPassword(formData: FormData) {
   
     // Create user record in the database
     if (data.user) {
-        try {
-            await supabase
-                .from('users')
-                .insert([
-                    { 
-                        id: data.user.id,
-                        email: data.user.email,
-                        plan_type: 'free',
-                        total_usage_minutes: 0,
-                        monthly_usage_minutes: 0,
-                    }
-                ]);
-        } catch (profileError) {
-            console.error('Error creating user profile:', profileError);
+        const { error } = await createNewUserSSR(supabase, data.user.id, email);
+        if (error) {
+            console.error('Error creating user profile:', error);
             // Continue anyway, as the auth part succeeded
         }
     }

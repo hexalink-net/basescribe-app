@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createUser } from '@/lib/supabase/client'
-import { createClient, getUserProfileSSR } from '@/lib/supabase/server';
+import { createClient, getUserProfileSSR, createNewUserSSR } from '@/lib/supabase/server';
 
 // Simple console log helper
 function log(message: string, data?: any) {
@@ -57,21 +56,16 @@ export async function GET(req: Request) {
         
         if (!existingUser) {
           log('Creating new user record');
-          const { error } = await supabase.from('users')
-          .insert([
-            { 
-              id: data.session.user.id,
-              email: data.session.user.email,
-              plan_type: 'free',
-              total_usage_minutes: 0,
-              monthly_usage_minutes: 0,
-            }
-          ]);
+          const { data: userData, error } = await createNewUserSSR(supabase, data.session.user.id, data.session.user.email);
+          
           if (error) {
-            log("Error creating user:", error.message);
-            throw new Error("Failed to create user: " + error.message);
+            log("Error creating user:", error);
+            // Continue without throwing - we don't want to block the auth flow if profile creation fails
+            // The user can still log in, and we can try to create their profile again later
+            log('Continuing despite profile creation error');
+          } else {
+            log('User record created successfully');
           }
-          log('User record created successfully');
         }
       }
     }
