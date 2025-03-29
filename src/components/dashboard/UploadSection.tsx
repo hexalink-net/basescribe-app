@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { updateUserUsage, updateUploadStatus, createUpload } from '@/lib/supabase/client';
+import { supabase, getUserById, updateUserUsage, updateUploadStatus } from '@/lib/supabase/client';
 import { FileUpload } from '@/components/FileUpload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/UseToast';
 import { Upload } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
+import { getMediaDuration } from '@/lib/utils';
 
 // 100MB max file size for free users
 const MAX_FILE_SIZE_FREE = 100 * 1024 * 1024;
@@ -58,19 +58,11 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
     // Create a new upload record
     const fileName = file.name;
     const fileSize = file.size;
-    const fileType = file.type;
     const timestamp = new Date().toISOString();
     const filePath = `${user.id}/${timestamp}-${fileName}`;
     
     try {
       setLoading(true);
-
-      const { data: session } = await supabase.auth.getSession();
-      if (!session || !session.session) {
-        console.error("No active session! User might be logged out.");
-      } else {
-        console.log("User ID:", session.session.user.id);
-      }
       
       // Upload to storage
       console.log('Uploading to storage bucket: user-uploads');
@@ -87,7 +79,10 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       
       // Calculate approximate duration in minutes (rough estimate based on file size)
       // Assuming average audio bitrate of 128 kbps
-      const estimatedDurationMinutes = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60)) / 60));
+      let durationMinutes = await getMediaDuration(file);
+      if (durationMinutes === null) {
+        durationMinutes = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60)) / 60));
+      }
       
       // Create upload record in database directly
       console.log('Creating database record');
@@ -98,7 +93,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
           file_name: fileName,
           file_path: filePath,
           file_size: fileSize,
-          duration_minutes: estimatedDurationMinutes,
+          duration_minutes: durationMinutes,
           status: 'completed'
         })
         .select();
@@ -109,9 +104,11 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       }
       
       console.log('Database record created successfully');
+
+      const { data: userData} = await getUserById(user.id);
       
       // Update user usage with estimated duration
-      await updateUserUsage(user.id, estimatedDurationMinutes, estimatedDurationMinutes);
+      await updateUserUsage(user.id, userData.total_usage_minutes + durationMinutes, userData.monthly_usage_minutes + durationMinutes);
       
       // Show success message
       toast({
@@ -127,13 +124,13 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       // Simulate processing (in a real app this would be done by a background job)
       setTimeout(async () => {
         if (data) {
-          await updateUploadStatus(data[0].id, 'completed', estimatedDurationMinutes);
+          await updateUploadStatus(data[0].id, 'completed', durationMinutes);
           
           // Update the uploads list
           setUploads((prev) => 
             prev.map((upload) => 
               upload.id === data[0].id 
-                ? { ...upload, status: 'completed', duration_minutes: estimatedDurationMinutes } 
+                ? { ...upload, status: 'completed', duration_minutes: durationMinutes } 
                 : upload
             )
           );

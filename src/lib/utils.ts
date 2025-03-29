@@ -29,3 +29,37 @@ export function isAudioOrVideoFile(fileName: string): boolean {
   const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
   return supportedFormats.includes(extension);
 }
+
+export const getMediaDuration = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    // Create a URL for the file
+    const url = URL.createObjectURL(file);
+    
+    // Create appropriate media element based on file type
+    const isVideo = file.type.startsWith('video/');
+    const mediaElement = isVideo 
+      ? document.createElement('video') 
+      : document.createElement('audio');
+    
+    // Set up event listeners
+    mediaElement.addEventListener('loadedmetadata', () => {
+      // Get duration in seconds and convert to minutes
+      const durationMinutes = Math.max(1, Math.round(mediaElement.duration / 60));
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      
+      // Return the duration in minutes
+      resolve(durationMinutes);
+    });
+    
+    mediaElement.addEventListener('error', (e) => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`Error getting media duration: ${e.message}`));
+    });
+    
+    // Load the media file
+    mediaElement.src = url;
+    mediaElement.load();
+  });
+};
