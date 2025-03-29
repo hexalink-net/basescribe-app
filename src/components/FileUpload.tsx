@@ -43,6 +43,8 @@ export function FileUpload({ onFileSelected, maxSizeInBytes }: FileUploadProps) 
     }
     
     setFile(selectedFile);
+    // Auto-upload immediately after file selection
+    // handleUpload(selectedFile);
   }, [maxSizeInBytes, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -56,6 +58,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes }: FileUploadProps) 
     
     try {
       setUploading(true);
+      console.log('FileUpload: handleUpload called with file:', file.name);
       
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
@@ -69,15 +72,11 @@ export function FileUpload({ onFileSelected, maxSizeInBytes }: FileUploadProps) 
         });
       }, 300);
       
+      // Call the parent component's upload function
       await onFileSelected(file);
       
       clearInterval(progressInterval);
       setProgress(100);
-      
-      toast({
-        title: "Upload successful",
-        description: "Your file has been uploaded and is being processed.",
-      });
       
       // Reset after a short delay
       setTimeout(() => {

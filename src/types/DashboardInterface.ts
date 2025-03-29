@@ -4,8 +4,6 @@ export interface UserProfile {
     plan_type: 'free' | 'pro';
     total_usage_minutes: number;
     monthly_usage_minutes: number;
-    subscription_tier?: string;
-    usage_bytes?: number;
   }
 
 export interface Upload {

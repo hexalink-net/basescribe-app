@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
 
 export type Tables = {
   users: {
@@ -133,21 +133,4 @@ export async function updateUploadStatus(uploadId: string, status: 'pending' | '
     .from('uploads')
     .update(updates)
     .eq('id', uploadId);
-}
-
-/**
- * Create an authenticated Supabase client with a provided access token
- */
-export function createAuthenticatedSupabaseClient(accessToken: string) {
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  });
 }

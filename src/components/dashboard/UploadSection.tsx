@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { updateUserUsage, updateUploadStatus } from '@/lib/supabase/client';
-import { FileUpload } from '@/components/file-upload';
+import { updateUserUsage, updateUploadStatus, createUpload } from '@/lib/supabase/client';
+import { FileUpload } from '@/components/FileUpload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/UseToast';
@@ -20,8 +20,7 @@ interface UploadSectionProps {
   userProfile: {
     id: string;
     email?: string;
-    plan_type?: string;
-    subscription_tier?: string;
+    plan_type?: 'free' | 'pro';
     usage_bytes?: number;
     total_usage_minutes?: number;
     monthly_usage_minutes?: number;
@@ -34,6 +33,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
   const { toast } = useToast();
 
   const handleFileUpload = async (file: File): Promise<void> => {
+    console.log('UploadSection: handleFileUpload called with file:', file.name);
     if (!user || !user.id) {
       toast({
         title: "Authentication required",
@@ -43,13 +43,13 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       return;
     }
     
-    // Check if user can upload based on their subscription tier
-    const maxFileSize = userProfile?.subscription_tier === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
+    // Check if user can upload based on their plan type
+    const maxFileSize = userProfile?.plan_type === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
     
     if (file.size > maxFileSize) {
       toast({
         title: "File too large",
-        description: `Maximum file size is ${maxFileSize / (1024 * 1024)}MB for your subscription tier.`,
+        description: `Maximum file size is ${maxFileSize / (1024 * 1024)}MB for your plan type.`,
         variant: "destructive",
       });
       return;
@@ -60,34 +60,58 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
     const fileSize = file.size;
     const fileType = file.type;
     const timestamp = new Date().toISOString();
+    const filePath = `${user.id}/${timestamp}-${fileName}`;
     
     try {
       setLoading(true);
+
+      const { data: session } = await supabase.auth.getSession();
+      if (!session || !session.session) {
+        console.error("No active session! User might be logged out.");
+      } else {
+        console.log("User ID:", session.session.user.id);
+      }
       
       // Upload to storage
+      console.log('Uploading to storage bucket: user-uploads');
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('audio-uploads')
-        .upload(`${user.id}/${timestamp}-${fileName}`, file);
+        .from('user-uploads')
+        .upload(filePath, file);
         
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
       
-      // Update user usage
-      await updateUserUsage(user.id, fileSize, 0);
+      console.log('File uploaded to storage successfully');
       
-      // Create upload record in database
+      // Calculate approximate duration in minutes (rough estimate based on file size)
+      // Assuming average audio bitrate of 128 kbps
+      const estimatedDurationMinutes = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60)) / 60));
+      
+      // Create upload record in database directly
+      console.log('Creating database record');
       const { data, error } = await supabase
         .from('uploads')
         .insert({
           user_id: user.id,
           file_name: fileName,
+          file_path: filePath,
           file_size: fileSize,
-          file_type: fileType,
-          status: 'processing',
-          storage_path: uploadData.path,
+          duration_minutes: estimatedDurationMinutes,
+          status: 'processing'
         })
         .select();
         
-      if (error) throw error;
+      if (error) {
+        console.error('Database insert error:', error);
+        throw error;
+      }
+      
+      console.log('Database record created successfully');
+      
+      // Update user usage with estimated duration
+      await updateUserUsage(user.id, estimatedDurationMinutes, estimatedDurationMinutes);
       
       // Show success message
       toast({
@@ -103,13 +127,13 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       // Simulate processing (in a real app this would be done by a background job)
       setTimeout(async () => {
         if (data) {
-          await updateUploadStatus(data[0].id, 'completed');
+          await updateUploadStatus(data[0].id, 'completed', estimatedDurationMinutes);
           
           // Update the uploads list
           setUploads((prev) => 
             prev.map((upload) => 
               upload.id === data[0].id 
-                ? { ...upload, status: 'completed' } 
+                ? { ...upload, status: 'completed', duration_minutes: estimatedDurationMinutes } 
                 : upload
             )
           );
@@ -117,6 +141,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
       }, 5000);
       
     } catch (error: any) {
+      console.error('Upload failed:', error);
       toast({
         title: "Upload failed",
         description: error.message || "There was an error uploading your file.",
@@ -142,7 +167,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
         <CardContent>
           <FileUpload 
             onFileSelected={handleFileUpload} 
-            maxSizeInBytes={userProfile?.subscription_tier === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
+            maxSizeInBytes={userProfile?.plan_type === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
           />
           
           {userProfile && typeof userProfile.usage_bytes === 'number' && (
@@ -151,13 +176,13 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
                 <span>Storage usage</span>
                 <span>
                   {Math.round(userProfile.usage_bytes / (1024 * 1024))}MB / 
-                  {userProfile.subscription_tier === 'pro' ? '10GB' : '1GB'}
+                  {userProfile.plan_type === 'pro' ? '10GB' : '1GB'}
                 </span>
               </div>
               <Progress 
                 value={
                   (userProfile.usage_bytes / 
-                  (userProfile.subscription_tier === 'pro' ? 10 * 1024 * 1024 * 1024 : 1024 * 1024 * 1024)) * 100
+                  (userProfile.plan_type === 'pro' ? 10 * 1024 * 1024 * 1024 : 1024 * 1024 * 1024)) * 100
                 } 
               />
             </div>
