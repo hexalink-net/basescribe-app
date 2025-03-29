@@ -99,7 +99,7 @@ export default function UploadSection({ user, userProfile }: UploadSectionProps)
           file_path: filePath,
           file_size: fileSize,
           duration_minutes: estimatedDurationMinutes,
-          status: 'processing'
+          status: 'completed'
         })
         .select();
         

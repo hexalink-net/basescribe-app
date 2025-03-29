@@ -10,7 +10,7 @@ import { UserMenu } from '@/components/UserMenu';
 // Import the client-side UploadSection component
 import UploadSection from '@/components/dashboard/UploadSection';
 
-import { Upload, UserProfile } from '@/types/dashboardInterface';
+import { Upload, UserProfile } from '@/types/DashboardInterface';
 
 // Utility functions
 const formatDate = (dateString: string) => {
@@ -70,15 +70,6 @@ export default async function DashboardPage() {
       <Tabs defaultValue="upload" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upload">Upload</TabsTrigger>
-          <TabsTrigger value="processing" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" /> 
-            Processing 
-            {pendingUploads.length > 0 && (
-              <span className="ml-1 rounded-full bg-primary w-5 h-5 text-xs flex items-center justify-center text-white">
-                {pendingUploads.length}
-              </span>
-            )}
-          </TabsTrigger>
           <TabsTrigger value="completed" className="flex items-center gap-2">
             <FileText className="h-4 w-4" /> 
             Completed 
@@ -96,38 +87,6 @@ export default async function DashboardPage() {
             user={user} 
             userProfile={userProfile as UserProfile} 
           />
-        </TabsContent>
-        
-        <TabsContent value="processing" className="space-y-4">
-          {pendingUploads.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>No processing files</CardTitle>
-                <CardDescription>
-                  When you upload files, they'll appear here while they're being processed.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {pendingUploads.map((upload: Upload) => (
-                <Card key={upload.id}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{upload.file_name}</CardTitle>
-                    <CardDescription>
-                      {new Date(upload.created_at).toLocaleString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>Status: {upload.status}</span>
-                      <span>{Math.round(upload.file_size / 1024 / 1024 * 10) / 10} MB</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
         </TabsContent>
         
         <TabsContent value="completed" className="space-y-4">
