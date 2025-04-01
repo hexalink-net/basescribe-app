@@ -1,40 +1,12 @@
-import Link from 'next/link';
 import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Clock, FileText } from 'lucide-react';
+import { Clock, FileText, Folder, FolderPlus, MoreVertical } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { UserMenu } from '@/components/UserMenu';
-
-// Import the client-side UploadSection component
-import UploadSection from '@/components/dashboard/UploadSection';
-
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Upload, UserProfile } from '@/types/DashboardInterface';
-
-// Utility functions
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'text-yellow-500';
-    case 'processing':
-      return 'text-blue-500';
-    case 'completed':
-      return 'text-green-500';
-    case 'error':
-      return 'text-red-500';
-    default:
-      return '';
-  }
-};
+import DashboardClient from './DashboardClient';
 
 // Server component for the dashboard page
 export default async function DashboardPage() {
@@ -54,116 +26,89 @@ export default async function DashboardPage() {
   // Get user's uploads
   const allUploads = await getAllUserUploadsSSR(supabase, user.id);
     
-  // Separate uploads by status - ensure allUploads is always an array
+  // Ensure allUploads is always an array
   const uploads = allUploads || [];
-  const completedUploads = uploads.filter((upload: Upload) => upload.status === 'completed');
-  const pendingUploads = uploads.filter((upload: Upload) => 
-    upload.status === 'processing' || upload.status === 'pending');
+
+  // Calculate storage usage
+  const totalStorageBytes = uploads.reduce((total, upload) => total + (upload.file_size || 0), 0);
+  const totalStorageMB = Math.round(totalStorageBytes / (1024 * 1024));
+  const maxStorageMB = userProfile?.plan_type === 'pro' ? 10 * 1024 : 15; // 10GB for pro, 15MB for free
+  const storagePercentage = Math.min(100, Math.round((totalStorageMB / maxStorageMB) * 100));
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <UserMenu user={user} userInitials={userInitials} />
-      </header>
-      
-      <Tabs defaultValue="upload" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="upload">Upload</TabsTrigger>
-          <TabsTrigger value="completed" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" /> 
-            Completed 
-            {completedUploads.length > 0 && (
-              <span className="ml-1 rounded-full bg-primary w-5 h-5 text-xs flex items-center justify-center text-white">
-                {completedUploads.length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="upload" className="space-y-4">
-          {/* Client component for uploads */}
-          <UploadSection 
-            user={user} 
-            userProfile={userProfile as UserProfile} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="completed" className="space-y-4">
-          {completedUploads.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>No completed files</CardTitle>
-                <CardDescription>
-                  Your processed files will appear here once they're ready.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {completedUploads.map((upload: Upload) => (
-                <Card key={upload.id}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg truncate">{upload.file_name}</CardTitle>
-                    <CardDescription>
-                      {new Date(upload.created_at).toLocaleString()}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>{upload.duration_minutes} minutes</span>
-                      <span>{Math.round(upload.file_size / 1024 / 1024 * 10) / 10} MB</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <Link 
-                      href={`/transcription/${upload.id}`}
-                      className="w-full text-center py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                    >
-                      View Transcription
-                    </Link>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-      {userProfile && (
-        <div className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Usage</CardTitle>
-              <CardDescription>
-                {userProfile.plan_type === 'free' 
-                  ? 'Free plan: 30 minutes total limit'
-                  : 'Pro plan: 60 minutes per month'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {userProfile.plan_type === 'free' ? (
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span>Total usage: {userProfile.total_usage_minutes} / 30 minutes</span>
-                      <span>{Math.round((userProfile.total_usage_minutes / 30) * 100)}%</span>
-                    </div>
-                    <Progress value={(userProfile.total_usage_minutes / 30) * 100} />
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span>Monthly usage: {userProfile.monthly_usage_minutes} / 60 minutes</span>
-                      <span>{Math.round((userProfile.monthly_usage_minutes / 60) * 100)}%</span>
-                    </div>
-                    <Progress value={(userProfile.monthly_usage_minutes / 60) * 100} />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="flex h-screen bg-[#0f0f0f] text-white overflow-hidden">
+      {/* Sidebar */}
+      <div className="w-[192px] border-r border-[#2a2a2a] flex flex-col">
+        {/* Sidebar header */}
+        <div className="p-4 border-b border-[#2a2a2a]">
+          <h1 className="text-xl font-bold">BaseScribe</h1>
         </div>
-      )}
+        
+        {/* Sidebar navigation */}
+        <div className="flex-1 overflow-auto">
+          <div className="p-2">
+            <Link href="/dashboard" className="flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a]">
+              <Clock className="h-4 w-4" />
+              <span>Recent Files</span>
+            </Link>
+          </div>
+          
+          <div className="px-4 py-2">
+            <h2 className="text-sm font-semibold text-gray-400 mb-2">Folders</h2>
+            <div className="space-y-1">
+              <Link href="/dashboard/folder/1" className="flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a]">
+                <Folder className="h-4 w-4" />
+                <span>Folder 1</span>
+              </Link>
+              <Link href="/dashboard" className="flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a]">
+                <FolderPlus className="h-4 w-4" />
+                <span>New Folder</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
+        {/* Usage section */}
+        <div className="p-4 border-t border-[#2a2a2a]">
+          <div className="flex items-center mb-1">
+            <span className="text-sm font-medium">Usage</span>
+            <span className="text-xs text-gray-400 ml-auto">
+              {userProfile?.plan_type === 'free' ? 'Free Plan' : 'Pro Plan'}
+            </span>
+          </div>
+          <Progress 
+            value={userProfile?.plan_type === 'free' 
+              ? Math.min(100, ((userProfile?.total_usage_minutes || 0) / 30) * 100)
+              : Math.min(100, ((userProfile?.monthly_usage_minutes || 0) / 60) * 100)} 
+            className="h-1 bg-[#2a2a2a]" 
+            indicatorClassName="bg-[#3b82f6]" 
+          />
+          <div className="mt-1 text-xs text-gray-400">
+            {userProfile?.plan_type === 'free' 
+              ? `${userProfile?.total_usage_minutes || 0} / 30 minutes total`
+              : `${userProfile?.monthly_usage_minutes || 0} / 60 minutes monthly`}
+          </div>
+          <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-8 border-[#2a2a2a] hover:bg-[#2a2a2a]">
+            Upgrade plan
+          </Button>
+        </div>
+      </div>
+      
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="h-16 border-b border-[#2a2a2a] flex items-center justify-between px-6">
+          <h1 className="text-xl font-medium">Welcome to BaseScribe</h1>
+          <UserMenu user={user} userInitials={userInitials} />
+        </header>
+        
+        {/* Client component for the dashboard content and modal */}
+        <DashboardClient 
+          user={user} 
+          userProfile={userProfile as UserProfile} 
+          uploads={uploads} 
+        />
+      </div>
     </div>
   );
 }

@@ -11,9 +11,10 @@ import { useToast } from '@/components/ui/UseToast';
 interface FileUploadProps {
   onFileSelected: (file: File) => Promise<void>;
   maxSizeInBytes: number;
+  disabled?: boolean;
 }
 
-export function FileUpload({ onFileSelected, maxSizeInBytes }: FileUploadProps) {
+export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -51,6 +52,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes }: FileUploadProps) 
     onDrop,
     maxFiles: 1,
     multiple: false,
+    disabled: disabled || uploading,
   });
 
   const handleUpload = async () => {
