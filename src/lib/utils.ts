@@ -43,14 +43,14 @@ export const getMediaDuration = (file: File): Promise<number> => {
     
     // Set up event listeners
     mediaElement.addEventListener('loadedmetadata', () => {
-      // Get duration in seconds and convert to minutes
-      const durationMinutes = Math.max(1, Math.round(mediaElement.duration / 60));
+      // Get duration in seconds
+      const durationSeconds = Math.max(1, Math.round(mediaElement.duration));
       
       // Clean up
       URL.revokeObjectURL(url);
       
-      // Return the duration in minutes
-      resolve(durationMinutes);
+      // Return the duration in seconds
+      resolve(durationSeconds);
     });
     
     mediaElement.addEventListener('error', (e) => {

@@ -33,9 +33,8 @@ export async function getUserProfileSSR(supabase: SupabaseClient, userId: string
     const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
     if (error) {
       console.error("Error fetching user profile:", error);
-      return error;
     }
-    return data;
+    return { data, error };
 }
 
 export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: string) {
@@ -69,16 +68,15 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
     return data;
   }
 
-  export async function createNewUserSSR(supabase: SupabaseClient, userId: string, userEmail: string | undefined) {
+//Add paddle subscription later, plan and subscription id still can be null now
+export async function createNewUserSSR(supabase: SupabaseClient, userId: string, userEmail: string | undefined) {
     const { data, error } = await supabase
     .from('users')
     .insert([
       { 
         id: userId,
         email: userEmail,
-        plan_type: 'free',
-        total_usage_minutes: 0,
-        monthly_usage_minutes: 0,
+        plan_id: "test"
       }
     ]);
 
@@ -86,6 +84,45 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
       console.error("Error creating user profile:", error);
     }
     
-    // Return a consistent structure with both data and error
     return { data, error };
+  }
+
+export async function updateUserSubscriptionSSR(
+    userId: string,
+    planId: string,
+    subscriptionId: string,
+    planStartDate: Date,
+    planEndDate: Date
+  ) {
+    const supabase = await createClient();
+    
+    await supabase.rpc('update_user_subscription', {
+      user_id: userId,
+      new_plan_id: planId,
+      new_subscription_id: subscriptionId,
+      new_plan_start_date: planStartDate,
+      new_plan_end_date: planEndDate
+    });
+  }
+
+export async function updateUserUsageSSR(
+    userId: string,
+    usageSeconds: number,
+  ) {
+    const supabase = await createClient();
+    
+    await supabase.rpc('update_user_usage', {
+      user_id: userId,
+      usage_seconds: usageSeconds,
+    });
+  }
+
+export async function resetMonthlyUserUsageSSR(
+    userId: string,
+  ) {
+    const supabase = await createClient();
+    
+    await supabase.rpc('reset_monthly_transcription_seconds', {
+      user_id: userId,
+    });
   }

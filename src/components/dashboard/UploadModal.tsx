@@ -70,9 +70,9 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
       }
       
       // Calculate duration in minutes
-      let durationMinutes = await getMediaDuration(file);
-      if (durationMinutes === null) {
-        durationMinutes = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60)) / 60));
+      let durationSeconds = await getMediaDuration(file);
+      if (durationSeconds === null) {
+        durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
       }
       
       // Create upload record in database
@@ -83,7 +83,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
           file_name: fileName,
           file_path: filePath,
           file_size: fileSize,
-          duration_minutes: durationMinutes,
+          duration_seconds: durationSeconds,
           status: 'completed'
         })
         .select();
@@ -94,8 +94,8 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
       }
       
       // Update user usage with the actual duration
-      const totalMinutes = (userProfile?.total_usage_minutes || 0) + durationMinutes;
-      const monthlyMinutes = (userProfile?.monthly_usage_minutes || 0) + durationMinutes;
+      const totalMinutes = (userProfile?.total_usage_minutes || 0) + durationSeconds;
+      const monthlyMinutes = (userProfile?.monthly_usage_minutes || 0) + durationSeconds;
       
       await updateUserUsage(user.id, totalMinutes, monthlyMinutes);
       

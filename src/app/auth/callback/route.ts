@@ -52,9 +52,9 @@ export async function GET(req: Request) {
       // Check if user exists in our database (only for OAuth sign-ins)
       if (data.session.user) {
         log('Checking if user exists in database');
-        const existingUser = await getUserProfileSSR(supabase, data.session.user.id);
+        const {data: existingUser, error: existingUserError} = await getUserProfileSSR(supabase, data.session.user.id);
         
-        if (!existingUser) {
+        if (existingUserError) {
           log('Creating new user record');
           const { data: userData, error } = await createNewUserSSR(supabase, data.session.user.id, data.session.user.email);
           

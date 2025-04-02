@@ -1,11 +1,10 @@
 import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server';
-import { Clock, FileText, Folder, FolderPlus, MoreVertical } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { Clock, Folder, FolderPlus } from 'lucide-react';
 import { UserMenu } from '@/components/UserMenu';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Upload, UserProfile } from '@/types/DashboardInterface';
+import { UserProfile } from '@/types/DashboardInterface';
 import DashboardClient from './DashboardClient';
 
 // Server component for the dashboard page
@@ -32,7 +31,7 @@ export default async function DashboardPage() {
   // Calculate storage usage
   const totalStorageBytes = uploads.reduce((total, upload) => total + (upload.file_size || 0), 0);
   const totalStorageMB = Math.round(totalStorageBytes / (1024 * 1024));
-  const maxStorageMB = userProfile?.plan_type === 'pro' ? 10 * 1024 : 15; // 10GB for pro, 15MB for free
+  const maxStorageMB = userProfile?.data?.plan_type === 'pro' ? 10 * 1024 : 15; // 10GB for pro, 15MB for free
   const storagePercentage = Math.min(100, Math.round((totalStorageMB / maxStorageMB) * 100));
 
   return (
@@ -73,20 +72,20 @@ export default async function DashboardPage() {
           <div className="flex items-center mb-1">
             <span className="text-sm font-medium">Usage</span>
             <span className="text-xs text-gray-400 ml-auto">
-              {userProfile?.plan_type === 'free' ? 'Free Plan' : 'Pro Plan'}
+              {userProfile?.data?.plan_id === 'free' ? 'Free Plan' : 'Pro Plan'}
             </span>
           </div>
           <Progress 
-            value={userProfile?.plan_type === 'free' 
-              ? Math.min(100, ((userProfile?.total_usage_minutes || 0) / 30) * 100)
-              : Math.min(100, ((userProfile?.monthly_usage_minutes || 0) / 60) * 100)} 
+            value={userProfile?.data?.plan_id === 'free' 
+              ? Math.min(100, ((userProfile?.data?.total_usage_seconds || 0) / 30) * 100)
+              : Math.min(100, ((userProfile?.data?.monthly_usage_seconds || 0) / 60) * 100)} 
             className="h-1 bg-[#2a2a2a]" 
             indicatorClassName="bg-[#3b82f6]" 
           />
           <div className="mt-1 text-xs text-gray-400">
-            {userProfile?.plan_type === 'free' 
-              ? `${userProfile?.total_usage_minutes || 0} / 30 minutes total`
-              : `${userProfile?.monthly_usage_minutes || 0} / 60 minutes monthly`}
+            {userProfile?.data?.plan_id === 'free' 
+              ? `${userProfile?.data?.total_usage_seconds || 0} / 30 minutes total`
+              : `${userProfile?.data?.monthly_usage_seconds || 0} / 60 minutes monthly`}
           </div>
           <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-8 border-[#2a2a2a] hover:bg-[#2a2a2a]">
             Upgrade plan
@@ -105,7 +104,7 @@ export default async function DashboardPage() {
         {/* Client component for the dashboard content and modal */}
         <DashboardClient 
           user={user} 
-          userProfile={userProfile as UserProfile} 
+          userProfile={userProfile?.data as UserProfile} 
           uploads={uploads} 
         />
       </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, UserProfile } from '@/types/DashboardInterface';
 import UploadModal from '@/components/dashboard/UploadModal';
-import { CheckCircle2, Clock, FileAudio, MoreVertical } from 'lucide-react';
+import { CheckCircle2, FileAudio, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
 import type { User } from '@supabase/supabase-js';
 
@@ -92,7 +92,7 @@ export default function DashboardClient({ user, userProfile, uploads }: Dashboar
                       {formatDate(upload.created_at)}, {formatTime(upload.created_at)}
                     </td>
                     <td className="px-4 py-3 text-gray-400 text-sm">
-                      {upload.duration_minutes}m {upload.duration_minutes === 1 ? '' : ''}
+                      {Math.floor(upload.duration_seconds / 60)}m {upload.duration_seconds % 60}s
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center">

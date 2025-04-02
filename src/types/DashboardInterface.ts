@@ -18,7 +18,7 @@ export interface Upload {
   file_name: string;
   file_path: string;
   file_size: number;
-  duration_minutes: number;
+  duration_seconds: number;
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'error';
   transcript_text?: string | null;
   transcript_json?: any | null;
