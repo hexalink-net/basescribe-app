@@ -30,23 +30,23 @@ export function UserMenu({ user, userInitials }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer hover:bg-[#2a2a2a]">
           <Avatar>
             <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || ''} />
-            <AvatarFallback>{userInitials}</AvatarFallback>
+            <AvatarFallback className="bg-blue-500 text-white">{userInitials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/dashboard">Dashboard</Link>
+      <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] text-white rounded-md shadow-lg py-1 min-w-[180px]">
+        <DropdownMenuLabel className="font-medium text-sm px-3 py-2">My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
+        <DropdownMenuItem asChild className="text-sm px-3 py-2 cursor-pointer hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] focus:text-white">
+          <Link href="/dashboard" className="w-full">Dashboard</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/profile">Profile</Link>
+        <DropdownMenuItem asChild className="text-sm px-3 py-2 cursor-pointer hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] focus:text-white">
+          <Link href="/profile" className="w-full">Profile</Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
         <SignOutButton />
       </DropdownMenuContent>
     </DropdownMenu>

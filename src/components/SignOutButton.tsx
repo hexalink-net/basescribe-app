@@ -40,6 +40,7 @@ export function SignOutButton() {
     <DropdownMenuItem 
       onClick={handleSignOut}
       disabled={isLoading}
+      className="text-sm px-3 py-2 cursor-pointer hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] focus:text-white text-red-500 hover:text-white"
     >
       {isLoading ? 'Signing out...' : 'Sign out'}
     </DropdownMenuItem>
