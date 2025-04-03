@@ -6,6 +6,13 @@ import { PlanActionForm } from '@/components/PlanActionForm';
 import { updatePlan } from './actions';
 import { Progress } from '@/components/ui/progress';
 
+// Format seconds to minutes:seconds format
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
 export default async function ProfilePage() {
   // Get user data from server-side Supabase client
   const supabase = await createClient();
@@ -62,19 +69,19 @@ export default async function ProfilePage() {
                   <div className="flex justify-between mb-2">
                     <span>
                       {userProfile.data.plan_id === 'free' 
-                        ? `Total usage: ${userProfile.data.total_usage_seconds} / 30 minutes` 
-                        : `Monthly usage: ${userProfile.data.monthly_usage_seconds} / 60 minutes`}
+                        ? `Total usage: ${formatDuration(userProfile.data.total_usage_seconds || 0)} / 30:00 minutes` 
+                        : `Monthly usage: ${formatDuration(userProfile.data.monthly_usage_seconds || 0)} / 60:00 minutes`}
                     </span>
                     <span>
                       {userProfile.data.plan_id === 'free' 
-                        ? `${Math.round((userProfile.data.total_usage_seconds / 30) * 100)}%` 
-                        : `${Math.round((userProfile.data.monthly_usage_seconds / 60) * 100)}%`}
+                        ? `${Math.round((userProfile.data.total_usage_seconds / (30 * 60)) * 100)}%` 
+                        : `${Math.round((userProfile.data.monthly_usage_seconds / (60 * 60)) * 100)}%`}
                     </span>
                   </div>
                   <Progress 
                     value={userProfile.data.plan_id === 'free' 
-                      ? Math.min(100, ((userProfile.data.total_usage_seconds || 0) / 30) * 100) 
-                      : Math.min(100, ((userProfile.data.monthly_usage_seconds || 0) / 60) * 100)} 
+                      ? Math.min(100, ((userProfile.data.total_usage_seconds || 0) / (30 * 60)) * 100) 
+                      : Math.min(100, ((userProfile.data.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
                     className="h-1 bg-[#2a2a2a]" 
                     indicatorClassName="bg-[#3b82f6]" 
                   />

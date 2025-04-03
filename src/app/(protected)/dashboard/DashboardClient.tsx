@@ -57,6 +57,13 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       hour12: true,
     });
   };
+  
+  // Format seconds to minutes:seconds format
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const handleDeleteUpload = async (uploadId: string) => {
     // Set deleting state for this upload
@@ -208,14 +215,14 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
             </div>
             <Progress 
               value={userProfile?.plan_id === 'free' 
-                ? Math.min(100, ((userProfile?.total_usage_seconds || 0) / 30 / 60) * 100)
-                : Math.min(100, ((userProfile?.monthly_usage_seconds || 0) / 60 / 60) * 100)} 
+                ? Math.min(100, ((userProfile?.total_usage_seconds || 0) / (30 * 60)) * 100)
+                : Math.min(100, ((userProfile?.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
               className="h-1 bg-[#2a2a2a]" 
             />
             <div className="text-xs text-gray-400 mt-1">
               {userProfile?.plan_id === 'free' 
-                ? `${Math.round((userProfile?.total_usage_seconds || 0) / 60)} / 30 minutes total`
-                : `${Math.round((userProfile?.monthly_usage_seconds || 0) / 60)} / 60 minutes monthly`}
+                ? `${formatDuration(userProfile?.total_usage_seconds || 0)} / 30:00 minutes total`
+                : `${formatDuration(userProfile?.monthly_usage_seconds || 0)} / 60:00 minutes monthly`}
             </div>
           </div>
         </div>
