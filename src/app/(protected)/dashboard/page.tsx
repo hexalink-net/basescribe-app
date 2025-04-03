@@ -78,14 +78,14 @@ export default async function DashboardPage() {
           <Progress 
             value={userProfile?.data?.plan_id === 'free' 
               ? Math.min(100, ((userProfile?.data?.total_usage_seconds || 0) / 30) * 100)
-              : Math.min(100, ((userProfile?.data?.monthly_usage_seconds || 0) / 60) * 100)} 
+              : Math.min(100, ((userProfile?.data?.monthly_usage_seconds || 0) / 60 / 60) * 100)} 
             className="h-1 bg-[#2a2a2a]" 
             indicatorClassName="bg-[#3b82f6]" 
           />
           <div className="mt-1 text-xs text-gray-400">
             {userProfile?.data?.plan_id === 'free' 
-              ? `${userProfile?.data?.total_usage_seconds || 0} / 30 minutes total`
-              : `${userProfile?.data?.monthly_usage_seconds || 0} / 60 minutes monthly`}
+              ? `${(userProfile?.data?.total_usage_seconds || 0) / 60} / 30 minutes total`
+              : `${Math.round((userProfile?.data?.monthly_usage_seconds || 0)/ 60)} / 60 minutes monthly`}
           </div>
           <Button variant="outline" size="sm" className="w-full mt-2 text-xs h-8 border-[#2a2a2a] hover:bg-[#2a2a2a]">
             Upgrade plan

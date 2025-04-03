@@ -23,3 +23,12 @@ export interface Upload {
   transcript_text?: string | null;
   transcript_json?: any | null;
 }
+
+export interface Folder {
+  id: string;
+  user_id: string;
+  parent_id: string | null;
+  name: string;
+  created_at: string;
+}
+  

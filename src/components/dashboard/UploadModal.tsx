@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from 'react';
-import { supabase, updateUserUsage } from '@/lib/supabase/client';
+import { createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server';
+import { supabase } from '@/lib/supabase/client';
 import { FileUpload } from '@/components/FileUpload';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/UseToast';
@@ -76,28 +77,10 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
       }
       
       // Create upload record in database
-      const { data, error } = await supabase
-        .from('uploads')
-        .insert({
-          user_id: user.id,
-          file_name: fileName,
-          file_path: filePath,
-          file_size: fileSize,
-          duration_seconds: durationSeconds,
-          status: 'completed'
-        })
-        .select();
-        
-      if (error) {
-        console.error('Database insert error:', error);
-        throw error;
-      }
+      await createUploadSSR(supabase, user.id, fileName, filePath, fileSize, durationSeconds);
       
       // Update user usage with the actual duration
-      const totalMinutes = (userProfile?.total_usage_seconds || 0) + durationSeconds;
-      const monthlyMinutes = (userProfile?.total_usage_seconds || 0) + durationSeconds;
-      
-      await updateUserUsage(user.id, totalMinutes, monthlyMinutes);
+      await updateUserUsageSSR(supabase,user.id, durationSeconds);
       
       // Show success message
       toast({

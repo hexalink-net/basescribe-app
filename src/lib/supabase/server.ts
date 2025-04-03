@@ -37,6 +37,27 @@ export async function getUserProfileSSR(supabase: SupabaseClient, userId: string
     return { data, error };
 }
 
+export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number) {
+  const { data, error } = await supabase
+  .from('uploads')
+  .insert({
+    user_id: userId,
+    file_name: fileName,
+    file_path: filePath,
+    file_size: fileSize,
+    duration_seconds: durationSeconds,
+    status: 'completed'
+  })
+  .select();
+  
+  if (error) {
+    console.error('Database insert error:', error);
+    throw error;
+  }
+
+  return { data, error };
+}
+
 export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: string) {
     const { data = [], error } = await supabase
     .from('uploads')
@@ -87,14 +108,13 @@ export async function createNewUserSSR(supabase: SupabaseClient, userId: string,
   }
 
 export async function updateUserSubscriptionSSR(
+    supabase: SupabaseClient,
     userId: string,
     planId: string,
     subscriptionId: string,
     planStartDate: Date,
     planEndDate: Date
-  ) {
-    const supabase = await createClient();
-    
+  ) {    
     await supabase.rpc('update_user_subscription', {
       user_id: userId,
       new_plan_id: planId,
@@ -105,10 +125,10 @@ export async function updateUserSubscriptionSSR(
   }
 
 export async function updateUserUsageSSR(
+    supabase: SupabaseClient,
     userId: string,
     usageSeconds: number,
   ) {
-    const supabase = await createClient();
     
     await supabase.rpc('update_user_usage', {
       user_id: userId,
@@ -117,9 +137,9 @@ export async function updateUserUsageSSR(
   }
 
 export async function resetMonthlyUserUsageSSR(
+    supabase: SupabaseClient,
     userId: string,
   ) {
-    const supabase = await createClient();
     
     await supabase.rpc('reset_monthly_transcription_seconds', {
       user_id: userId,

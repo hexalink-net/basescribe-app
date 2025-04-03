@@ -43,13 +43,6 @@ export default function DashboardClient({ user, userProfile, uploads }: Dashboar
     });
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024 * 1024) {
-      return `${Math.round(bytes / 1024)} KB`;
-    }
-    return `${Math.round(bytes / (1024 * 1024))} MB`;
-  };
-
   const handleDeleteUpload = async (uploadId: string) => {
     // Set deleting state for this upload
     setIsDeleting(prev => ({ ...prev, [uploadId]: true }));
