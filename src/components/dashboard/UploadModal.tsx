@@ -109,7 +109,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[550px] w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
@@ -119,11 +119,13 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
             Upload audio files to transcribe. Supported formats: MP3, WAV, M4A, FLAC.
           </DialogDescription>
         </DialogHeader>
-        <FileUpload 
-          onFileSelected={handleFileUpload} 
-          maxSizeInBytes={userProfile?.plan_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
-          disabled={loading}
-        />
+        <div className="w-full">
+          <FileUpload 
+            onFileSelected={handleFileUpload} 
+            maxSizeInBytes={userProfile?.plan_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
+            disabled={loading}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

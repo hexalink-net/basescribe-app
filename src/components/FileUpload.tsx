@@ -109,8 +109,8 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
       {!file ? (
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-            isDragActive ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-primary/50'
+          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors w-full ${
+            isDragActive ? 'border-primary bg-primary/10' : 'border-[#2a2a2a] hover:border-[#3a3a3a]'
           }`}
         >
           <input {...getInputProps()} />
@@ -119,24 +119,24 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
             <p className="text-lg font-medium">
               {isDragActive ? 'Drop the file here' : 'Drag & drop your audio or video file here'}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-400">
               Supported formats: MP3, MP4, WAV, etc. (Max size: {formatFileSize(maxSizeInBytes)})
             </p>
-            <Button type="button" className="mt-2 cursor-pointer">
+            <Button type="button" className="mt-2 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white">
               Select File
             </Button>
           </div>
         </div>
       ) : (
-        <div className="border rounded-lg p-4">
+        <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded">
-                <Upload className="h-5 w-5 text-primary" />
+              <div className="p-2 bg-blue-500/10 rounded">
+                <Upload className="h-5 w-5 text-blue-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{file.name}</p>
-                <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
+                <p className="text-sm text-gray-400">{formatFileSize(file.size)}</p>
               </div>
             </div>
             {!uploading && (
@@ -154,12 +154,12 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
           {uploading ? (
             <div className="space-y-2">
               <Progress value={progress} />
-              <p className="text-sm text-center text-gray-500">
+              <p className="text-sm text-center text-gray-400">
                 {progress < 100 ? 'Uploading...' : 'Processing...'}
               </p>
             </div>
           ) : (
-            <Button onClick={handleUpload} className="w-full mt-2 cursor-pointer">
+            <Button onClick={handleUpload} className="w-full mt-2 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white">
               Upload File
             </Button>
           )}
