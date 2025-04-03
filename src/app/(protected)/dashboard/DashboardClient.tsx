@@ -534,7 +534,15 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
               >
                 Create Folder
               </Button>
-              <Button className="cursor-pointer" onClick={() => setIsUploadModalOpen(true)}>
+              <Button 
+                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 shadow-md transition-all duration-200 ease-in-out hover:shadow-lg flex items-center gap-2" 
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" x2="12" y1="19" y2="22"></line>
+                </svg>
                 Transcribe
               </Button>
             </div>
