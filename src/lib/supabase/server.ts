@@ -53,7 +53,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
   }
 
 export async function getUserUploadSSR(supabase: SupabaseClient, userId: string, uploadId: string) {
-    const { data = [], error } = await supabase
+    const { data, error } = await supabase
     .from('uploads')
     .select('*')
     .eq('id', uploadId)
@@ -62,10 +62,9 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
   
     if (error) {
       console.error("Error fetching user upload:", error);
-      return error;
     }
   
-    return data;
+    return { data, error };
   }
 
 //Add paddle subscription later, plan and subscription id still can be null now
@@ -125,4 +124,51 @@ export async function resetMonthlyUserUsageSSR(
     await supabase.rpc('reset_monthly_transcription_seconds', {
       user_id: userId,
     });
+  }
+
+export async function deleteUserUploadSSR(
+    userId: string,
+    uploadId: string
+  ) {
+    const supabase = await createClient();
+    
+    // First, get the upload to verify it belongs to the user and get file path
+    const { data: upload, error: fetchError } = await supabase
+      .from('uploads')
+      .select('file_path')
+      .eq('id', uploadId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching upload for deletion:", fetchError);
+      return { error: fetchError };
+    }
+    
+    // Delete the record from the database
+    const { error: deleteError } = await supabase
+      .from('uploads')
+      .delete()
+      .eq('id', uploadId)
+      .eq('user_id', userId);
+    
+    if (deleteError) {
+      console.error("Error deleting upload:", deleteError);
+      return { error: deleteError };
+    }
+    
+    // Delete the file from storage if it exists
+    if (upload?.file_path) {
+      const { error: storageError } = await supabase
+        .storage
+        .from('user-uploads')
+        .remove([upload.file_path]);
+      
+      if (storageError) {
+        console.error("Error deleting file from storage:", storageError);
+        return { error: storageError };
+      }
+    }
+    
+    return { success: true };
   }

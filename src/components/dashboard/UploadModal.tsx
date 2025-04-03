@@ -39,7 +39,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
     }
     
     // Check if user can upload based on their plan type
-    const maxFileSize = userProfile?.plan_type === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
+    const maxFileSize = userProfile?.plan_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
     
     if (file.size > maxFileSize) {
       toast({
@@ -60,7 +60,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
       setLoading(true);
       
       // Upload to storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('user-uploads')
         .upload(filePath, file);
         
@@ -94,8 +94,8 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
       }
       
       // Update user usage with the actual duration
-      const totalMinutes = (userProfile?.total_usage_minutes || 0) + durationSeconds;
-      const monthlyMinutes = (userProfile?.monthly_usage_minutes || 0) + durationSeconds;
+      const totalMinutes = (userProfile?.total_usage_seconds || 0) + durationSeconds;
+      const monthlyMinutes = (userProfile?.total_usage_seconds || 0) + durationSeconds;
       
       await updateUserUsage(user.id, totalMinutes, monthlyMinutes);
       
@@ -137,7 +137,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
         </DialogHeader>
         <FileUpload 
           onFileSelected={handleFileUpload} 
-          maxSizeInBytes={userProfile?.plan_type === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
+          maxSizeInBytes={userProfile?.plan_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
           disabled={loading}
         />
       </DialogContent>

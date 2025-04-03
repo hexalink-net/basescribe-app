@@ -51,7 +51,7 @@ export default async function ProfilePage() {
             <CardHeader>
               <CardTitle>Usage</CardTitle>
               <CardDescription className="text-gray-400">
-                {userProfile.plan_type === 'free' 
+                {userProfile.data.plan_id === 'free' 
                   ? 'Free plan: 30 minutes total limit' 
                   : 'Pro plan: 60 minutes per month'}
               </CardDescription>
@@ -61,20 +61,20 @@ export default async function ProfilePage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span>
-                      {userProfile.plan_type === 'free' 
-                        ? `Total usage: ${userProfile.total_usage_minutes} / 30 minutes` 
-                        : `Monthly usage: ${userProfile.monthly_usage_minutes} / 60 minutes`}
+                      {userProfile.data.plan_id === 'free' 
+                        ? `Total usage: ${userProfile.data.total_usage_seconds} / 30 minutes` 
+                        : `Monthly usage: ${userProfile.data.monthly_usage_seconds} / 60 minutes`}
                     </span>
                     <span>
-                      {userProfile.plan_type === 'free' 
-                        ? `${Math.round((userProfile.total_usage_minutes / 30) * 100)}%` 
-                        : `${Math.round((userProfile.monthly_usage_minutes / 60) * 100)}%`}
+                      {userProfile.data.plan_id === 'free' 
+                        ? `${Math.round((userProfile.data.total_usage_seconds / 30) * 100)}%` 
+                        : `${Math.round((userProfile.data.monthly_usage_seconds / 60) * 100)}%`}
                     </span>
                   </div>
                   <Progress 
-                    value={userProfile.plan_type === 'free' 
-                      ? Math.min(100, ((userProfile.total_usage_minutes || 0) / 30) * 100) 
-                      : Math.min(100, ((userProfile.monthly_usage_minutes || 0) / 60) * 100)} 
+                    value={userProfile.data.plan_id === 'free' 
+                      ? Math.min(100, ((userProfile.data.total_usage_seconds || 0) / 30) * 100) 
+                      : Math.min(100, ((userProfile.data.monthly_usage_seconds || 0) / 60) * 100)} 
                     className="h-1 bg-[#2a2a2a]" 
                     indicatorClassName="bg-[#3b82f6]" 
                   />
@@ -99,7 +99,7 @@ export default async function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-400">Account Created</p>
-                  <p>{new Date(userProfile.created_at).toLocaleDateString()}</p>
+                  <p>{new Date(userProfile.data.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -118,14 +118,14 @@ export default async function ProfilePage() {
                 <div>
                   <p className="text-sm font-medium text-gray-400">Current Plan</p>
                   <p className="font-medium">
-                    {userProfile.plan_type === 'free' ? 'Free' : 'Pro'}
+                    {userProfile.data.plan_id === 'free' ? 'Free' : 'Pro'}
                   </p>
                 </div>
                 
                 <div>
                   <p className="text-sm font-medium text-gray-400">Usage Limit</p>
                   <p>
-                    {userProfile.plan_type === 'free' 
+                    {userProfile.data.plan_type === 'free' 
                       ? '30 minutes total (lifetime)' 
                       : '60 minutes per month'}
                   </p>
@@ -133,7 +133,7 @@ export default async function ProfilePage() {
               </div>
             </CardContent>
             <CardFooter>
-              {userProfile.plan_type === 'free' ? (
+              {userProfile.data.plan_type === 'free' ? (
                 <PlanActionForm 
                   planType="pro" 
                   action={upgradeToPro} 
