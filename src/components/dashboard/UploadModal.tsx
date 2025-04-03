@@ -22,9 +22,10 @@ interface UploadModalProps {
   userProfile: UserProfile | null;
   isOpen: boolean;
   onClose: () => void;
+  folderId?: string | null;
 }
 
-export default function UploadModal({ user, userProfile, isOpen, onClose }: UploadModalProps) {
+export default function UploadModal({ user, userProfile, isOpen, onClose, folderId }: UploadModalProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -77,7 +78,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose }: Uplo
       }
       
       // Create upload record in database
-      await createUploadSSR(supabase, user.id, fileName, filePath, fileSize, durationSeconds);
+      await createUploadSSR(supabase, user.id, fileName, filePath, fileSize, durationSeconds, folderId);
       
       // Update user usage with the actual duration
       await updateUserUsageSSR(supabase,user.id, durationSeconds);

@@ -37,7 +37,7 @@ export async function getUserProfileSSR(supabase: SupabaseClient, userId: string
     return { data, error };
 }
 
-export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number) {
+export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number, folderId?: string | null) {
   const { data, error } = await supabase
   .from('uploads')
   .insert({
@@ -46,6 +46,7 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
     file_path: filePath,
     file_size: fileSize,
     duration_seconds: durationSeconds,
+    folder_id: folderId || null,
     status: 'completed'
   })
   .select();
