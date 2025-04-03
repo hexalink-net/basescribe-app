@@ -174,14 +174,13 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-64 border-r border-[#2a2a2a] flex flex-col">
-          
           <div className="p-4 border-t border-[#2a2a2a]">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-6 w-6 p-0" 
+                className="h-6 w-6 p-0 cursor-pointer" 
                 onClick={() => setIsNewFolderModalOpen(true)}
               >
                 <FolderPlus className="h-4 w-4" />
@@ -239,7 +238,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
             )}
             <Button 
               onClick={() => setIsUploadModalOpen(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
             >
               Transcribe
             </Button>
@@ -367,11 +366,11 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
             <Button
               variant="outline"
               onClick={() => setIsNewFolderModalOpen(false)}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a]"
+              className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
             >
               Cancel
             </Button>
-            <Button onClick={handleCreateFolder}>
+            <Button onClick={handleCreateFolder} className="cursor-pointer">
               Create Folder
             </Button>
           </DialogFooter>

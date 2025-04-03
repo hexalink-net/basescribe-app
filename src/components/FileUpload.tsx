@@ -122,7 +122,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
             <p className="text-sm text-gray-500">
               Supported formats: MP3, MP4, WAV, etc. (Max size: {formatFileSize(maxSizeInBytes)})
             </p>
-            <Button type="button" className="mt-2">
+            <Button type="button" className="mt-2 cursor-pointer">
               Select File
             </Button>
           </div>
@@ -144,7 +144,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
                 variant="ghost"
                 size="icon"
                 onClick={removeFile}
-                className="text-gray-500 hover:text-destructive"
+                className="text-gray-500 hover:text-destructive cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -159,7 +159,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
               </p>
             </div>
           ) : (
-            <Button onClick={handleUpload} className="w-full mt-2">
+            <Button onClick={handleUpload} className="w-full mt-2 cursor-pointer">
               Upload File
             </Button>
           )}

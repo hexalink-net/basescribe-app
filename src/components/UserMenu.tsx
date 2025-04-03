@@ -30,7 +30,7 @@ export function UserMenu({ user, userInitials }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer">
           <Avatar>
             <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || ''} />
             <AvatarFallback>{userInitials}</AvatarFallback>
