@@ -97,9 +97,48 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
       return { success: false, error: error.message }
     }
     
+    // Revalidate paths
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/folder/[id]', 'page')
+    
     return { success: true }
   } catch (error) {
     console.error('Error moving upload to folder:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    }
+  }
+}
+
+export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: string | null) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    // Update all uploads with the new folder_id
+    const { error } = await supabase
+      .from('uploads')
+      .update({ folder_id: folderId })
+      .in('id', uploadIds)
+      .eq('user_id', user.id)
+    
+    if (error) {
+      console.error('Error bulk moving uploads to folder:', error)
+      return { success: false, error: error.message }
+    }
+    
+    // Revalidate paths
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/folder/[id]', 'page')
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error bulk moving uploads to folder:', error)
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'An unknown error occurred' 

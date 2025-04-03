@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/AlertDialog';
 import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
 import UploadModal from '@/components/dashboard/UploadModal';
-import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderIcon, FolderPlus, ArrowLeft, FolderUp } from 'lucide-react';
+import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderIcon, FolderPlus, FolderUp } from 'lucide-react';
 import { UserMenu } from '@/components/UserMenu';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -16,7 +17,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/DropdownMenu';
-import { deleteUpload } from './actions';
+import { deleteUpload, bulkDeleteUploads } from './actions';
 import { createFolder, moveUploadToFolder } from './folder/actions';
 import { useToast } from '@/components/ui/UseToast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -39,6 +40,11 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   const [isMoving, setIsMoving] = useState<Record<string, boolean>>({});
   const [selectedUploadId, setSelectedUploadId] = useState<string | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [selectedUploads, setSelectedUploads] = useState<string[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [isBulkMoving, setIsBulkMoving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -65,6 +71,36 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Effect to handle select all checkbox state based on selected uploads
+  useEffect(() => {
+    if (uploads.length > 0 && selectedUploads.length === uploads.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedUploads, uploads]);
+
+  // Toggle select all uploads
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUploads([]);
+    } else {
+      setSelectedUploads(uploads.map(upload => upload.id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // Toggle individual upload selection
+  const handleSelectUpload = (uploadId: string) => {
+    setSelectedUploads(prev => {
+      if (prev.includes(uploadId)) {
+        return prev.filter(id => id !== uploadId);
+      } else {
+        return [...prev, uploadId];
+      }
+    });
+  };
+
   const handleDeleteUpload = async (uploadId: string) => {
     // Set deleting state for this upload
     setIsDeleting(prev => ({ ...prev, [uploadId]: true }));
@@ -73,6 +109,11 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       const result = await deleteUpload(uploadId, user.id);
       
       if (result.success) {
+        // Remove from selected uploads if it was selected
+        if (selectedUploads.includes(uploadId)) {
+          setSelectedUploads(prev => prev.filter(id => id !== uploadId));
+        }
+        
         toast({
           title: "File deleted",
           description: "The file has been successfully deleted"
@@ -93,6 +134,41 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       });
     } finally {
       setIsDeleting(prev => ({ ...prev, [uploadId]: false }));
+    }
+  };
+  
+  // Handle bulk delete of selected uploads
+  const handleBulkDelete = async () => {
+    if (selectedUploads.length === 0) return;
+    
+    setIsBulkDeleting(true);
+    
+    try {
+      const result = await bulkDeleteUploads(selectedUploads, user.id);
+      
+      if (result.success) {
+        toast({
+          title: "Files deleted",
+          description: `Successfully deleted ${selectedUploads.length} file(s)`
+        });
+        setSelectedUploads([]);
+      } else {
+        toast({
+          title: "Delete failed",
+          description: result.error || 'An error occurred while deleting the files',
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error bulk deleting uploads:', error);
+      toast({
+        title: "Delete failed",
+        description: "An error occurred while deleting the files",
+        variant: "destructive"
+      });
+    } finally {
+      setIsBulkDeleting(false);
+      setShowBulkDeleteDialog(false);
     }
   };
 
@@ -136,6 +212,11 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       const result = await moveUploadToFolder(uploadId, folderId);
       
       if (result.success) {
+        // Remove from selected uploads if it was selected
+        if (selectedUploads.includes(uploadId)) {
+          setSelectedUploads(prev => prev.filter(id => id !== uploadId));
+        }
+        
         toast({
           title: "Upload moved",
           description: folderId ? "The upload has been moved to the selected folder." : "The upload has been moved to the root folder."
@@ -161,6 +242,52 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       });
     } finally {
       setIsMoving(prev => ({ ...prev, [uploadId]: false }));
+    }
+  };
+  
+  // Handle bulk move of selected uploads
+  const handleBulkMove = async (folderId: string | null) => {
+    if (selectedUploads.length === 0) return;
+    
+    setIsBulkMoving(true);
+    
+    try {
+      // Move each upload individually
+      const promises = selectedUploads.map(uploadId => moveUploadToFolder(uploadId, folderId));
+      const results = await Promise.all(promises);
+      
+      const failures = results.filter(result => !result.success);
+      
+      if (failures.length === 0) {
+        toast({
+          title: "Files moved",
+          description: `Successfully moved ${selectedUploads.length} file(s)`
+        });
+        setSelectedUploads([]);
+        setShowMoveDialog(false);
+        
+        // Navigate to the appropriate folder page after successful move
+        if (folderId) {
+          router.push(`/dashboard/folder/${folderId}`);
+        } else {
+          router.push('/dashboard');
+        }
+      } else {
+        toast({
+          title: "Move partially failed",
+          description: `${failures.length} out of ${selectedUploads.length} files failed to move`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error bulk moving uploads:', error);
+      toast({
+        title: "Move failed",
+        description: "An error occurred while moving the files",
+        variant: "destructive"
+      });
+    } finally {
+      setIsBulkMoving(false);
     }
   };
 
@@ -250,7 +377,12 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
               <thead>
                 <tr className="border-b border-[#2a2a2a]">
                   <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-6">
-                    <input type="checkbox" className="rounded bg-[#2a2a2a] border-none" />
+                    <input 
+                      type="checkbox" 
+                      className="rounded bg-[#2a2a2a] border-none" 
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                    />
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Name</th>
                   <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Uploaded</th>
@@ -271,9 +403,14 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
                   </tr>
                 ) : (
                   uploads.map((upload) => (
-                    <tr key={upload.id} className="border-b border-[#2a2a2a] hover:bg-[#2a2a2a]">
+                    <tr key={upload.id} className={`border-b border-[#2a2a2a] hover:bg-[#2a2a2a] ${selectedUploads.includes(upload.id) ? 'bg-[#2a2a2a]' : ''}`}>
                       <td className="px-4 py-3">
-                        <input type="checkbox" className="rounded bg-[#2a2a2a] border-none" />
+                        <input 
+                          type="checkbox" 
+                          className="rounded bg-[#2a2a2a] border-none" 
+                          checked={selectedUploads.includes(upload.id)}
+                          onChange={() => handleSelectUpload(upload.id)}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <Link href={`/dashboard/transcript/${upload.id}`} className="text-white hover:underline">
@@ -336,6 +473,40 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         </div>
       </div>
 
+      {/* Bulk Actions Floating Bar */}
+      {selectedUploads.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-lg py-3 px-4 flex items-center gap-4 z-50">
+          <div className="text-sm font-medium">
+            {selectedUploads.length} item{selectedUploads.length !== 1 ? 's' : ''} selected
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-[#3a3a3a] hover:bg-[#2a2a2a] flex items-center gap-1"
+              onClick={() => {
+                setSelectedUploadId(null);
+                setShowMoveDialog(true);
+              }}
+              disabled={isBulkMoving}
+            >
+              <FolderUp className="h-4 w-4" />
+              {isBulkMoving ? 'Moving...' : 'Move'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-[#3a3a3a] hover:bg-red-600 hover:text-white text-red-500 flex items-center gap-1"
+              onClick={() => setShowBulkDeleteDialog(true)}
+              disabled={isBulkDeleting}
+            >
+              <Trash2 className="h-4 w-4" />
+              {isBulkDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Upload Modal */}
       <UploadModal
         user={user}
@@ -383,15 +554,26 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           <DialogHeader>
             <DialogTitle>Move to Folder</DialogTitle>
             <DialogDescription className="text-gray-400">
-              Select a folder to move this upload to
+              {selectedUploads.length > 0 
+                ? `Select a folder to move ${selectedUploads.length} file(s) to`
+                : 'Select a folder to move this upload to'
+              }
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-2">
             <Button
               variant="outline"
               className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => selectedUploadId && handleMoveUpload(selectedUploadId, null)}
-              disabled={!selectedUploadId || isMoving[selectedUploadId || '']}
+              onClick={() => {
+                if (selectedUploads.length > 0) {
+                  handleBulkMove(null);
+                } else if (selectedUploadId) {
+                  handleMoveUpload(selectedUploadId, null);
+                }
+              }}
+              disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
+                (selectedUploadId ? isMoving[selectedUploadId] : false) || 
+                isBulkMoving}
             >
               <FolderIcon className="h-4 w-4 mr-2" />
               Root Folder
@@ -401,8 +583,16 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
                 key={folder.id}
                 variant="outline"
                 className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-                onClick={() => selectedUploadId && handleMoveUpload(selectedUploadId, folder.id)}
-                disabled={!selectedUploadId || isMoving[selectedUploadId || '']}
+                onClick={() => {
+                  if (selectedUploads.length > 0) {
+                    handleBulkMove(folder.id);
+                  } else if (selectedUploadId) {
+                    handleMoveUpload(selectedUploadId, folder.id);
+                  }
+                }}
+                disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
+                  (selectedUploadId ? isMoving[selectedUploadId] : false) || 
+                  isBulkMoving}
               >
                 <FolderIcon className="h-4 w-4 mr-2" />
                 {folder.name}
@@ -420,6 +610,30 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Bulk Delete Confirmation Dialog */}
+      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
+        <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Are you sure you want to delete {selectedUploads.length} file(s)? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleBulkDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={isBulkDeleting}
+            >
+              {isBulkDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
