@@ -12,13 +12,38 @@ export async function createFolder(name: string, parentId: string | null) {
     if (!user) {
       return { success: false, error: 'Not authenticated' }
     }
+
+    // Validate folder name
+    const trimmedName = name.trim()
+    if (!trimmedName) {
+      return { success: false, error: 'Folder name cannot be empty' }
+    }
+
+    if (trimmedName.length > 100) {
+      return { success: false, error: 'Folder name is too long (maximum 100 characters)' }
+    }
+    
+    // If creating in a parent folder, verify parent folder ownership
+    if (parentId !== null) {
+      const { data: folder, error: folderError } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('id', parentId)
+        .eq('user_id', user.id)
+        .single()
+      
+      if (folderError || !folder) {
+        console.error('Error verifying parent folder ownership:', folderError)
+        return { success: false, error: 'Parent folder not found or not owned by user' }
+      }
+    }
     
     const { data, error } = await supabase
       .from('folders')
       .insert({
         user_id: user.id,
         parent_id: parentId,
-        name
+        name: trimmedName
       })
       .select()
       .single()
@@ -84,13 +109,28 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
       return { success: false, error: 'Not authenticated' }
     }
 
+
+    // If moving to a folder (not root), verify folder ownership
+    if (folderId !== null) {
+      const { data: folder, error: folderError } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('id', folderId)
+        .eq('user_id', user.id)
+        .single()
+      
+      if (folderError || !folder) {
+        console.error('Error verifying folder ownership:', folderError)
+        return { success: false, error: 'Folder not found or not owned by user' }
+      }
+    }
+
     // Update the upload with the new folder_id
     const { error } = await supabase
       .from('uploads')
       .update({ folder_id: folderId })
       .eq('id', uploadId)
       .eq('user_id', user.id) 
-      .select()
     
     if (error) {
       console.error('Error moving upload to folder:', error)
@@ -118,6 +158,38 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
     
     if (!user) {
       return { success: false, error: 'Not authenticated' }
+    }
+
+    // First verify all uploads belong to the user
+    const { data: uploads, error: uploadsError } = await supabase
+      .from('uploads')
+      .select('id')
+      .in('id', uploadIds)
+      .eq('user_id', user.id)
+    
+    if (uploadsError) {
+      console.error('Error verifying uploads ownership:', uploadsError)
+      return { success: false, error: 'Error verifying uploads ownership' }
+    }
+
+    // Check if all requested uploads were found (belong to the user)
+    if (uploads.length !== uploadIds.length) {
+      return { success: false, error: 'Some uploads were not found or not owned by user' }
+    }
+
+    // If moving to a folder (not root), verify folder ownership
+    if (folderId !== null) {
+      const { data: folder, error: folderError } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('id', folderId)
+        .eq('user_id', user.id)
+        .single()
+      
+      if (folderError || !folder) {
+        console.error('Error verifying folder ownership:', folderError)
+        return { success: false, error: 'Folder not found or not owned by user' }
+      }
     }
 
     // Update all uploads with the new folder_id
@@ -154,8 +226,26 @@ export async function deleteFolder(folderId: string) {
     if (!user) {
       return { success: false, error: 'Not authenticated' }
     }
+    
+    // Validate input
+    if (!folderId) {
+      return { success: false, error: 'Folder ID is required' }
+    }
+    
+    // First, verify the folder exists and belongs to the user
+    const { data: folder, error: folderError } = await supabase
+      .from('folders')
+      .select('id, parent_id')
+      .eq('id', folderId)
+      .eq('user_id', user.id)
+      .single()
+    
+    if (folderError || !folder) {
+      console.error('Error verifying folder ownership:', folderError)
+      return { success: false, error: 'Folder not found or not owned by user' }
+    }
 
-    // First, check if there are any uploads in this folder
+    // Check if there are any uploads in this folder
     const { data: uploads, error: uploadsError } = await supabase
       .from('uploads')
       .select('id')
@@ -243,14 +333,33 @@ export async function renameFolder(folderId: string, newName: string) {
       return { success: false, error: 'Not authenticated' }
     }
 
-    if (!newName.trim()) {
+    // Validate folder name
+    const trimmedName = newName.trim()
+    if (!trimmedName) {
       return { success: false, error: 'Folder name cannot be empty' }
+    }
+
+    if (trimmedName.length > 100) {
+      return { success: false, error: 'Folder name is too long (maximum 100 characters)' }
+    }
+
+    // First verify the folder exists and belongs to the user
+    const { data: folder, error: fetchError } = await supabase
+      .from('folders')
+      .select('id')
+      .eq('id', folderId)
+      .eq('user_id', user.id)
+      .single()
+    
+    if (fetchError || !folder) {
+      console.error('Error verifying folder ownership:', fetchError)
+      return { success: false, error: 'Folder not found or not owned by user' }
     }
 
     // Update the folder name
     const { error } = await supabase
       .from('folders')
-      .update({ name: newName.trim() })
+      .update({ name: trimmedName })
       .eq('id', folderId)
       .eq('user_id', user.id)
     
@@ -282,7 +391,12 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       return { success: false, error: 'Not authenticated' }
     }
 
-    // First, check if the folder exists
+    // Validate input
+    if (!folderId) {
+      return { success: false, error: 'Folder ID is required' }
+    }
+
+    // First, check if the folder exists and belongs to the user
     const { data: folder, error: folderError } = await supabase
       .from('folders')
       .select('*')
@@ -292,10 +406,10 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
     
     if (folderError || !folder) {
       console.error('Error finding folder:', folderError)
-      return { success: false, error: folderError?.message || 'Folder not found' }
+      return { success: false, error: 'Folder not found or not owned by user' }
     }
 
-    // Check if the new parent folder exists (if not null)
+    // Check if the new parent folder exists and belongs to the user (if not null)
     if (newParentId) {
       const { data: parentFolder, error: parentError } = await supabase
         .from('folders')
@@ -306,12 +420,20 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       
       if (parentError || !parentFolder) {
         console.error('Error finding parent folder:', parentError)
-        return { success: false, error: parentError?.message || 'Parent folder not found' }
+        return { success: false, error: 'Parent folder not found or not owned by user' }
       }
 
       // Prevent circular references - check if newParentId is not a descendant of folderId
       let currentCheckId = newParentId
+      const visited = new Set<string>() // Prevent infinite loops
+      
       while (currentCheckId) {
+        // Safety check to prevent infinite loops
+        if (visited.has(currentCheckId)) {
+          return { success: false, error: 'Circular reference detected in folder structure' }
+        }
+        visited.add(currentCheckId)
+        
         if (currentCheckId === folderId) {
           return { success: false, error: 'Cannot move a folder into its own subfolder' }
         }
