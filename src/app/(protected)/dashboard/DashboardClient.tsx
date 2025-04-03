@@ -1,29 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/AlertDialog';
 import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
 import UploadModal from '@/components/dashboard/UploadModal';
-import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderIcon, FolderPlus, FolderUp, ChevronRight, ChevronDown } from 'lucide-react';
 import { UserMenu } from '@/components/UserMenu';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/DropdownMenu';
-import { deleteUpload, bulkDeleteUploads } from './actions';
-import { createFolder, moveUploadToFolder } from './folder/actions';
+import { deleteUpload, bulkDeleteUploads, renameUpload } from './actions';
+import { createFolder, moveUploadToFolder, deleteFolder, renameFolder, moveFolder } from './folder/actions';
 import { useToast } from '@/components/ui/UseToast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { motion, AnimatePresence } from 'framer-motion';
+
+// Import our new components
+import FolderSidebar from '@/components/dashboard/FolderSidebar';
+import FileTable from '@/components/dashboard/FileTable';
+import BulkActions from '@/components/dashboard/BulkActions';
+import FolderDialogs from '@/components/dashboard/FolderDialogs';
+import FileDialogs from '@/components/dashboard/FileDialogs';
 
 interface DashboardClientProps {
   user: User;
@@ -33,10 +26,31 @@ interface DashboardClientProps {
   currentFolder: Folder | null;
 }
 
+// Format seconds to minutes:seconds format
+function formatDuration(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder }: DashboardClientProps) {
+  // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  
+  // Folder management state
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [isRenameFolderModalOpen, setIsRenameFolderModalOpen] = useState(false);
+  const [folderToRename, setFolderToRename] = useState<Folder | null>(null);
+  const [newFolderRename, setNewFolderRename] = useState('');
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<Folder | null>(null);
+  const [showDeleteFolderDialog, setShowDeleteFolderDialog] = useState(false);
+  const [showMoveFolderDialog, setShowMoveFolderDialog] = useState(false);
+  const [folderToMove, setFolderToMove] = useState<Folder | null>(null);
+  const [isMovingFolder, setIsMovingFolder] = useState(false);
+  
+  // File management state
   const [isDeleting, setIsDeleting] = useState<Record<string, boolean>>({});
   const [isMoving, setIsMoving] = useState<Record<string, boolean>>({});
   const [selectedUploadId, setSelectedUploadId] = useState<string | null>(null);
@@ -46,10 +60,14 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkMoving, setIsBulkMoving] = useState(false);
-  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [isRenameUploadModalOpen, setIsRenameUploadModalOpen] = useState(false);
+  const [uploadToRename, setUploadToRename] = useState<Upload | null>(null);
+  const [newUploadName, setNewUploadName] = useState('');
+  
   const { toast } = useToast();
   const router = useRouter();
 
+  // Utility functions
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -66,21 +84,27 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     });
   };
   
-  // Format seconds to minutes:seconds format
-  const formatDuration = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  // Effect to handle select all checkbox state based on selected uploads
-  useEffect(() => {
-    if (uploads.length > 0 && selectedUploads.length === uploads.length) {
-      setSelectAll(true);
-    } else {
-      setSelectAll(false);
+  // Helper function to check if a folder is a descendant of another folder
+  const isDescendantOf = (folderId: string | undefined, ancestorId: string | undefined, foldersList: Folder[]): boolean => {
+    if (!folderId || !ancestorId) return false;
+    
+    let currentId: string | null = folderId;
+    const visited = new Set<string>();
+    
+    while (currentId) {
+      // Prevent infinite loops
+      if (visited.has(currentId)) return false;
+      visited.add(currentId);
+      
+      const folder = foldersList.find(f => f.id === currentId);
+      if (!folder) return false;
+      
+      if (folder.parent_id === ancestorId) return true;
+      currentId = folder.parent_id;
     }
-  }, [selectedUploads, uploads]);
+    
+    return false;
+  };
 
   // Toggle select all uploads
   const handleSelectAll = () => {
@@ -94,199 +118,373 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
 
   // Toggle individual upload selection
   const handleSelectUpload = (uploadId: string) => {
-    setSelectedUploads(prev => {
-      if (prev.includes(uploadId)) {
-        return prev.filter(id => id !== uploadId);
-      } else {
-        return [...prev, uploadId];
-      }
-    });
+    if (selectedUploads.includes(uploadId)) {
+      setSelectedUploads(selectedUploads.filter(id => id !== uploadId));
+      setSelectAll(false);
+    } else {
+      setSelectedUploads([...selectedUploads, uploadId]);
+      setSelectAll(selectedUploads.length + 1 === uploads.length);
+    }
   };
 
+  // Handle delete upload
   const handleDeleteUpload = async (uploadId: string) => {
-    // Set deleting state for this upload
-    setIsDeleting(prev => ({ ...prev, [uploadId]: true }));
-    
     try {
+      setIsDeleting(prev => ({ ...prev, [uploadId]: true }));
+      
       const result = await deleteUpload(uploadId, user.id);
       
       if (result.success) {
-        // Remove from selected uploads if it was selected
-        if (selectedUploads.includes(uploadId)) {
-          setSelectedUploads(prev => prev.filter(id => id !== uploadId));
-        }
-        
         toast({
-          title: "File deleted",
-          description: "The file has been successfully deleted"
+          title: "Upload deleted",
+          description: "The upload has been successfully deleted.",
         });
+        
+        // Refresh the page to show updated data
+        router.refresh();
       } else {
         toast({
-          title: "Delete failed",
-          description: result.error || 'An error occurred while deleting the file',
-          variant: "destructive"
+          title: "Error",
+          description: result.error || "Failed to delete upload.",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error deleting upload:', error);
+      console.error("Error deleting upload:", error);
       toast({
-        title: "Delete failed",
-        description: "An error occurred while deleting the file",
-        variant: "destructive"
+        title: "Error",
+        description: "An unexpected error occurred while deleting the upload.",
+        variant: "destructive",
       });
     } finally {
       setIsDeleting(prev => ({ ...prev, [uploadId]: false }));
     }
   };
-  
+
   // Handle bulk delete of selected uploads
   const handleBulkDelete = async () => {
     if (selectedUploads.length === 0) return;
     
-    setIsBulkDeleting(true);
-    
     try {
+      setIsBulkDeleting(true);
+      
       const result = await bulkDeleteUploads(selectedUploads, user.id);
       
       if (result.success) {
         toast({
-          title: "Files deleted",
-          description: `Successfully deleted ${selectedUploads.length} file(s)`
+          title: "Uploads deleted",
+          description: `${selectedUploads.length} upload(s) have been successfully deleted.`,
         });
+        
+        // Clear selection and refresh
         setSelectedUploads([]);
+        setSelectAll(false);
+        setShowBulkDeleteDialog(false);
+        router.refresh();
       } else {
         toast({
-          title: "Delete failed",
-          description: result.error || 'An error occurred while deleting the files',
-          variant: "destructive"
+          title: "Error",
+          description: result.error || "Failed to delete uploads.",
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error bulk deleting uploads:', error);
+      console.error("Error bulk deleting uploads:", error);
       toast({
-        title: "Delete failed",
-        description: "An error occurred while deleting the files",
-        variant: "destructive"
+        title: "Error",
+        description: "An unexpected error occurred while deleting uploads.",
+        variant: "destructive",
       });
     } finally {
       setIsBulkDeleting(false);
-      setShowBulkDeleteDialog(false);
     }
   };
 
+  // Handle create folder
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) {
       toast({
-        title: "Folder name required",
-        description: "Please enter a name for your folder.",
-        variant: "destructive"
+        title: "Error",
+        description: "Folder name cannot be empty.",
+        variant: "destructive",
       });
       return;
     }
-
+    
     try {
       const result = await createFolder(newFolderName, currentFolder?.id || null);
       
       if (result.success) {
         toast({
           title: "Folder created",
-          description: `Folder "${newFolderName}" has been created successfully.`
+          description: "The folder has been successfully created.",
         });
+        
         setIsNewFolderModalOpen(false);
         setNewFolderName('');
+        router.refresh();
       } else {
-        throw new Error(result.error);
+        toast({
+          title: "Error",
+          description: result.error || "Failed to create folder.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error creating folder:', error);
+      console.error("Error creating folder:", error);
       toast({
-        title: "Error creating folder",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive"
+        title: "Error",
+        description: "An unexpected error occurred while creating the folder.",
+        variant: "destructive",
       });
     }
   };
 
-  const handleMoveUpload = async (uploadId: string, folderId: string | null) => {
-    setIsMoving(prev => ({ ...prev, [uploadId]: true }));
+  // Handle rename folder
+  const handleRenameFolder = async () => {
+    if (!folderToRename) return;
+    
+    if (!newFolderRename.trim()) {
+      toast({
+        title: "Error",
+        description: "Folder name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
+      const result = await renameFolder(folderToRename.id, newFolderRename);
+      
+      if (result.success) {
+        toast({
+          title: "Folder renamed",
+          description: "The folder has been successfully renamed.",
+        });
+        
+        setIsRenameFolderModalOpen(false);
+        setFolderToRename(null);
+        setNewFolderRename('');
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to rename folder.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error renaming folder:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while renaming the folder.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle delete folder
+  const handleDeleteFolder = async () => {
+    if (!folderToDelete) return;
+    
+    try {
+      setIsDeletingFolder(true);
+      
+      const result = await deleteFolder(folderToDelete.id);
+      
+      if (result.success) {
+        toast({
+          title: "Folder deleted",
+          description: "The folder has been successfully deleted.",
+        });
+        
+        setShowDeleteFolderDialog(false);
+        setFolderToDelete(null);
+        
+        // If we're currently viewing the deleted folder, redirect to root
+        if (currentFolder?.id === folderToDelete.id) {
+          router.push('/dashboard');
+        } else {
+          router.refresh();
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete folder.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while deleting the folder.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingFolder(false);
+    }
+  };
+
+  // Handle rename upload
+  const handleRenameUpload = async () => {
+    if (!uploadToRename) return;
+    
+    if (!newUploadName.trim()) {
+      toast({
+        title: "Error",
+        description: "File name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const result = await renameUpload(uploadToRename.id, newUploadName);
+      
+      if (result.success) {
+        toast({
+          title: "File renamed",
+          description: "The file has been successfully renamed.",
+        });
+        
+        setIsRenameUploadModalOpen(false);
+        setUploadToRename(null);
+        setNewUploadName('');
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to rename file.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error renaming file:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while renaming the file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle move folder
+  const handleMoveFolder = async (destinationFolderId: string | null) => {
+    if (!folderToMove) return;
+    
+    try {
+      setIsMovingFolder(true);
+      
+      const result = await moveFolder(folderToMove.id, destinationFolderId);
+      
+      if (result.success) {
+        toast({
+          title: "Folder moved",
+          description: "The folder has been successfully moved.",
+        });
+        
+        setShowMoveFolderDialog(false);
+        setFolderToMove(null);
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to move folder.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error moving folder:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while moving the folder.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMovingFolder(false);
+    }
+  };
+
+  // Handle move upload
+  const handleMoveUpload = async (uploadId: string, folderId: string | null) => {
+    try {
+      setIsMoving(prev => ({ ...prev, [uploadId]: true }));
+      
       const result = await moveUploadToFolder(uploadId, folderId);
       
       if (result.success) {
-        // Remove from selected uploads if it was selected
-        if (selectedUploads.includes(uploadId)) {
-          setSelectedUploads(prev => prev.filter(id => id !== uploadId));
-        }
-        
         toast({
-          title: "Upload moved",
-          description: folderId ? "The upload has been moved to the selected folder." : "The upload has been moved to the root folder."
+          title: "File moved",
+          description: "The file has been successfully moved.",
         });
+        
         setShowMoveDialog(false);
         setSelectedUploadId(null);
-        
-        // Navigate to the appropriate folder page after successful move
-        if (folderId) {
-          router.push(`/dashboard/folder/${folderId}`);
-        } else {
-          router.push('/dashboard');
-        }
+        router.refresh();
       } else {
-        throw new Error(result.error);
+        toast({
+          title: "Error",
+          description: result.error || "Failed to move file.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Error moving upload:', error);
+      console.error("Error moving file:", error);
       toast({
-        title: "Error moving upload",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive"
+        title: "Error",
+        description: "An unexpected error occurred while moving the file.",
+        variant: "destructive",
       });
     } finally {
       setIsMoving(prev => ({ ...prev, [uploadId]: false }));
     }
   };
-  
+
   // Handle bulk move of selected uploads
   const handleBulkMove = async (folderId: string | null) => {
     if (selectedUploads.length === 0) return;
     
-    setIsBulkMoving(true);
-    
     try {
-      // Move each upload individually
-      const promises = selectedUploads.map(uploadId => moveUploadToFolder(uploadId, folderId));
-      const results = await Promise.all(promises);
+      setIsBulkMoving(true);
       
-      const failures = results.filter(result => !result.success);
+      let success = true;
+      let errorMessage = '';
       
-      if (failures.length === 0) {
+      // Move each upload one by one
+      for (const uploadId of selectedUploads) {
+        const result = await moveUploadToFolder(uploadId, folderId);
+        
+        if (!result.success) {
+          success = false;
+          errorMessage = result.error || "Failed to move some files.";
+          break;
+        }
+      }
+      
+      if (success) {
         toast({
           title: "Files moved",
-          description: `Successfully moved ${selectedUploads.length} file(s)`
+          description: `${selectedUploads.length} file(s) have been successfully moved.`,
         });
-        setSelectedUploads([]);
-        setShowMoveDialog(false);
         
-        // Navigate to the appropriate folder page after successful move
-        if (folderId) {
-          router.push(`/dashboard/folder/${folderId}`);
-        } else {
-          router.push('/dashboard');
-        }
+        setShowMoveDialog(false);
+        setSelectedUploads([]);
+        setSelectAll(false);
+        router.refresh();
       } else {
         toast({
-          title: "Move partially failed",
-          description: `${failures.length} out of ${selectedUploads.length} files failed to move`,
-          variant: "destructive"
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error bulk moving uploads:', error);
+      console.error("Error bulk moving uploads:", error);
       toast({
-        title: "Move failed",
-        description: "An error occurred while moving the files",
-        variant: "destructive"
+        title: "Error",
+        description: "An unexpected error occurred while moving files.",
+        variant: "destructive",
       });
     } finally {
       setIsBulkMoving(false);
@@ -294,436 +492,161 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen">
       <header className="border-b border-[#2a2a2a] py-4 px-6 flex justify-between items-center">
         <h1 className="text-xl font-bold">BaseScribe</h1>
         <UserMenu user={user} userInitials={user.email ? user.email.charAt(0).toUpperCase() : '?'} />
       </header>
       
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-64 border-r border-[#2a2a2a] flex flex-col">
-          <div className="p-4 border-t border-[#2a2a2a]">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 w-6 p-0 cursor-pointer" 
-                onClick={() => {
-                  // Reset current folder selection for root folder creation
-                  setIsNewFolderModalOpen(true);
-                }}
-                title="Create folder in root"
-              >
-                <FolderPlus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="space-y-1">
-              <Link href="/dashboard" className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${!currentFolder ? 'bg-[#2a2a2a]' : ''}`}>
-                <FolderIcon className="h-4 w-4" />
-                <span>All Files</span>
-              </Link>
-              
-              {/* Root folders */}
-              {folders
-                .filter(folder => folder.parent_id === null)
-                .map(rootFolder => {
-                  // Check if this folder has any subfolders
-                  const hasSubfolders = folders.some(f => f.parent_id === rootFolder.id);
-                  const isExpanded = expandedFolders[rootFolder.id] || false;
-                  
-                  return (
-                    <div key={rootFolder.id} className="space-y-0.5">
-                      <div className="flex items-center">
-                        {hasSubfolders ? (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0 mr-1" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setExpandedFolders(prev => ({
-                                ...prev,
-                                [rootFolder.id]: !prev[rootFolder.id]
-                              }));
-                            }}
-                          >
-                            <motion.div
-                              animate={{ rotate: isExpanded ? 90 : 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <ChevronRight className="h-3 w-3" />
-                            </motion.div>
-                          </Button>
-                        ) : (
-                          <div className="w-6 mr-1" /> // Spacer for alignment
-                        )}
-                        <Link 
-                          href={`/dashboard/folder/${rootFolder.id}`} 
-                          className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] flex-grow ${currentFolder?.id === rootFolder.id ? 'bg-[#2a2a2a]' : ''}`}
-                        >
-                          <FolderIcon className="h-4 w-4" />
-                          <span>{rootFolder.name}</span>
-                        </Link>
-                      </div>
-                      
-                      {/* Subfolders with animation */}
-                      <AnimatePresence>
-                        {hasSubfolders && isExpanded && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                            animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
-                            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
-                            className="ml-6 pl-2 border-l border-[#3a3a3a]"
-                          >
-                            {folders
-                              .filter(subfolder => subfolder.parent_id === rootFolder.id)
-                              .map(subfolder => (
-                                <motion.div
-                                  key={subfolder.id}
-                                  initial={{ x: -5, opacity: 0 }}
-                                  animate={{ x: 0, opacity: 1 }}
-                                  transition={{ duration: 0.2, delay: 0.05 }}
-                                >
-                                  <Link 
-                                    href={`/dashboard/folder/${subfolder.id}`} 
-                                    className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${currentFolder?.id === subfolder.id ? 'bg-[#2a2a2a]' : ''}`}
-                                  >
-                                    <FolderIcon className="h-4 w-4" />
-                                    <span>{subfolder.name}</span>
-                                  </Link>
-                                </motion.div>
-                              ))
-                            }
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })
-              }
-            </div>
-          </div>
-          
-          {/* Usage section */}
-          <div className="p-4 border-t border-[#2a2a2a] mt-auto">
-            <div className="flex items-center mb-1">
-              <span className="text-sm font-medium">Usage</span>
-              <span className="text-xs text-gray-400 ml-auto">
-                {userProfile?.plan_id === 'free' ? 'Free Plan' : 'Pro Plan'}
-              </span>
-            </div>
-            <Progress 
-              value={userProfile?.plan_id === 'free' 
-                ? Math.min(100, ((userProfile?.total_usage_seconds || 0) / (30 * 60)) * 100)
-                : Math.min(100, ((userProfile?.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
-              className="h-1 bg-[#2a2a2a]" 
-            />
-            <div className="text-xs text-gray-400 mt-1">
-              {userProfile?.plan_id === 'free' 
-                ? `${formatDuration(userProfile?.total_usage_seconds || 0)} / 30:00 minutes total`
-                : `${formatDuration(userProfile?.monthly_usage_seconds || 0)} / 60:00 minutes monthly`}
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
+        {/* Folder Sidebar */}
+        <FolderSidebar 
+          folders={folders}
+          currentFolder={currentFolder}
+          userProfile={userProfile}
+          onCreateFolder={() => setIsNewFolderModalOpen(true)}
+          onRenameFolder={(folder) => {
+            setFolderToRename(folder);
+            setNewFolderRename(folder.name);
+            setIsRenameFolderModalOpen(true);
+          }}
+          onDeleteFolder={(folder) => {
+            setFolderToDelete(folder);
+            setShowDeleteFolderDialog(true);
+          }}
+          onMoveFolder={(folder) => {
+            setFolderToMove(folder);
+            setShowMoveFolderDialog(true);
+          }}
+        />
         
-        {/* Main content */}
+        {/* Main Content */}
         <div className="flex-1 overflow-auto p-6">
-          <div className="flex items-center justify-between mb-6">
-            {currentFolder ? (
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-medium">{currentFolder.name}</h2>
-              </div>
-            ) : (
-              <h2 className="text-xl font-medium">Recent Files</h2>
-            )}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">
+              {currentFolder ? currentFolder.name : 'All Files'}
+            </h1>
             <div className="flex gap-2">
-              {currentFolder && (
-                <Button 
-                  onClick={() => setIsNewFolderModalOpen(true)}
-                  variant="outline"
-                  className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white cursor-pointer flex items-center gap-1"
-                >
-                  <FolderPlus className="h-4 w-4" />
-                  New Subfolder
-                </Button>
-              )}
               <Button 
-                onClick={() => setIsUploadModalOpen(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+                variant="outline" 
+                className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+                onClick={() => setIsNewFolderModalOpen(true)}
               >
+                Create Folder
+              </Button>
+              <Button className="cursor-pointer" onClick={() => setIsUploadModalOpen(true)}>
                 Transcribe
               </Button>
             </div>
           </div>
-
-          {/* Files table */}
+          
+          {/* File Table */}
           <div className="bg-[#1a1a1a] rounded-md overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#2a2a2a]">
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-6">
-                    <input 
-                      type="checkbox" 
-                      className="rounded bg-[#2a2a2a] border-none" 
-                      checked={selectAll}
-                      onChange={handleSelectAll}
-                    />
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Name</th>
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Uploaded</th>
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Duration</th>
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Mode</th>
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Status</th>
-                  <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-10"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {uploads.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                      {currentFolder 
-                        ? "No files in this folder. Upload files or move existing files here."
-                        : "No files yet. Click \"Transcribe\" to upload your first file."}
-                    </td>
-                  </tr>
-                ) : (
-                  uploads.map((upload) => (
-                    <tr key={upload.id} className={`border-b border-[#2a2a2a] hover:bg-[#2a2a2a] ${selectedUploads.includes(upload.id) ? 'bg-[#2a2a2a]' : ''}`}>
-                      <td className="px-4 py-3">
-                        <input 
-                          type="checkbox" 
-                          className="rounded bg-[#2a2a2a] border-none" 
-                          checked={selectedUploads.includes(upload.id)}
-                          onChange={() => handleSelectUpload(upload.id)}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Link href={`/dashboard/transcript/${upload.id}`} className="text-white hover:underline">
-                          {upload.file_name}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-sm">
-                        {formatDate(upload.created_at)}, {formatTime(upload.created_at)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-sm">
-                        {Math.floor(upload.duration_seconds / 60)}m {upload.duration_seconds % 60}s
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <FileAudio className="h-5 w-5 text-blue-400 mr-2" />
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <CheckCircle2 className="h-4 w-4 text-green-500 mr-1" />
-                          <span className="text-green-500 text-sm">Completed</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#2a2a2a]">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-md shadow-lg py-1 px-0 min-w-[160px]">
-                            <DropdownMenuItem 
-                              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center"
-                              onClick={() => {
-                                setSelectedUploadId(upload.id);
-                                setShowMoveDialog(true);
-                              }}
-                            >
-                              <FolderUp className="h-4 w-4 mr-2" />
-                              Move to Folder
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
-                            <DropdownMenuItem 
-                              className="text-red-500 hover:text-white hover:bg-red-600 cursor-pointer focus:bg-red-600 focus:text-white px-3 py-2 text-sm font-medium transition-colors flex items-center"
-                              disabled={isDeleting[upload.id]}
-                              onClick={() => handleDeleteUpload(upload.id)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              {isDeleting[upload.id] ? 'Deleting...' : 'Delete'}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            <FileTable 
+              uploads={uploads}
+              currentFolder={currentFolder}
+              selectedUploads={selectedUploads}
+              isDeleting={isDeleting}
+              formatDate={formatDate}
+              formatTime={formatTime}
+              onSelectAll={handleSelectAll}
+              onSelectUpload={handleSelectUpload}
+              onDeleteUpload={handleDeleteUpload}
+              onMoveUpload={(uploadId) => {
+                setSelectedUploadId(uploadId);
+                setShowMoveDialog(true);
+              }}
+              onRenameUpload={(upload) => {
+                setUploadToRename(upload);
+                setNewUploadName(upload.file_name);
+                setIsRenameUploadModalOpen(true);
+              }}
+              selectAll={selectAll}
+            />
           </div>
         </div>
       </div>
-
-      {/* Bulk Actions Floating Bar */}
-      {selectedUploads.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-lg py-3 px-4 flex items-center gap-4 z-50">
-          <div className="text-sm font-medium">
-            {selectedUploads.length} item{selectedUploads.length !== 1 ? 's' : ''} selected
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a] flex items-center gap-1"
-              onClick={() => {
-                setSelectedUploadId(null);
-                setShowMoveDialog(true);
-              }}
-              disabled={isBulkMoving}
-            >
-              <FolderUp className="h-4 w-4" />
-              {isBulkMoving ? 'Moving...' : 'Move'}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="border-[#3a3a3a] hover:bg-red-600 hover:text-white text-red-500 flex items-center gap-1"
-              onClick={() => setShowBulkDeleteDialog(true)}
-              disabled={isBulkDeleting}
-            >
-              <Trash2 className="h-4 w-4" />
-              {isBulkDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </div>
-        </div>
-      )}
-
+      
+      {/* Bulk Actions */}
+      <BulkActions 
+        selectedUploads={selectedUploads}
+        isBulkDeleting={isBulkDeleting}
+        onShowMoveDialog={() => setShowMoveDialog(true)}
+        onShowDeleteDialog={() => setShowBulkDeleteDialog(true)}
+      />
+      
       {/* Upload Modal */}
-      <UploadModal
+      <UploadModal 
+        isOpen={isUploadModalOpen} 
+        onClose={() => setIsUploadModalOpen(false)} 
         user={user}
         userProfile={userProfile}
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
         folderId={currentFolder?.id || null}
       />
-
-      {/* New Folder Modal */}
-      <Dialog open={isNewFolderModalOpen} onOpenChange={setIsNewFolderModalOpen}>
-        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              {currentFolder 
-                ? `Create a new subfolder inside "${currentFolder.name}"` 
-                : 'Create a new folder in the root directory'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              className="bg-[#2a2a2a] border-[#3a3a3a]"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsNewFolderModalOpen(false)}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateFolder} className="cursor-pointer">
-              Create Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Move to Folder Dialog */}
-      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
-        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <DialogHeader>
-            <DialogTitle>Move to Folder</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              {selectedUploads.length > 0 
-                ? `Select a folder to move ${selectedUploads.length} file(s) to`
-                : 'Select a folder to move this upload to'
-              }
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => {
-                if (selectedUploads.length > 0) {
-                  handleBulkMove(null);
-                } else if (selectedUploadId) {
-                  handleMoveUpload(selectedUploadId, null);
-                }
-              }}
-              disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
-                (selectedUploadId ? isMoving[selectedUploadId] : false) || 
-                isBulkMoving}
-            >
-              <FolderIcon className="h-4 w-4 mr-2" />
-              Root Folder
-            </Button>
-            {folders.map(folder => (
-              <Button
-                key={folder.id}
-                variant="outline"
-                className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-                onClick={() => {
-                  if (selectedUploads.length > 0) {
-                    handleBulkMove(folder.id);
-                  } else if (selectedUploadId) {
-                    handleMoveUpload(selectedUploadId, folder.id);
-                  }
-                }}
-                disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
-                  (selectedUploadId ? isMoving[selectedUploadId] : false) || 
-                  isBulkMoving}
-              >
-                <FolderIcon className="h-4 w-4 mr-2" />
-                {folder.name}
-              </Button>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowMoveDialog(false)}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a]"
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
-      {/* Bulk Delete Confirmation Dialog */}
-      <AlertDialog open={showBulkDeleteDialog} onOpenChange={setShowBulkDeleteDialog}>
-        <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              Are you sure you want to delete {selectedUploads.length} file(s)? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleBulkDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
-              disabled={isBulkDeleting}
-            >
-              {isBulkDeleting ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Folder Dialogs */}
+      <FolderDialogs 
+        // New Folder Dialog
+        isNewFolderModalOpen={isNewFolderModalOpen}
+        setIsNewFolderModalOpen={setIsNewFolderModalOpen}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        handleCreateFolder={handleCreateFolder}
+        currentFolder={currentFolder}
+        
+        // Rename Folder Dialog
+        isRenameFolderModalOpen={isRenameFolderModalOpen}
+        setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
+        folderToRename={folderToRename}
+        newFolderRename={newFolderRename}
+        setNewFolderRename={setNewFolderRename}
+        handleRenameFolder={handleRenameFolder}
+        
+        // Delete Folder Dialog
+        showDeleteFolderDialog={showDeleteFolderDialog}
+        setShowDeleteFolderDialog={setShowDeleteFolderDialog}
+        folderToDelete={folderToDelete}
+        isDeletingFolder={isDeletingFolder}
+        handleDeleteFolder={handleDeleteFolder}
+        
+        // Move Folder Dialog
+        showMoveFolderDialog={showMoveFolderDialog}
+        setShowMoveFolderDialog={setShowMoveFolderDialog}
+        folderToMove={folderToMove}
+        isMovingFolder={isMovingFolder}
+        handleMoveFolder={handleMoveFolder}
+        folders={folders}
+        isDescendantOf={isDescendantOf}
+      />
+      
+      {/* File Dialogs */}
+      <FileDialogs 
+        // Move Upload Dialog
+        showMoveDialog={showMoveDialog}
+        setShowMoveDialog={setShowMoveDialog}
+        selectedUploadId={selectedUploadId}
+        selectedUploads={selectedUploads}
+        isMoving={isMoving}
+        isBulkMoving={isBulkMoving}
+        handleMoveUpload={handleMoveUpload}
+        handleBulkMove={handleBulkMove}
+        folders={folders}
+        
+        // Rename Upload Dialog
+        isRenameUploadModalOpen={isRenameUploadModalOpen}
+        setIsRenameUploadModalOpen={setIsRenameUploadModalOpen}
+        uploadToRename={uploadToRename}
+        newUploadName={newUploadName}
+        setNewUploadName={setNewUploadName}
+        handleRenameUpload={handleRenameUpload}
+        
+        // Bulk Delete Dialog
+        showBulkDeleteDialog={showBulkDeleteDialog}
+        setShowBulkDeleteDialog={setShowBulkDeleteDialog}
+        isBulkDeleting={isBulkDeleting}
+        handleBulkDelete={handleBulkDelete}
+        selectedUploadsCount={selectedUploads.length}
+      />
     </div>
   );
 }

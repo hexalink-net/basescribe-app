@@ -67,3 +67,61 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
     }
   }
 }
+
+export async function renameUpload(uploadId: string, newFileName: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
+      return { success: false, error: 'Not authenticated' }
+    }
+
+    if (!newFileName.trim()) {
+      return { success: false, error: 'File name cannot be empty' }
+    }
+
+    // First get the current upload to ensure it belongs to the user
+    const { data: upload, error: fetchError } = await supabase
+      .from('uploads')
+      .select('*')
+      .eq('id', uploadId)
+      .eq('user_id', user.id)
+      .single()
+    
+    if (fetchError || !upload) {
+      console.error('Error fetching upload for renaming:', fetchError)
+      return { 
+        success: false, 
+        error: fetchError?.message || 'Upload not found' 
+      }
+    }
+
+    // Update the file_name field
+    const { error: updateError } = await supabase
+      .from('uploads')
+      .update({ file_name: newFileName.trim() })
+      .eq('id', uploadId)
+      .eq('user_id', user.id)
+    
+    if (updateError) {
+      console.error('Error renaming upload:', updateError)
+      return { success: false, error: updateError.message }
+    }
+    
+    // Revalidate paths
+    revalidatePath('/dashboard')
+    if (upload.folder_id) {
+      revalidatePath(`/dashboard/folder/${upload.folder_id}`)
+    }
+    revalidatePath(`/dashboard/transcript/${uploadId}`)
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Error renaming upload:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+    }
+  }
+}
