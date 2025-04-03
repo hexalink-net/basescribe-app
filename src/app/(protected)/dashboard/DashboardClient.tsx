@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/AlertDialog';
 import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
 import UploadModal from '@/components/dashboard/UploadModal';
-import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderIcon, FolderPlus, FolderUp } from 'lucide-react';
+import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderIcon, FolderPlus, FolderUp, ChevronRight, ChevronDown } from 'lucide-react';
 import { UserMenu } from '@/components/UserMenu';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,7 @@ import { useToast } from '@/components/ui/UseToast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DashboardClientProps {
   user: User;
@@ -45,6 +46,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkMoving, setIsBulkMoving] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const router = useRouter();
 
@@ -308,7 +310,11 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
                 variant="ghost" 
                 size="sm" 
                 className="h-6 w-6 p-0 cursor-pointer" 
-                onClick={() => setIsNewFolderModalOpen(true)}
+                onClick={() => {
+                  // Reset current folder selection for root folder creation
+                  setIsNewFolderModalOpen(true);
+                }}
+                title="Create folder in root"
               >
                 <FolderPlus className="h-4 w-4" />
               </Button>
@@ -318,16 +324,86 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
                 <FolderIcon className="h-4 w-4" />
                 <span>All Files</span>
               </Link>
-              {folders.map(folder => (
-                <Link 
-                  key={folder.id} 
-                  href={`/dashboard/folder/${folder.id}`} 
-                  className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${currentFolder?.id === folder.id ? 'bg-[#2a2a2a]' : ''}`}
-                >
-                  <FolderIcon className="h-4 w-4" />
-                  <span>{folder.name}</span>
-                </Link>
-              ))}
+              
+              {/* Root folders */}
+              {folders
+                .filter(folder => folder.parent_id === null)
+                .map(rootFolder => {
+                  // Check if this folder has any subfolders
+                  const hasSubfolders = folders.some(f => f.parent_id === rootFolder.id);
+                  const isExpanded = expandedFolders[rootFolder.id] || false;
+                  
+                  return (
+                    <div key={rootFolder.id} className="space-y-0.5">
+                      <div className="flex items-center">
+                        {hasSubfolders ? (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 mr-1" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setExpandedFolders(prev => ({
+                                ...prev,
+                                [rootFolder.id]: !prev[rootFolder.id]
+                              }));
+                            }}
+                          >
+                            <motion.div
+                              animate={{ rotate: isExpanded ? 90 : 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <ChevronRight className="h-3 w-3" />
+                            </motion.div>
+                          </Button>
+                        ) : (
+                          <div className="w-6 mr-1" /> // Spacer for alignment
+                        )}
+                        <Link 
+                          href={`/dashboard/folder/${rootFolder.id}`} 
+                          className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] flex-grow ${currentFolder?.id === rootFolder.id ? 'bg-[#2a2a2a]' : ''}`}
+                        >
+                          <FolderIcon className="h-4 w-4" />
+                          <span>{rootFolder.name}</span>
+                        </Link>
+                      </div>
+                      
+                      {/* Subfolders with animation */}
+                      <AnimatePresence>
+                        {hasSubfolders && isExpanded && (
+                          <motion.div 
+                            initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                            animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+                            exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="ml-6 pl-2 border-l border-[#3a3a3a]"
+                          >
+                            {folders
+                              .filter(subfolder => subfolder.parent_id === rootFolder.id)
+                              .map(subfolder => (
+                                <motion.div
+                                  key={subfolder.id}
+                                  initial={{ x: -5, opacity: 0 }}
+                                  animate={{ x: 0, opacity: 1 }}
+                                  transition={{ duration: 0.2, delay: 0.05 }}
+                                >
+                                  <Link 
+                                    href={`/dashboard/folder/${subfolder.id}`} 
+                                    className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${currentFolder?.id === subfolder.id ? 'bg-[#2a2a2a]' : ''}`}
+                                  >
+                                    <FolderIcon className="h-4 w-4" />
+                                    <span>{subfolder.name}</span>
+                                  </Link>
+                                </motion.div>
+                              ))
+                            }
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })
+              }
             </div>
           </div>
           
@@ -363,12 +439,24 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
             ) : (
               <h2 className="text-xl font-medium">Recent Files</h2>
             )}
-            <Button 
-              onClick={() => setIsUploadModalOpen(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
-            >
-              Transcribe
-            </Button>
+            <div className="flex gap-2">
+              {currentFolder && (
+                <Button 
+                  onClick={() => setIsNewFolderModalOpen(true)}
+                  variant="outline"
+                  className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white cursor-pointer flex items-center gap-1"
+                >
+                  <FolderPlus className="h-4 w-4" />
+                  New Subfolder
+                </Button>
+              )}
+              <Button 
+                onClick={() => setIsUploadModalOpen(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white cursor-pointer"
+              >
+                Transcribe
+              </Button>
+            </div>
           </div>
 
           {/* Files table */}
@@ -522,7 +610,9 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
             <DialogDescription className="text-gray-400">
-              Enter a name for your new folder
+              {currentFolder 
+                ? `Create a new subfolder inside "${currentFolder.name}"` 
+                : 'Create a new folder in the root directory'}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
