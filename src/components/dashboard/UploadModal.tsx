@@ -53,24 +53,55 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
     }
 
     // Create a new upload record
-    const fileName = file.name;
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
     const fileSize = file.size;
     const timestamp = new Date().toISOString();
-    const filePath = `${user.id}/${timestamp}-${fileName}`;
+    const filePath = `${user.id}/${timestamp}-${file.name}`;
     
     try {
       setLoading(true);
       
       // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('user-uploads')
-        .upload(filePath, file);
-        
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
-        throw uploadError;
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("No access token available. Please sign in again.");
       }
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("filePath", filePath);
+
+      console.log("Attempting to upload...");
       
+      // When sending FormData with fetch, don't set Content-Type header
+      // The browser will automatically set it with the correct boundary
+      const response = await fetch("https://invqqnmrvigbgktwrxaf.supabase.co/functions/v1/storage-upload", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: formData,
+      }).catch(error => {
+        console.error("Network error during fetch:", error);
+        throw new Error(`Network error: ${error.message}`);
+      });
+    
+      console.log("Response received, status:", response.status);
+      
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error("Error parsing response:", jsonError);
+        throw new Error("Invalid response from server");
+      }
+
+      if (!response.ok) {
+        console.error("Upload failed:", result?.error || response.statusText);
+        throw new Error(result?.error || `Server error: ${response.status}`);
+      }
+            
       // Calculate duration in seconds
       let durationSeconds = await getMediaDuration(file);
       if (durationSeconds === null) {
