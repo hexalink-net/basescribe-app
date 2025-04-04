@@ -32,6 +32,6 @@ export async function updatePlan(userId: string, planType: 'free' | 'pro', formD
     return { success: true };
   } catch (error: any) {
     console.error(`Error ${planType === 'pro' ? 'upgrading' : 'downgrading'} plan:`, error);
-    return { success: false, error: error.message };
+    return { success: false, error: "Unable to update plan" };
   }
 }

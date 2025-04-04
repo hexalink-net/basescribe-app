@@ -148,10 +148,10 @@ export async function resetMonthlyUserUsageSSR(
   }
 
 export async function deleteUserUploadSSR(
+    supabase: SupabaseClient,
     userId: string,
     uploadId: string
   ) {
-    const supabase = await createClient();
     
     // First, get the upload to verify it belongs to the user and get file path
     const { data: upload, error: fetchError } = await supabase

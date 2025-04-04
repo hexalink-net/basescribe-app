@@ -5,10 +5,19 @@ import { revalidatePath } from 'next/cache'
 
 export async function deleteUpload(uploadId: string, userId: string) {
   try {
-    const result = await deleteUserUploadSSR(userId, uploadId)
+    const supabase = await createClient()
+    
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user || user.id !== userId) {
+      return { success: false, error: 'Not authenticated' }
+    }
+    const result = await deleteUserUploadSSR(supabase, userId, uploadId)
     
     if (result.error) {
-      return { success: false, error: result.error.message }
+      console.error('Error from deleteUserUploadSSR:', result.error)
+      throw result.error
     }
     
     // Revalidate the dashboard page to refresh the uploads list
@@ -20,7 +29,7 @@ export async function deleteUpload(uploadId: string, userId: string) {
     console.error('Error deleting upload:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to delete file' 
     }
   }
 }
@@ -37,7 +46,7 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
     
     // Delete each upload
     const results = await Promise.allSettled(
-      uploadIds.map(uploadId => deleteUserUploadSSR(userId, uploadId))
+      uploadIds.map(uploadId => deleteUserUploadSSR(supabase, userId, uploadId))
     )
     
     // Check for errors
@@ -47,10 +56,10 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
     
     if (errors.length > 0) {
       console.error('Errors during bulk deletion:', errors)
+      // We'll keep this return since it's a business logic error, not a database error
       return { 
         success: false, 
-        error: 'Some files could not be deleted',
-        details: errors
+        error: 'Some files could not be deleted'
       }
     }
     
@@ -63,17 +72,17 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
     console.error('Error bulk deleting uploads:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to delete files' 
     }
   }
 }
 
-export async function renameUpload(uploadId: string, newFileName: string) {
+export async function renameUpload(uploadId: string, newFileName: string, userId: string) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
-    if (!user) {
+    if (!user || user.id !== userId) {
       return { success: false, error: 'Not authenticated' }
     }
 
@@ -89,11 +98,15 @@ export async function renameUpload(uploadId: string, newFileName: string) {
       .eq('user_id', user.id)
       .single()
     
-    if (fetchError || !upload) {
+    if (fetchError) {
       console.error('Error fetching upload for renaming:', fetchError)
+      throw fetchError
+    }
+    
+    if (!upload) {
       return { 
         success: false, 
-        error: fetchError?.message || 'Upload not found' 
+        error: 'Upload not found' 
       }
     }
 
@@ -106,7 +119,7 @@ export async function renameUpload(uploadId: string, newFileName: string) {
     
     if (updateError) {
       console.error('Error renaming upload:', updateError)
-      return { success: false, error: updateError.message }
+      throw updateError
     }
     
     // Revalidate paths
@@ -121,7 +134,7 @@ export async function renameUpload(uploadId: string, newFileName: string) {
     console.error('Error renaming upload:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to rename file' 
     }
   }
 }

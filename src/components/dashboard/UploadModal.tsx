@@ -71,7 +71,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
         throw uploadError;
       }
       
-      // Calculate duration in minutes
+      // Calculate duration in seconds
       let durationSeconds = await getMediaDuration(file);
       if (durationSeconds === null) {
         durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
@@ -99,7 +99,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
       console.error('Upload failed:', error);
       toast({
         title: "Upload failed",
-        description: error.message || "There was an error uploading your file.",
+        description: "There was an error uploading your file.",
         variant: "destructive",
       });
     } finally {

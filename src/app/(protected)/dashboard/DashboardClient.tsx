@@ -340,7 +340,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     }
     
     try {
-      const result = await renameUpload(uploadToRename.id, newUploadName);
+      const result = await renameUpload(uploadToRename.id, newUploadName, user.id);
       
       if (result.success) {
         toast({

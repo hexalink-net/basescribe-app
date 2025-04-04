@@ -50,7 +50,7 @@ export async function createFolder(name: string, parentId: string | null) {
     
     if (error) {
       console.error('Error creating folder:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: 'Unable to create folder' }
     }
     
     // Revalidate the dashboard page to refresh the folders list
@@ -64,7 +64,7 @@ export async function createFolder(name: string, parentId: string | null) {
     console.error('Error creating folder:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to create folder' 
     }
   }
 }
@@ -86,7 +86,7 @@ export async function getFolders() {
     
     if (error) {
       console.error('Error fetching folders:', error)
-      return { success: false, error: error.message, data: [] }
+      return { success: false, error: 'Unable to fetch folders', data: [] }
     }
     
     return { success: true, data: data as Folder[] }
@@ -95,7 +95,7 @@ export async function getFolders() {
     return { 
       success: false, 
       data: [],
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to fetch folders' 
     }
   }
 }
@@ -134,7 +134,7 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
     
     if (error) {
       console.error('Error moving upload to folder:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: 'Unable to move file to folder' }
     }
     
     // Revalidate paths
@@ -146,7 +146,7 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
     console.error('Error moving upload to folder:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to move file to folder' 
     }
   }
 }
@@ -158,23 +158,6 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
     
     if (!user) {
       return { success: false, error: 'Not authenticated' }
-    }
-
-    // First verify all uploads belong to the user
-    const { data: uploads, error: uploadsError } = await supabase
-      .from('uploads')
-      .select('id')
-      .in('id', uploadIds)
-      .eq('user_id', user.id)
-    
-    if (uploadsError) {
-      console.error('Error verifying uploads ownership:', uploadsError)
-      return { success: false, error: 'Error verifying uploads ownership' }
-    }
-
-    // Check if all requested uploads were found (belong to the user)
-    if (uploads.length !== uploadIds.length) {
-      return { success: false, error: 'Some uploads were not found or not owned by user' }
     }
 
     // If moving to a folder (not root), verify folder ownership
@@ -193,15 +176,20 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
     }
 
     // Update all uploads with the new folder_id
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('uploads')
       .update({ folder_id: folderId })
       .in('id', uploadIds)
       .eq('user_id', user.id)
+      .select()
     
     if (error) {
       console.error('Error bulk moving uploads to folder:', error)
-      return { success: false, error: error.message }
+      return { success: false, error: 'Unable to move files to folder' }
+    }
+
+    if (data.length !== uploadIds.length) {
+      return { success: false, error: 'Some files do not belong to you' }
     }
     
     // Revalidate paths
@@ -213,7 +201,7 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
     console.error('Error bulk moving uploads to folder:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to move files to folder' 
     }
   }
 }
@@ -231,19 +219,6 @@ export async function deleteFolder(folderId: string) {
     if (!folderId) {
       return { success: false, error: 'Folder ID is required' }
     }
-    
-    // First, verify the folder exists and belongs to the user
-    const { data: folder, error: folderError } = await supabase
-      .from('folders')
-      .select('id, parent_id')
-      .eq('id', folderId)
-      .eq('user_id', user.id)
-      .single()
-    
-    if (folderError || !folder) {
-      console.error('Error verifying folder ownership:', folderError)
-      return { success: false, error: 'Folder not found or not owned by user' }
-    }
 
     // Check if there are any uploads in this folder
     const { data: uploads, error: uploadsError } = await supabase
@@ -254,7 +229,7 @@ export async function deleteFolder(folderId: string) {
     
     if (uploadsError) {
       console.error('Error checking uploads in folder:', uploadsError)
-      return { success: false, error: uploadsError.message }
+      throw uploadsError
     }
 
     // If there are uploads in the folder, move them to root (null folder)
@@ -268,7 +243,7 @@ export async function deleteFolder(folderId: string) {
       
       if (moveError) {
         console.error('Error moving uploads out of folder:', moveError)
-        return { success: false, error: moveError.message }
+        throw moveError
       }
     }
 
@@ -281,7 +256,7 @@ export async function deleteFolder(folderId: string) {
     
     if (subfoldersError) {
       console.error('Error checking subfolders:', subfoldersError)
-      return { success: false, error: subfoldersError.message }
+      throw subfoldersError
     }
 
     // If there are subfolders, move them to root (null parent)
@@ -294,7 +269,7 @@ export async function deleteFolder(folderId: string) {
       
       if (moveSubfoldersError) {
         console.error('Error moving subfolders to root:', moveSubfoldersError)
-        return { success: false, error: moveSubfoldersError.message }
+        throw moveSubfoldersError
       }
     }
 
@@ -307,7 +282,7 @@ export async function deleteFolder(folderId: string) {
     
     if (error) {
       console.error('Error deleting folder:', error)
-      return { success: false, error: error.message }
+      throw error
     }
     
     // Revalidate paths
@@ -319,7 +294,7 @@ export async function deleteFolder(folderId: string) {
     console.error('Error deleting folder:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to delete folder' 
     }
   }
 }
@@ -343,19 +318,6 @@ export async function renameFolder(folderId: string, newName: string) {
       return { success: false, error: 'Folder name is too long (maximum 100 characters)' }
     }
 
-    // First verify the folder exists and belongs to the user
-    const { data: folder, error: fetchError } = await supabase
-      .from('folders')
-      .select('id')
-      .eq('id', folderId)
-      .eq('user_id', user.id)
-      .single()
-    
-    if (fetchError || !folder) {
-      console.error('Error verifying folder ownership:', fetchError)
-      return { success: false, error: 'Folder not found or not owned by user' }
-    }
-
     // Update the folder name
     const { error } = await supabase
       .from('folders')
@@ -365,7 +327,7 @@ export async function renameFolder(folderId: string, newName: string) {
     
     if (error) {
       console.error('Error renaming folder:', error)
-      return { success: false, error: error.message }
+      throw error
     }
     
     // Revalidate paths
@@ -377,7 +339,7 @@ export async function renameFolder(folderId: string, newName: string) {
     console.error('Error renaming folder:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to rename folder' 
     }
   }
 }
@@ -396,19 +358,6 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       return { success: false, error: 'Folder ID is required' }
     }
 
-    // First, check if the folder exists and belongs to the user
-    const { data: folder, error: folderError } = await supabase
-      .from('folders')
-      .select('*')
-      .eq('id', folderId)
-      .eq('user_id', user.id)
-      .single()
-    
-    if (folderError || !folder) {
-      console.error('Error finding folder:', folderError)
-      return { success: false, error: 'Folder not found or not owned by user' }
-    }
-
     // Check if the new parent folder exists and belongs to the user (if not null)
     if (newParentId) {
       const { data: parentFolder, error: parentError } = await supabase
@@ -418,8 +367,12 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
         .eq('user_id', user.id)
         .single()
       
-      if (parentError || !parentFolder) {
+      if (parentError) {
         console.error('Error finding parent folder:', parentError)
+        throw parentError
+      }
+      
+      if (!parentFolder) {
         return { success: false, error: 'Parent folder not found or not owned by user' }
       }
 
@@ -462,15 +415,13 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
     
     if (error) {
       console.error('Error moving folder:', error)
-      return { success: false, error: error.message }
+      throw error
     }
     
     // Revalidate paths
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/folder/[id]', 'page')
-    if (folder.parent_id) {
-      revalidatePath(`/dashboard/folder/${folder.parent_id}`)
-    }
+
     if (newParentId) {
       revalidatePath(`/dashboard/folder/${newParentId}`)
     }
@@ -480,7 +431,7 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
     console.error('Error moving folder:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
+      error: 'Unable to move folder' 
     }
   }
 }
