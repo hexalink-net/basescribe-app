@@ -62,44 +62,10 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
       setLoading(true);
       
       // Upload to storage
-      const { data: { session } } = await supabase.auth.getSession();
+      const {error: uploadError} = await supabase.storage.from('user-uploads').upload(filePath, file);
 
-      if (!session?.access_token) {
-        throw new Error("No access token available. Please sign in again.");
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("filePath", filePath);
-
-      console.log("Attempting to upload...");
-      
-      // When sending FormData with fetch, don't set Content-Type header
-      // The browser will automatically set it with the correct boundary
-      const response = await fetch("https://invqqnmrvigbgktwrxaf.supabase.co/functions/v1/storage-upload", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${session.access_token}`
-        },
-        body: formData,
-      }).catch(error => {
-        console.error("Network error during fetch:", error);
-        throw new Error(`Network error: ${error.message}`);
-      });
-    
-      console.log("Response received, status:", response.status);
-      
-      let result;
-      try {
-        result = await response.json();
-      } catch (jsonError) {
-        console.error("Error parsing response:", jsonError);
-        throw new Error("Invalid response from server");
-      }
-
-      if (!response.ok) {
-        console.error("Upload failed:", result?.error || response.statusText);
-        throw new Error(result?.error || `Server error: ${response.status}`);
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
             
       // Calculate duration in seconds
