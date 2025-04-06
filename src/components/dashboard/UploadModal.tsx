@@ -1,16 +1,14 @@
 "use client";
 
 import { useState } from 'react';
-import { createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server';
-import { supabase } from '@/lib/supabase/client';
 import { FileUpload } from '@/components/FileUpload';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/UseToast';
 import { Upload } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
-import { getMediaDuration } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { UserProfile } from '@/types/DashboardInterface';
+import { uploadFileStandard, processUploadedFile } from '@/lib/UploadUtils';
 
 // 100MB max file size for free users
 const MAX_FILE_SIZE_FREE = 100 * 1024 * 1024;
@@ -62,23 +60,10 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
       setLoading(true);
       
       // Upload to storage
-      const {error: uploadError} = await supabase.storage.from('user-uploads').upload(filePath, file);
+      await uploadFileStandard(file, filePath);
 
-      if (uploadError) {
-        throw new Error(`Storage upload failed: ${uploadError.message}`);
-      }
-            
-      // Calculate duration in seconds
-      let durationSeconds = await getMediaDuration(file);
-      if (durationSeconds === null) {
-        durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
-      }
-      
-      // Create upload record in database
-      await createUploadSSR(supabase, user.id, fileName, filePath, fileSize, durationSeconds, folderId);
-      
-      // Update user usage with the actual duration
-      await updateUserUsageSSR(supabase,user.id, durationSeconds);
+      // Process the upload
+      await processUploadedFile(user.id, fileName, filePath, fileSize, file, folderId);
       
       // Show success message
       toast({
