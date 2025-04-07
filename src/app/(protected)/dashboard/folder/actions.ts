@@ -39,14 +39,10 @@ export async function createFolder(name: string, parentId: string | null) {
     }
     
     const { data, error } = await supabase
-      .from('folders')
-      .insert({
-        user_id: user.id,
-        parent_id: parentId,
-        name: trimmedName
-      })
-      .select()
-      .single()
+    .rpc('create_or_get_folder', {
+      folder_name: trimmedName,
+      uid: user.id
+    });
     
     if (error) {
       console.error('Error creating folder:', error)
@@ -55,9 +51,6 @@ export async function createFolder(name: string, parentId: string | null) {
     
     // Revalidate the dashboard page to refresh the folders list
     revalidatePath('/dashboard')
-    if (parentId) {
-      revalidatePath(`/dashboard/folder/${parentId}`)
-    }
     
     return { success: true, data }
   } catch (error) {

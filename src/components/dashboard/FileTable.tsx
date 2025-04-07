@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, useCallback, useMemo } from 'react';
+import { useState, memo, useCallback, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderUp, Pencil } from 'lucide-react';
@@ -160,6 +160,17 @@ const FileTable = ({
   onRenameUpload,
   selectAll
 }: FileTableProps) => {
+  // Ref for the table container
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  // State for client-side rendering to avoid hydration mismatch
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Set mounted state after component mounts (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
   // Memoize the empty state component
   const emptyState = useMemo(() => 
     uploads.length === 0 ? <EmptyState currentFolder={currentFolder} /> : null
@@ -169,7 +180,10 @@ const FileTable = ({
     <div className="bg-[#1a1a1a] rounded-md overflow-hidden flex flex-col">
       <div className="w-full flex flex-col">
         {/* Table with sticky header */}
-        <div className="overflow-y-auto max-h-[calc(100vh-220px)]">
+        <div 
+          ref={tableContainerRef}
+          className={`overflow-y-auto ${isMounted ? 'max-h-[calc(100vh-220px)]' : 'max-h-[600px]'}`}
+        >
           <table className="w-full table-fixed border-collapse">
             {/* Apply sticky positioning to the thead */}
             <thead className="sticky top-0 bg-[#1a1a1a] z-10">

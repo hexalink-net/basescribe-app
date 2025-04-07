@@ -274,15 +274,17 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     try {
       const result = await createFolder(newFolderName, currentFolder?.id || null);
       
-      if (result.success) {
+      if (result.success && result) {
+        setIsNewFolderModalOpen(false);
+        setNewFolderName('');
+        
+        // Navigate to the newly created folder
+        router.push(`/dashboard/folder/${result.data}`);
+        router.refresh();
         toast({
           title: "Folder created",
           description: "The folder has been successfully created.",
         });
-        
-        setIsNewFolderModalOpen(false);
-        setNewFolderName('');
-        router.refresh();
       } else {
         toast({
           title: "Error",
@@ -439,14 +441,21 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       const result = await moveFolder(folderToMove.id, destinationFolderId);
       
       if (result.success) {
+        setShowMoveFolderDialog(false);
+        setFolderToMove(null);
+        
+        // Navigate to the destination folder
+        if (destinationFolderId) {
+          router.push(`/dashboard/folder/${destinationFolderId}`);
+        } else {
+          router.push('/dashboard'); // Root folder
+        }
+        router.refresh();
+        
         toast({
           title: "Folder moved",
           description: "The folder has been successfully moved.",
         });
-        
-        setShowMoveFolderDialog(false);
-        setFolderToMove(null);
-        router.refresh();
       } else {
         toast({
           title: "Error",
@@ -474,14 +483,21 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       const result = await moveUploadToFolder(uploadId, folderId);
       
       if (result.success) {
+        setShowMoveDialog(false);
+        setSelectedUploadId(null);
+        
+        // Navigate to the destination folder
+        if (folderId) {
+          router.push(`/dashboard/folder/${folderId}`);
+        } else {
+          router.push('/dashboard'); // Root folder
+        }
+        router.refresh();
+        
         toast({
           title: "File moved",
           description: "The file has been successfully moved.",
         });
-        
-        setShowMoveDialog(false);
-        setSelectedUploadId(null);
-        router.refresh();
       } else {
         toast({
           title: "Error",
@@ -523,15 +539,22 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       }
       
       if (success) {
+        setShowMoveDialog(false);
+        setSelectedUploads([]);
+        setSelectAll(false);
+        
+        // Navigate to the destination folder
+        if (folderId) {
+          router.push(`/dashboard/folder/${folderId}`);
+        } else {
+          router.push('/dashboard'); // Root folder
+        }
+        router.refresh();
+        
         toast({
           title: "Files moved",
           description: `${selectedUploads.length} file(s) have been successfully moved.`,
         });
-        
-        setShowMoveDialog(false);
-        setSelectedUploads([]);
-        setSelectAll(false);
-        router.refresh();
       } else {
         toast({
           title: "Error",
