@@ -21,13 +21,35 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-export function isAudioOrVideoFile(fileName: string): boolean {
-  const supportedFormats = [
-    '.mp3', '.mp4', '.wav', '.avi', '.mov', '.flac', '.ogg', '.webm', '.m4a'
+export async function validateAudioOrVideoFile(file: File): Promise<boolean> {
+  const supportedExtensions = ['.mp3', '.mp4', '.wav', '.avi', '.mov', '.flac', '.ogg', '.webm', '.m4a'];
+  const supportedMimeTypes = [
+    'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/mp4', 'audio/x-m4a',
+    'audio/flac', 'audio/ogg', 'video/mp4', 'video/x-msvideo',
+    'video/quicktime', 'video/webm', 'video/ogg'
   ];
-  
-  const extension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
-  return supportedFormats.includes(extension);
+
+  const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+  const isExtensionValid = supportedExtensions.includes(extension);
+  const isMimeTypeValid = supportedMimeTypes.includes(file.type);
+
+  if (!isExtensionValid && !isMimeTypeValid) return false;
+
+  const duration = await getMediaDuration(file);
+  if (!duration || isNaN(duration)) return false;
+
+  const fileSizeMB = file.size / (1024 * 1024); // convert bytes to MB
+
+  // Basic sanity: avoid files that are like 500MB for 2 seconds
+  const averageBitrate = fileSizeMB / duration; // MB per second
+  const maxReasonableBitrate = 10; // e.g., 10 MB/s max allowed
+
+  if (averageBitrate > maxReasonableBitrate) {
+    console.warn(`Suspicious bitrate: ${averageBitrate} MB/s`);
+    return false;
+  }
+
+  return true;
 }
 
 export const getMediaDuration = (file: File): Promise<number> => {

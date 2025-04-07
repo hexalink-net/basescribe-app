@@ -5,8 +5,9 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { formatFileSize, isAudioOrVideoFile } from '@/lib/MediaUtils';
+import { formatFileSize, validateAudioOrVideoFile } from '@/lib/MediaUtils';
 import { useToast } from '@/components/ui/UseToast';
+import e from 'express';
 
 interface FileUploadProps {
   onFileSelected: (file: File) => Promise<void>;
@@ -34,7 +35,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
   // Use a ref to track all active progress intervals for cleanup
   const activeIntervalsRef = useRef<{[id: string]: NodeJS.Timeout}>({});
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const validFiles: FileWithStatus[] = [];
     const invalidFiles: { file: File; reason: string }[] = [];
 
@@ -43,8 +44,10 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
     }
     
     for (const file of acceptedFiles) {
-      if (!isAudioOrVideoFile(file.name)) {
+      const isValid = await validateAudioOrVideoFile(file);
+      if (!isValid) {
         invalidFiles.push({ file, reason: 'Invalid file type' });
+        totalFilesSizeRef.current -= file.size;
         continue;
       }
       
