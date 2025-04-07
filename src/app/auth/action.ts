@@ -94,8 +94,4 @@ export async function signUpWithEmailPassword(formData: FormData) {
 export async function signOut() {
     const supabase = await createClient()
     await supabase.auth.signOut()
-    
-    // The Supabase client will handle clearing cookies
-    
-    redirect('/auth')
 }
