@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
 import { UserMenu } from '@/components/UserMenu';
@@ -44,12 +44,7 @@ interface DashboardClientProps {
   currentFolder: Folder | null;
 }
 
-// Format seconds to minutes:seconds format
-function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
+
 
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder }: DashboardClientProps) {
   // Upload modal state
