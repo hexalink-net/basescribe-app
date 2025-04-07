@@ -1,5 +1,6 @@
 "use client";
 
+import React, { memo, useMemo } from 'react';
 import { Folder } from '@/types/DashboardInterface';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -41,7 +42,225 @@ interface FolderDialogsProps {
   isDescendantOf: (folderId: string | undefined, ancestorId: string | undefined, foldersList: Folder[]) => boolean;
 }
 
-export default function FolderDialogs({
+// Define interfaces for each dialog component
+interface NewFolderDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  folderName: string;
+  setFolderName: (name: string) => void;
+  handleCreate: () => void;
+  currentFolder: Folder | null;
+}
+
+interface RenameFolderDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  folder: Folder | null;
+  newName: string;
+  setNewName: (name: string) => void;
+  handleRename: () => void;
+}
+
+interface DeleteFolderDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  folder: Folder | null;
+  isDeleting: boolean;
+  handleDelete: () => void;
+}
+
+interface MoveFolderDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  folder: Folder | null;
+  isMoving: boolean;
+  handleMove: (destinationFolderId: string | null) => void;
+  folders: Folder[];
+  isDescendantOf: (folderId: string | undefined, ancestorId: string | undefined, foldersList: Folder[]) => boolean;
+}
+
+// Memoized New Folder Dialog Component
+const NewFolderDialog = memo(({ isOpen, onOpenChange, folderName, setFolderName, handleCreate, currentFolder }: NewFolderDialogProps) => {
+  if (!isOpen) return null;
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <DialogHeader>
+          <DialogTitle>Create New Folder</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            {currentFolder 
+              ? `Create a new subfolder inside "${currentFolder.name}"` 
+              : 'Create a new folder in the root directory'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Input
+            placeholder="Folder name"
+            value={folderName}
+            onChange={(e) => setFolderName(e.target.value)}
+            className="bg-[#2a2a2a] border-[#3a3a3a]"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} className="cursor-pointer">
+            Create Folder
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+NewFolderDialog.displayName = 'NewFolderDialog';
+
+// Memoized Rename Folder Dialog Component
+const RenameFolderDialog = memo(({ isOpen, onOpenChange, folder, newName, setNewName, handleRename }: RenameFolderDialogProps) => {
+  if (!isOpen) return null;
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <DialogHeader>
+          <DialogTitle>Rename Folder</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Enter a new name for &quot;{folder?.name}&quot;
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Input
+            placeholder="New folder name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            className="bg-[#2a2a2a] border-[#3a3a3a]"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleRename} className="cursor-pointer">
+            Rename Folder
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+RenameFolderDialog.displayName = 'RenameFolderDialog';
+
+// Memoized Delete Folder Dialog Component
+const DeleteFolderDialog = memo(({ isOpen, onOpenChange, folder, isDeleting, handleDelete }: DeleteFolderDialogProps) => {
+  if (!isOpen) return null;
+  
+  return (
+    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-400">
+            Are you sure you want to delete the folder &quot;{folder?.name}&quot;?
+            <br /><br />
+            Any files in this folder will be moved to the root directory.
+            Any subfolders will also be moved to the root directory.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleDelete}
+            className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+});
+
+DeleteFolderDialog.displayName = 'DeleteFolderDialog';
+
+// Memoized Move Folder Dialog Component
+const MoveFolderDialog = memo(({ isOpen, onOpenChange, folder, isMoving, handleMove, folders, isDescendantOf }: MoveFolderDialogProps) => {
+  if (!isOpen) return null;
+  
+  // Memoize filtered folders to prevent recomputation on every render
+  const filteredFolders = useMemo(() => {
+    return folders.filter((f: Folder) => 
+      f.id !== folder?.id && 
+      !isDescendantOf(f.id, folder?.id, folders)
+    );
+  }, [folders, folder, isDescendantOf]);
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <DialogHeader>
+          <DialogTitle>Move Folder</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Select a destination for &quot;{folder?.name}&quot;
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4 space-y-2">
+          <Button
+            variant="outline"
+            className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
+            onClick={() => handleMove(null)}
+            disabled={isMoving || folder?.parent_id === null}
+          >
+            <FolderIcon className="h-4 w-4 mr-2" />
+            Root Directory
+            {folder?.parent_id === null && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
+          </Button>
+          
+          {filteredFolders.map((f: Folder) => (
+            <Button
+              key={f.id}
+              variant="outline"
+              className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
+              onClick={() => handleMove(f.id)}
+              disabled={isMoving || f.id === folder?.parent_id}
+            >
+              <FolderIcon className="h-4 w-4 mr-2" />
+              {f.name}
+              {f.id === folder?.parent_id && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
+            </Button>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-[#3a3a3a] hover:bg-[#2a2a2a]"
+            disabled={isMoving}
+          >
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+MoveFolderDialog.displayName = 'MoveFolderDialog';
+
+const FolderDialogs = memo(({
   // New Folder Dialog
   isNewFolderModalOpen,
   setIsNewFolderModalOpen,
@@ -73,152 +292,57 @@ export default function FolderDialogs({
   handleMoveFolder,
   folders,
   isDescendantOf
-}: FolderDialogsProps) {
+}: FolderDialogsProps) => {
   return (
     <>
-      {/* New Folder Modal */}
-      <Dialog open={isNewFolderModalOpen} onOpenChange={setIsNewFolderModalOpen}>
-        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              {currentFolder 
-                ? `Create a new subfolder inside "${currentFolder.name}"` 
-                : 'Create a new folder in the root directory'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Folder name"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              className="bg-[#2a2a2a] border-[#3a3a3a]"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsNewFolderModalOpen(false)}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateFolder} className="cursor-pointer">
-              Create Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Only render dialogs when they are open to reduce initial load time */}
+      {isNewFolderModalOpen && (
+        <NewFolderDialog
+          isOpen={isNewFolderModalOpen}
+          onOpenChange={setIsNewFolderModalOpen}
+          folderName={newFolderName}
+          setFolderName={setNewFolderName}
+          handleCreate={handleCreateFolder}
+          currentFolder={currentFolder}
+        />
+      )}
 
-      {/* Rename Folder Modal */}
-      <Dialog open={isRenameFolderModalOpen} onOpenChange={setIsRenameFolderModalOpen}>
-        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <DialogHeader>
-            <DialogTitle>Rename Folder</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Enter a new name for &quot;{folderToRename?.name}&quot;
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="New folder name"
-              value={newFolderRename}
-              onChange={(e) => setNewFolderRename(e.target.value)}
-              className="bg-[#2a2a2a] border-[#3a3a3a]"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRenameFolderModalOpen(false)}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleRenameFolder} className="cursor-pointer">
-              Rename Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isRenameFolderModalOpen && (
+        <RenameFolderDialog
+          isOpen={isRenameFolderModalOpen}
+          onOpenChange={setIsRenameFolderModalOpen}
+          folder={folderToRename}
+          newName={newFolderRename}
+          setNewName={setNewFolderRename}
+          handleRename={handleRenameFolder}
+        />
+      )}
 
-      {/* Delete Folder Confirmation Dialog */}
-      <AlertDialog open={showDeleteFolderDialog} onOpenChange={setShowDeleteFolderDialog}>
-        <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Folder</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-400">
-              Are you sure you want to delete the folder &quot;{folderToDelete?.name}&quot;?
-              <br /><br />
-              Any files in this folder will be moved to the root directory.
-              Any subfolders will also be moved to the root directory.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteFolder}
-              className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
-              disabled={isDeletingFolder}
-            >
-              {isDeletingFolder ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {showDeleteFolderDialog && (
+        <DeleteFolderDialog
+          isOpen={showDeleteFolderDialog}
+          onOpenChange={setShowDeleteFolderDialog}
+          folder={folderToDelete}
+          isDeleting={isDeletingFolder}
+          handleDelete={handleDeleteFolder}
+        />
+      )}
 
-      {/* Move Folder Dialog */}
-      <Dialog open={showMoveFolderDialog} onOpenChange={setShowMoveFolderDialog}>
-        <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
-          <DialogHeader>
-            <DialogTitle>Move Folder</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Select a destination for &quot;{folderToMove?.name}&quot;
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => handleMoveFolder(null)}
-              disabled={isMovingFolder || folderToMove?.parent_id === null}
-            >
-              <FolderIcon className="h-4 w-4 mr-2" />
-              Root Directory
-              {folderToMove?.parent_id === null && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
-            </Button>
-            
-            {folders
-              .filter(folder => folder.id !== folderToMove?.id && !isDescendantOf(folder.id, folderToMove?.id, folders))
-              .map(folder => (
-                <Button
-                  key={folder.id}
-                  variant="outline"
-                  className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-                  onClick={() => handleMoveFolder(folder.id)}
-                  disabled={isMovingFolder || folder.id === folderToMove?.parent_id}
-                >
-                  <FolderIcon className="h-4 w-4 mr-2" />
-                  {folder.name}
-                  {folder.id === folderToMove?.parent_id && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
-                </Button>
-              ))
-            }
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowMoveFolderDialog(false)}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              disabled={isMovingFolder}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {showMoveFolderDialog && (
+        <MoveFolderDialog
+          isOpen={showMoveFolderDialog}
+          onOpenChange={setShowMoveFolderDialog}
+          folder={folderToMove}
+          isMoving={isMovingFolder}
+          handleMove={handleMoveFolder}
+          folders={folders}
+          isDescendantOf={isDescendantOf}
+        />
+      )}
     </>
   );
-}
+});
+
+FolderDialogs.displayName = 'FolderDialogs';
+
+export default FolderDialogs;

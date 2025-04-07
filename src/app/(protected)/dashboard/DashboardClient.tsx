@@ -1,22 +1,40 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
-import UploadModal from '@/components/dashboard/UploadModal';
 import { UserMenu } from '@/components/UserMenu';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { deleteUpload, bulkDeleteUploads, renameUpload } from './actions';
 import { createFolder, moveUploadToFolder, deleteFolder, renameFolder, moveFolder } from './folder/actions';
 import { useToast } from '@/components/ui/UseToast';
+import dynamic from 'next/dynamic';
 
-// Import our new components
+// Import non-modal components directly
 import FolderSidebar from '@/components/dashboard/FolderSidebar';
 import FileTable from '@/components/dashboard/FileTable';
-import BulkActions from '@/components/dashboard/BulkActions';
-import FolderDialogs from '@/components/dashboard/FolderDialogs';
-import FileDialogs from '@/components/dashboard/FileDialogs';
+
+// Dynamically import heavy components to reduce initial load time
+const BulkActions = dynamic(() => import('@/components/dashboard/BulkActions'), {
+  ssr: false,
+  loading: () => <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 h-16"></div>
+});
+
+const UploadModal = dynamic(() => import('@/components/dashboard/UploadModal'), {
+  ssr: false,
+  loading: () => null
+});
+
+const FolderDialogs = dynamic(() => import('@/components/dashboard/FolderDialogs'), {
+  ssr: false,
+  loading: () => null
+});
+
+const FileDialogs = dynamic(() => import('@/components/dashboard/FileDialogs'), {
+  ssr: false,
+  loading: () => null
+});
 
 interface DashboardClientProps {
   user: User;
@@ -67,25 +85,26 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   const { toast } = useToast();
   const router = useRouter();
 
-  // Utility functions
-  const formatDate = (dateString: string) => {
+  // Utility functions - memoized to prevent unnecessary re-renders
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
-  };
+  }, []);
 
-  const formatTime = (dateString: string) => {
+  const formatTime = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: 'numeric',
       hour12: true,
     });
-  };
+  }, []);
   
   // Helper function to check if a folder is a descendant of another folder
-  const isDescendantOf = (folderId: string | undefined, ancestorId: string | undefined, foldersList: Folder[]): boolean => {
+  // Memoized to prevent recalculation on every render
+  const isDescendantOf = useCallback((folderId: string | undefined, ancestorId: string | undefined, foldersList: Folder[]): boolean => {
     if (!folderId || !ancestorId) return false;
     
     let currentId: string | null = folderId;
@@ -104,31 +123,34 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     }
     
     return false;
-  };
+  }, []);
 
-  // Toggle select all uploads
-  const handleSelectAll = () => {
+  // Toggle select all uploads - memoized to prevent unnecessary re-renders
+  const handleSelectAll = useCallback(() => {
     if (selectAll) {
       setSelectedUploads([]);
     } else {
       setSelectedUploads(uploads.map(upload => upload.id));
     }
     setSelectAll(!selectAll);
-  };
+  }, [selectAll, uploads, setSelectedUploads]);
 
-  // Toggle individual upload selection
-  const handleSelectUpload = (uploadId: string) => {
-    if (selectedUploads.includes(uploadId)) {
-      setSelectedUploads(selectedUploads.filter(id => id !== uploadId));
-      setSelectAll(false);
-    } else {
-      setSelectedUploads([...selectedUploads, uploadId]);
-      setSelectAll(selectedUploads.length + 1 === uploads.length);
-    }
-  };
+  // Toggle individual upload selection - memoized to prevent unnecessary re-renders
+  const handleSelectUpload = useCallback((uploadId: string) => {
+    setSelectedUploads(prevSelected => {
+      if (prevSelected.includes(uploadId)) {
+        setSelectAll(false);
+        return prevSelected.filter(id => id !== uploadId);
+      } else {
+        const newSelected = [...prevSelected, uploadId];
+        setSelectAll(newSelected.length === uploads.length);
+        return newSelected;
+      }
+    });
+  }, [uploads.length]);
 
-  // Handle delete upload
-  const handleDeleteUpload = async (uploadId: string) => {
+  // Handle delete upload - memoized to prevent unnecessary re-renders
+  const handleDeleteUpload = useCallback(async (uploadId: string) => {
     try {
       setIsDeleting(prev => ({ ...prev, [uploadId]: true }));
       
@@ -159,10 +181,10 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     } finally {
       setIsDeleting(prev => ({ ...prev, [uploadId]: false }));
     }
-  };
+  }, [user.id, toast, router]);
 
-  // Handle bulk delete of selected uploads
-  const handleBulkDelete = async () => {
+  // Handle bulk delete of selected uploads - memoized to prevent unnecessary re-renders
+  const handleBulkDelete = useCallback(async () => {
     if (selectedUploads.length === 0) return;
     
     try {
@@ -198,10 +220,10 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     } finally {
       setIsBulkDeleting(false);
     }
-  };
+  }, [selectedUploads, user.id, toast, router, setSelectedUploads, setSelectAll, setShowBulkDeleteDialog]);
 
-  // Handle create folder
-  const handleCreateFolder = async () => {
+  // Handle create folder - memoized to prevent unnecessary re-renders
+  const handleCreateFolder = useCallback(async () => {
     if (!newFolderName.trim()) {
       toast({
         title: "Error",
@@ -238,7 +260,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         variant: "destructive",
       });
     }
-  };
+  }, [newFolderName, currentFolder, toast, router, setIsNewFolderModalOpen, setNewFolderName]);
 
   // Handle rename folder
   const handleRenameFolder = async () => {

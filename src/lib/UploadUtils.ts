@@ -11,7 +11,7 @@ export async function uploadFileStandard(
     filePath: string,
     bucketName: string = 'user-uploads'
   ) {
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(bucketName)
       .upload(filePath, file);
     
