@@ -10,7 +10,7 @@ import { UserProfile } from '@/types/DashboardInterface';
 import { uploadFile, processUploadedFile } from '@/lib/UploadUtils';
 
 // 5 GB max file size for free users
-const MAX_FILE_SIZE_FREE = 5000 * 1000 * 1000;
+const MAX_FILE_SIZE_FREE = 6 * 1000 * 1000;
 // 5 GB max file size for pro users
 const MAX_FILE_SIZE_PRO = 5000 * 1000 * 1000;
 
@@ -74,12 +74,8 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       router.refresh();
 
     } catch (error: any) {
-    console.error('Upload failed:', error);
-      toast({
-        title: "Upload failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Upload failed:', error);
+      throw error;
     } finally {
       setLoading(false);
     }

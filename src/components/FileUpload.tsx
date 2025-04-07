@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,10 +29,18 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
   const [files, setFiles] = useState<FileWithStatus[]>([]);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const totalFilesSizeRef = useRef(0);
+  
+  // Use a ref to track all active progress intervals for cleanup
+  const activeIntervalsRef = useRef<{[id: string]: NodeJS.Timeout}>({});
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const validFiles: FileWithStatus[] = [];
     const invalidFiles: { file: File; reason: string }[] = [];
+
+    for (const file of acceptedFiles) {
+      totalFilesSizeRef.current += file.size;
+    }
     
     for (const file of acceptedFiles) {
       if (!isAudioOrVideoFile(file.name)) {
@@ -40,8 +48,9 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
         continue;
       }
       
-      if (file.size > maxSizeInBytes) {
+      if (totalFilesSizeRef.current > maxSizeInBytes) {
         invalidFiles.push({ file, reason: 'File too large' });
+        totalFilesSizeRef.current -= file.size;
         continue;
       }
       
@@ -88,6 +97,23 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
     multiple: multiple,
     disabled: disabled || uploading,
   });
+  
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    // Return cleanup function
+    return () => {
+      // Clear all progress intervals when component unmounts
+      Object.values(activeIntervalsRef.current).forEach(interval => {
+        clearInterval(interval);
+      });
+      
+      // If there are any uploading files, log that they were cancelled
+      const uploadingFiles = files.filter(f => f.status === 'uploading');
+      if (uploadingFiles.length > 0) {
+        console.log(`FileUpload: Cancelled ${uploadingFiles.length} in-progress uploads due to component unmount`);
+      }
+    };
+  }, [files]);
 
   const updateFileProgress = (id: string, progress: number) => {
     setFiles(prev => prev.map(f => 
@@ -116,16 +142,30 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
         ));
       }, 300);
       
+      // Store the interval in our ref for cleanup
+      activeIntervalsRef.current[id] = progressInterval;
+      
       // Call the parent component's upload function
       await onFileSelected(file);
       
-      if (progressInterval) clearInterval(progressInterval);
+      // Clear and remove the interval
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        delete activeIntervalsRef.current[id];
+      }
+      
       updateFileProgress(id, 100);
       updateFileStatus(id, 'success');
       
     } catch (error: any) {
       console.error("Upload error:", error);
-      if (progressInterval) clearInterval(progressInterval);
+      
+      // Clear and remove the interval
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        delete activeIntervalsRef.current[id];
+      }
+      
       updateFileStatus(id, 'error', error.message);
       toast({
         title: "Upload failed",
@@ -155,12 +195,28 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
     }
   };
 
-  const removeFile = (id: string) => {
+  const removeFile = (id: string, fileSize: number) => {
+    // Clear any active interval for this file
+    if (activeIntervalsRef.current[id]) {
+      clearInterval(activeIntervalsRef.current[id]);
+      delete activeIntervalsRef.current[id];
+    }
+
+    totalFilesSizeRef.current -= fileSize;
+    
     setFiles(prev => prev.filter(f => f.id !== id));
   };
   
   const removeAllFiles = () => {
+    // Clear all active intervals
+    Object.values(activeIntervalsRef.current).forEach(interval => {
+      clearInterval(interval);
+    });
+    activeIntervalsRef.current = {};
+    
     setFiles([]);
+
+    totalFilesSizeRef.current = 0;
   };
 
   return (
@@ -239,7 +295,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeFile(fileWithStatus.id)}
+                        onClick={() => removeFile(fileWithStatus.id, fileWithStatus.file.size)}
                         className="text-gray-500 hover:text-destructive cursor-pointer"
                         disabled={uploading}
                       >
