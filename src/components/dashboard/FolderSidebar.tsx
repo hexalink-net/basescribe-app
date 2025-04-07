@@ -77,7 +77,7 @@ export default function FolderSidebar({
         </div>
         
         {/* Folder Header */}
-        <div className="p-4 border-t border-[#2a2a2a]">
+        <div className="px-4 pt-4 pb-1 border-t border-[#2a2a2a]">
           <div className="flex justify-between items-center">
             <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
             <Button 
