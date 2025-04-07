@@ -66,30 +66,38 @@ export default function FolderSidebar({
   };
 
   return (
-    <div className="w-64 border-r border-[#2a2a2a] overflow-auto flex flex-col h-full min-h-full">
-      <div className="p-4 mb-4">
-        <Link href="/dashboard" className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${!currentFolder ? 'bg-[#2a2a2a]' : ''}`}>
-          <FolderIcon className="h-4 w-4" />
-          <span>All Files</span>
-        </Link>
+    <div className="w-64 border-r border-[#2a2a2a] flex flex-col h-full">
+      {/* Fixed Header Section */}
+      <div className="flex-shrink-0">
+        <div className="p-4">
+          <Link href="/dashboard" className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${!currentFolder ? 'bg-[#2a2a2a]' : ''}`}>
+            <FolderIcon className="h-4 w-4" />
+            <span>All Files</span>
+          </Link>
+        </div>
+        
+        {/* Folder Header */}
+        <div className="p-4 border-t border-[#2a2a2a]">
+          <div className="flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0 cursor-pointer" 
+              onClick={() => {
+                // Create folder in root
+                onCreateFolder();
+              }}
+              title="Create folder in root"
+            >
+              <FolderPlus className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
       
-      <div className="p-4 border-t border-[#2a2a2a]">
-        <div className="flex justify-between items-center mb-2">
-          <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-6 w-6 p-0 cursor-pointer" 
-            onClick={() => {
-              // Create folder in root
-              onCreateFolder();
-            }}
-            title="Create folder in root"
-          >
-            <FolderPlus className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Scrollable Folder List - with max height to ensure scrolling */}
+      <div className="overflow-y-auto flex-grow px-4 pt-2 max-h-[calc(100vh-270px)]">
         <div className="space-y-1">
           
           {/* Root folders */}

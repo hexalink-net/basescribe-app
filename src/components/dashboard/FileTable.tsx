@@ -28,28 +28,7 @@ interface FileTableProps {
   selectAll: boolean;
 }
 
-// Memoized table header component for better LCP
-const TableHeader = memo(({ selectAll, onSelectAll }: { selectAll: boolean, onSelectAll: () => void }) => (
-  <thead>
-    <tr className="border-b border-[#2a2a2a]">
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-6">
-        <input 
-          type="checkbox" 
-          className="rounded bg-[#2a2a2a] border-none" 
-          checked={selectAll}
-          onChange={onSelectAll}
-          data-testid="select-all-checkbox"
-        />
-      </th>
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Name</th>
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Uploaded</th>
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Duration</th>
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Mode</th>
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400">Status</th>
-      <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-10"></th>
-    </tr>
-  </thead>
-));
+// Empty state component is now directly used in the table
 
 // Memoized empty state component
 const EmptyState = memo(({ currentFolder }: { currentFolder: Folder | null }) => (
@@ -181,37 +160,58 @@ const FileTable = ({
   onRenameUpload,
   selectAll
 }: FileTableProps) => {
-  // Memoize the table header to prevent unnecessary re-renders
-  const tableHeader = useMemo(() => <TableHeader selectAll={selectAll} onSelectAll={onSelectAll} />, [selectAll, onSelectAll]);
-  
   // Memoize the empty state component
   const emptyState = useMemo(() => 
     uploads.length === 0 ? <EmptyState currentFolder={currentFolder} /> : null
   , [uploads.length, currentFolder]);
 
   return (
-    <div className="bg-[#1a1a1a] rounded-md overflow-hidden">
-      <table className="w-full">
-        {tableHeader}
-        <tbody>
-          {emptyState || (
-            uploads.map((upload) => (
-              <FileRow 
-                key={upload.id}
-                upload={upload}
-                isSelected={selectedUploads.includes(upload.id)}
-                isDeleting={!!isDeleting[upload.id]}
-                formatDate={formatDate}
-                formatTime={formatTime}
-                onSelectUpload={onSelectUpload}
-                onDeleteUpload={onDeleteUpload}
-                onMoveUpload={onMoveUpload}
-                onRenameUpload={onRenameUpload}
-              />
-            ))
-          )}
-        </tbody>
-      </table>
+    <div className="bg-[#1a1a1a] rounded-md overflow-hidden flex flex-col">
+      <div className="w-full flex flex-col">
+        {/* Table with sticky header */}
+        <div className="overflow-y-auto max-h-[calc(100vh-220px)]">
+          <table className="w-full table-fixed border-collapse">
+            {/* Apply sticky positioning to the thead */}
+            <thead className="sticky top-0 bg-[#1a1a1a] z-10">
+              <tr className="border-b border-[#2a2a2a]">
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[50px]">
+                  <input 
+                    type="checkbox" 
+                    className="rounded bg-[#2a2a2a] border-none" 
+                    checked={selectAll}
+                    onChange={onSelectAll}
+                    data-testid="select-all-checkbox"
+                  />
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[30%]">Name</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[20%]">Uploaded</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[10%]">Duration</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Mode</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[60px]"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {emptyState || (
+                uploads.map((upload) => (
+                  <FileRow 
+                    key={upload.id}
+                    upload={upload}
+                    isSelected={selectedUploads.includes(upload.id)}
+                    isDeleting={!!isDeleting[upload.id]}
+                    formatDate={formatDate}
+                    formatTime={formatTime}
+                    onSelectUpload={onSelectUpload}
+                    onDeleteUpload={onDeleteUpload}
+                    onMoveUpload={onMoveUpload}
+                    onRenameUpload={onRenameUpload}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

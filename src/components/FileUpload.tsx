@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { formatFileSize, validateAudioOrVideoFile } from '@/lib/MediaUtils';
 import { useToast } from '@/components/ui/UseToast';
-import e from 'express';
 
 interface FileUploadProps {
   onFileSelected: (file: File) => Promise<void>;
