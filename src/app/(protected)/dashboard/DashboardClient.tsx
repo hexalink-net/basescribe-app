@@ -674,7 +674,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         <UploadModal 
           isOpen={isUploadModalOpen} 
           onClose={() => setIsUploadModalOpen(false)} 
-          user={user}
+          userId={user.id}
           userProfile={userProfile}
           folderId={currentFolder?.id || null}
         />

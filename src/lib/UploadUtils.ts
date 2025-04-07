@@ -8,7 +8,7 @@ import Tus from '@uppy/tus';
 /**
  * Standard file upload to Supabase storage
  */
-export async function uploadFileStandard(
+export async function uploadFile(
     file: File,
     filePath: string,
     fileSize: number,
@@ -54,7 +54,7 @@ export async function uploadFileStandard(
                 contentType: file.type, // Set content type based on file MIME type
             };
         });
-        
+
         return;
     }
 

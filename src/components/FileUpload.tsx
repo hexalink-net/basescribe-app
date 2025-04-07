@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { formatFileSize, isAudioOrVideoFile } from '@/lib/MediaUtils';
@@ -12,159 +12,284 @@ interface FileUploadProps {
   onFileSelected: (file: File) => Promise<void>;
   maxSizeInBytes: number;
   disabled?: boolean;
+  multiple?: boolean;
 }
 
-export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }: FileUploadProps) {
-  const [file, setFile] = useState<File | null>(null);
+type FileStatus = 'idle' | 'uploading' | 'success' | 'error';
+
+interface FileWithStatus {
+  file: File;
+  id: string;
+  progress: number;
+  status: FileStatus;
+  error?: string;
+}
+
+export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
+  const [files, setFiles] = useState<FileWithStatus[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const selectedFile = acceptedFiles[0];
+    const validFiles: FileWithStatus[] = [];
+    const invalidFiles: { file: File; reason: string }[] = [];
     
-    if (!selectedFile) return;
-    
-    if (!isAudioOrVideoFile(selectedFile.name)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload an audio or video file (mp3, mp4, wav, etc.)",
-        variant: "destructive",
+    for (const file of acceptedFiles) {
+      if (!isAudioOrVideoFile(file.name)) {
+        invalidFiles.push({ file, reason: 'Invalid file type' });
+        continue;
+      }
+      
+      if (file.size > maxSizeInBytes) {
+        invalidFiles.push({ file, reason: 'File too large' });
+        continue;
+      }
+      
+      validFiles.push({
+        file,
+        id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        progress: 0,
+        status: 'idle'
       });
-      return;
     }
     
-    if (selectedFile.size > maxSizeInBytes) {
+    if (invalidFiles.length > 0) {
+      const reasons = new Set(invalidFiles.map(f => f.reason));
+      let message = '';
+      
+      if (reasons.has('Invalid file type')) {
+        message += 'Some files have invalid types. Please upload audio or video files only (mp3, mp4, wav, etc.). ';
+      }
+      
+      if (reasons.has('File too large')) {
+        message += `Some files exceed the maximum size of ${formatFileSize(maxSizeInBytes)}. `;
+      }
+      
       toast({
-        title: "File too large",
-        description: `Maximum file size is ${formatFileSize(maxSizeInBytes)}`,
+        title: "Some files couldn't be added",
+        description: message,
         variant: "destructive",
       });
-      return;
     }
     
-    setFile(selectedFile);
-    // Auto-upload immediately after file selection
-    // handleUpload(selectedFile);
-  }, [maxSizeInBytes, toast]);
+    if (validFiles.length > 0) {
+      // If not multiple, replace existing files
+      if (!multiple) {
+        setFiles([validFiles[0]]);
+      } else {
+        setFiles(prev => [...prev, ...validFiles]);
+      }
+    }
+  }, [maxSizeInBytes, toast, multiple]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    maxFiles: 1,
-    multiple: false,
+    maxFiles: multiple ? undefined : 1,
+    multiple: multiple,
     disabled: disabled || uploading,
   });
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const updateFileProgress = (id: string, progress: number) => {
+    setFiles(prev => prev.map(f => 
+      f.id === id ? { ...f, progress } : f
+    ));
+  };
+
+  const updateFileStatus = (id: string, status: FileStatus, error?: string) => {
+    setFiles(prev => prev.map(f => 
+      f.id === id ? { ...f, status, error } : f
+    ));
+  };
+
+  const uploadFile = async (fileWithStatus: FileWithStatus) => {
+    const { file, id } = fileWithStatus;
+    let progressInterval: NodeJS.Timeout | null = null;
     
     try {
-      setUploading(true);
-      console.log('FileUpload: handleUpload called with file:', file.name);
+      updateFileStatus(id, 'uploading');
+      console.log('FileUpload: uploading file:', file.name);
       
       // Simulate progress for better UX
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          const newProgress = prev + 5;
-          if (newProgress >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return newProgress;
-        });
+      progressInterval = setInterval(() => {
+        setFiles(prev => prev.map(f => 
+          f.id === id ? { ...f, progress: Math.min(f.progress + 5, 90) } : f
+        ));
       }, 300);
       
       // Call the parent component's upload function
       await onFileSelected(file);
       
-      clearInterval(progressInterval);
-      setProgress(100);
-      
-      // Reset after a short delay
-      setTimeout(() => {
-        setFile(null);
-        setProgress(0);
-        setUploading(false);
-      }, 2000);
+      if (progressInterval) clearInterval(progressInterval);
+      updateFileProgress(id, 100);
+      updateFileStatus(id, 'success');
       
     } catch (error: any) {
       console.error("Upload error:", error);
+      if (progressInterval) clearInterval(progressInterval);
+      updateFileStatus(id, 'error', error.message);
       toast({
         title: "Upload failed",
-        description: error.message,
+        description: `${file.name}: ${error.message}`,
         variant: "destructive",
       });
+    }
+  };
+  
+  const handleUpload = async () => {
+    if (files.length === 0) return;
+    
+    setUploading(true);
+    
+    try {
+      // Filter only idle files
+      const filesToUpload = files.filter(f => f.status === 'idle');
+      
+      // Start all uploads in parallel
+      const uploadPromises = filesToUpload.map(fileWithStatus => 
+        uploadFile(fileWithStatus)
+      );
+      
+      await Promise.all(uploadPromises);
+    } finally {
       setUploading(false);
-      setProgress(0);
     }
   };
 
-  const removeFile = () => {
-    setFile(null);
-    setProgress(0);
+  const removeFile = (id: string) => {
+    setFiles(prev => prev.filter(f => f.id !== id));
+  };
+  
+  const removeAllFiles = () => {
+    setFiles([]);
   };
 
   return (
     <div className="w-full">
-      {!file ? (
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors w-full ${
-            isDragActive ? 'border-primary bg-primary/10' : 'border-[#2a2a2a] hover:border-[#3a3a3a]'
-          }`}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center justify-center gap-2">
-            <Upload className="h-10 w-10 text-gray-400" />
-            <p className="text-lg font-medium">
-              {isDragActive ? 'Drop the file here' : 'Drag & drop your audio or video file here'}
-            </p>
-            <p className="text-sm text-gray-400">
-              Supported formats: MP3, MP4, WAV, etc. (Max size: {formatFileSize(maxSizeInBytes)})
-            </p>
-            <Button type="button" className="mt-2 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white">
-              Select File
-            </Button>
-          </div>
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors w-full ${
+          isDragActive ? 'border-primary bg-primary/10' : 'border-[#2a2a2a] hover:border-[#3a3a3a]'
+        } ${files.length > 0 ? 'mb-4' : ''}`}
+      >
+        <input {...getInputProps()} />
+        <div className="flex flex-col items-center justify-center gap-2">
+          <Upload className="h-10 w-10 text-gray-400" />
+          <p className="text-lg font-medium">
+            {isDragActive 
+              ? 'Drop files here' 
+              : multiple 
+                ? 'Drag & drop your audio or video files here' 
+                : 'Drag & drop your audio or video file here'
+            }
+          </p>
+          <p className="text-sm text-gray-400">
+            Supported formats: MP3, MP4, WAV, etc. (Max size: {formatFileSize(maxSizeInBytes)})
+          </p>
+          <Button 
+            type="button" 
+            className="mt-2 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={disabled || uploading}
+          >
+            Select {multiple ? 'Files' : 'File'}
+          </Button>
         </div>
-      ) : (
-        <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-500/10 rounded">
-                <Upload className="h-5 w-5 text-blue-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium truncate">{file.name}</p>
-                <p className="text-sm text-gray-400">{formatFileSize(file.size)}</p>
+      </div>
+
+      {files.length > 0 && (
+        <div className="space-y-4">
+          <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-medium">Files to upload ({files.length})</h3>
+              <div className="flex gap-2">
+                {!uploading && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={removeAllFiles}
+                    className="text-gray-400 hover:text-destructive"
+                  >
+                    Clear All
+                  </Button>
+                )}
+                <Button 
+                  onClick={handleUpload} 
+                  className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white"
+                  size="sm"
+                  disabled={uploading || files.every(f => f.status !== 'idle')}
+                >
+                  {uploading ? 'Uploading...' : 'Upload All'}
+                </Button>
               </div>
             </div>
-            {!uploading && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={removeFile}
-                className="text-gray-500 hover:text-destructive cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            )}
+            
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+              {files.map((fileWithStatus) => (
+                <div key={fileWithStatus.id} className="border border-[#2a2a2a] rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-2 rounded ${getStatusColor(fileWithStatus.status)}`}>
+                        {getStatusIcon(fileWithStatus.status)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{fileWithStatus.file.name}</p>
+                        <p className="text-sm text-gray-400">{formatFileSize(fileWithStatus.file.size)}</p>
+                      </div>
+                    </div>
+                    {(fileWithStatus.status === 'idle' || fileWithStatus.status === 'error') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFile(fileWithStatus.id)}
+                        className="text-gray-500 hover:text-destructive cursor-pointer"
+                        disabled={uploading}
+                      >
+                        <X className="h-5 w-5" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {fileWithStatus.status === 'uploading' && (
+                    <div className="space-y-1">
+                      <Progress value={fileWithStatus.progress} className="h-1" />
+                      <p className="text-xs text-right text-gray-400">
+                        {fileWithStatus.progress}%
+                      </p>
+                    </div>
+                  )}
+                  
+                  {fileWithStatus.status === 'error' && fileWithStatus.error && (
+                    <p className="text-xs text-destructive mt-1">
+                      Error: {fileWithStatus.error}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          
-          {uploading ? (
-            <div className="space-y-2">
-              <Progress value={progress} />
-              <p className="text-sm text-center text-gray-400">
-                {progress < 100 ? 'Uploading...' : 'Processing...'}
-              </p>
-            </div>
-          ) : (
-            <Button onClick={handleUpload} className="w-full mt-2 cursor-pointer bg-blue-500 hover:bg-blue-600 text-white">
-              Upload File
-            </Button>
-          )}
         </div>
       )}
     </div>
   );
+}
+
+function getStatusColor(status: FileStatus): string {
+  switch (status) {
+    case 'idle': return 'bg-gray-500/10';
+    case 'uploading': return 'bg-blue-500/10';
+    case 'success': return 'bg-green-500/10';
+    case 'error': return 'bg-red-500/10';
+  }
+}
+
+function getStatusIcon(status: FileStatus) {
+  switch (status) {
+    case 'idle': 
+      return <Upload className="h-5 w-5 text-gray-500" />;
+    case 'uploading': 
+      return <Upload className="h-5 w-5 text-blue-500" />;
+    case 'success': 
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    case 'error': 
+      return <AlertCircle className="h-5 w-5 text-red-500" />;
+  }
 }
