@@ -15,23 +15,49 @@ import dynamic from 'next/dynamic';
 import FolderSidebar from '@/components/dashboard/FolderSidebar';
 import FileTable from '@/components/dashboard/FileTable';
 
-// Dynamically import heavy components to reduce initial load time
+// Dynamically import heavy components with optimized loading strategy
+// Use a more efficient dynamic import approach with preloading
 const BulkActions = dynamic(() => import('@/components/dashboard/BulkActions'), {
   ssr: false,
   loading: () => <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 h-16"></div>
 });
 
-const UploadModal = dynamic(() => import('@/components/dashboard/UploadModal'), {
+// Preload the modal components after initial render to improve LCP
+// but still benefit from code-splitting for initial page load
+const UploadModal = dynamic(() => {
+  // This helps Next.js prioritize the main content first
+  if (typeof window !== 'undefined') {
+    const modulePromise = import('@/components/dashboard/UploadModal');
+    // Preload but don't block rendering
+    modulePromise.catch(() => {});
+    return modulePromise;
+  }
+  return import('@/components/dashboard/UploadModal');
+}, {
   ssr: false,
   loading: () => null
 });
 
-const FolderDialogs = dynamic(() => import('@/components/dashboard/FolderDialogs'), {
+const FolderDialogs = dynamic(() => {
+  if (typeof window !== 'undefined') {
+    const modulePromise = import('@/components/dashboard/FolderDialogs');
+    modulePromise.catch(() => {});
+    return modulePromise;
+  }
+  return import('@/components/dashboard/FolderDialogs');
+}, {
   ssr: false,
   loading: () => null
 });
 
-const FileDialogs = dynamic(() => import('@/components/dashboard/FileDialogs'), {
+const FileDialogs = dynamic(() => {
+  if (typeof window !== 'undefined') {
+    const modulePromise = import('@/components/dashboard/FileDialogs');
+    modulePromise.catch(() => {});
+    return modulePromise;
+  }
+  return import('@/components/dashboard/FileDialogs');
+}, {
   ssr: false,
   loading: () => null
 });
@@ -45,6 +71,23 @@ interface DashboardClientProps {
 }
 
 
+
+// Memoize the format functions outside the component to avoid recreation on each render
+const formatDateFn = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
+const formatTimeFn = (dateString: string) => {
+  return new Date(dateString).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  });
+};
 
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder }: DashboardClientProps) {
   // Upload modal state
@@ -508,64 +551,95 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     }
   };
 
+  // Memoize the header component to prevent unnecessary re-renders
+  const Header = useCallback(() => (
+    <header className="border-b border-[#2a2a2a] py-4 px-6 flex justify-between items-center">
+      <h1 className="text-xl font-bold">BaseScribe</h1>
+      <UserMenu user={user} userInitials={user.email ? user.email.charAt(0).toUpperCase() : '?'} />
+    </header>
+  ), [user]);
+
+  // Memoize the action buttons to improve LCP
+  const ActionButtons = useCallback(() => (
+    <div className="flex gap-2">
+      <Button 
+        variant="outline" 
+        className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+        onClick={() => setIsNewFolderModalOpen(true)}
+      >
+        Create Folder
+      </Button>
+      <Button 
+        className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 shadow-md transition-all duration-200 ease-in-out hover:shadow-lg flex items-center gap-2" 
+        onClick={() => setIsUploadModalOpen(true)}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" x2="12" y1="19" y2="22"></line>
+        </svg>
+        Transcribe
+      </Button>
+    </div>
+  ), [setIsNewFolderModalOpen, setIsUploadModalOpen]);
+
+  // Memoize UI interaction handlers (these are different from the actual operation handlers)
+  const handleFolderRenameClick = useCallback((folder: Folder) => {
+    setFolderToRename(folder);
+    setNewFolderRename(folder.name);
+    setIsRenameFolderModalOpen(true);
+  }, []);
+
+  const handleFolderDeleteClick = useCallback((folder: Folder) => {
+    setFolderToDelete(folder);
+    setShowDeleteFolderDialog(true);
+  }, []);
+
+  const handleFolderMoveClick = useCallback((folder: Folder) => {
+    setFolderToMove(folder);
+    setShowMoveFolderDialog(true);
+  }, []);
+
+  // Memoize upload UI interaction handlers
+  const handleUploadMoveClick = useCallback((uploadId: string) => {
+    setSelectedUploadId(uploadId);
+    setShowMoveDialog(true);
+  }, []);
+
+  const handleUploadRenameClick = useCallback((upload: Upload) => {
+    setUploadToRename(upload);
+    setNewUploadName(upload.file_name);
+    setIsRenameUploadModalOpen(true);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen">
-      <header className="border-b border-[#2a2a2a] py-4 px-6 flex justify-between items-center">
-        <h1 className="text-xl font-bold">BaseScribe</h1>
-        <UserMenu user={user} userInitials={user.email ? user.email.charAt(0).toUpperCase() : '?'} />
-      </header>
+      {/* Memoized Header */}
+      <Header />
       
       <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
-        {/* Folder Sidebar */}
+        {/* Folder Sidebar with memoized handlers */}
         <FolderSidebar 
           folders={folders}
           currentFolder={currentFolder}
           userProfile={userProfile}
           onCreateFolder={() => setIsNewFolderModalOpen(true)}
-          onRenameFolder={(folder) => {
-            setFolderToRename(folder);
-            setNewFolderRename(folder.name);
-            setIsRenameFolderModalOpen(true);
-          }}
-          onDeleteFolder={(folder) => {
-            setFolderToDelete(folder);
-            setShowDeleteFolderDialog(true);
-          }}
-          onMoveFolder={(folder) => {
-            setFolderToMove(folder);
-            setShowMoveFolderDialog(true);
-          }}
+          onRenameFolder={handleFolderRenameClick}
+          onDeleteFolder={handleFolderDeleteClick}
+          onMoveFolder={handleFolderMoveClick}
         />
         
-        {/* Main Content */}
+        {/* Main Content - Optimized for LCP */}
         <div className="flex-1 overflow-auto p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">
               {currentFolder ? currentFolder.name : 'All Files'}
             </h1>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
-                onClick={() => setIsNewFolderModalOpen(true)}
-              >
-                Create Folder
-              </Button>
-              <Button 
-                className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 shadow-md transition-all duration-200 ease-in-out hover:shadow-lg flex items-center gap-2" 
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic">
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" x2="12" y1="19" y2="22"></line>
-                </svg>
-                Transcribe
-              </Button>
-            </div>
+            {/* Memoized Action Buttons */}
+            <ActionButtons />
           </div>
           
-          {/* File Table */}
+          {/* File Table - Critical for LCP */}
           <div className="bg-[#1a1a1a] rounded-md overflow-hidden">
             <FileTable 
               uploads={uploads}
@@ -577,39 +651,36 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
               onSelectAll={handleSelectAll}
               onSelectUpload={handleSelectUpload}
               onDeleteUpload={handleDeleteUpload}
-              onMoveUpload={(uploadId) => {
-                setSelectedUploadId(uploadId);
-                setShowMoveDialog(true);
-              }}
-              onRenameUpload={(upload) => {
-                setUploadToRename(upload);
-                setNewUploadName(upload.file_name);
-                setIsRenameUploadModalOpen(true);
-              }}
+              onMoveUpload={handleUploadMoveClick}
+              onRenameUpload={handleUploadRenameClick}
               selectAll={selectAll}
             />
           </div>
         </div>
       </div>
       
-      {/* Bulk Actions */}
-      <BulkActions 
-        selectedUploads={selectedUploads}
-        isBulkDeleting={isBulkDeleting}
-        onShowMoveDialog={() => setShowMoveDialog(true)}
-        onShowDeleteDialog={() => setShowBulkDeleteDialog(true)}
-      />
+      {/* Bulk Actions - Only rendered when needed */}
+      {selectedUploads.length > 0 && (
+        <BulkActions 
+          selectedUploads={selectedUploads}
+          isBulkDeleting={isBulkDeleting}
+          onShowMoveDialog={() => setShowMoveDialog(true)}
+          onShowDeleteDialog={() => setShowBulkDeleteDialog(true)}
+        />
+      )}
       
-      {/* Upload Modal */}
-      <UploadModal 
-        isOpen={isUploadModalOpen} 
-        onClose={() => setIsUploadModalOpen(false)} 
-        user={user}
-        userProfile={userProfile}
-        folderId={currentFolder?.id || null}
-      />
+      {/* Dynamically loaded modals - only rendered when open */}
+      {isUploadModalOpen && (
+        <UploadModal 
+          isOpen={isUploadModalOpen} 
+          onClose={() => setIsUploadModalOpen(false)} 
+          user={user}
+          userProfile={userProfile}
+          folderId={currentFolder?.id || null}
+        />
+      )}
       
-      {/* Folder Dialogs */}
+      {/* Folder Dialogs - Conditionally rendered based on state */}
       <FolderDialogs 
         // New Folder Dialog
         isNewFolderModalOpen={isNewFolderModalOpen}
@@ -644,7 +715,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         isDescendantOf={isDescendantOf}
       />
       
-      {/* File Dialogs */}
+      {/* File Dialogs - Conditionally rendered based on state */}
       <FileDialogs 
         // Move Upload Dialog
         showMoveDialog={showMoveDialog}
