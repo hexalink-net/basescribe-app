@@ -53,6 +53,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
     // Create a new upload record
     const fileName = file.name.replace(/\.[^/.]+$/, '');
     const fileSize = file.size;
+    console.log(fileSize)
     const timestamp = new Date().toISOString();
     const filePath = `${user.id}/${timestamp}-${file.name}`;
     
@@ -60,7 +61,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
       setLoading(true);
       
       // Upload to storage
-      await uploadFileStandard(file, filePath);
+      await uploadFileStandard(file, filePath, fileSize);
 
       // Process the upload
       await processUploadedFile(user.id, fileName, filePath, fileSize, file, folderId);
@@ -81,7 +82,7 @@ export default function UploadModal({ user, userProfile, isOpen, onClose, folder
       console.error('Upload failed:', error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your file.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {

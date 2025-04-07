@@ -1,6 +1,7 @@
 import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server';
 import { getFolders } from './folder/actions';
 import { UserProfile } from '@/types/DashboardInterface';
+import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
 
 // Server component for the dashboard page
@@ -9,8 +10,11 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // If user is not authenticated, redirect to auth page instead of throwing error
   if (!user) {
-    throw new Error('User not authenticated');
+    redirect('/auth');
+    // The code below will never execute due to the redirect, but TypeScript needs this
+    return null;
   }
   
   // Get user profile from database

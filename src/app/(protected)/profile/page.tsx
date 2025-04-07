@@ -5,6 +5,7 @@ import { UserMenu } from '@/components/UserMenu';
 import { PlanActionForm } from '@/components/PlanActionForm';
 import { updatePlan } from './actions';
 import { Progress } from '@/components/ui/progress';
+import { redirect } from 'next/navigation';
 
 // Format seconds to minutes:seconds format
 function formatDuration(seconds: number): string {
@@ -19,7 +20,10 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) {
-    throw new Error('User not authenticated');
+    // Redirect to auth page instead of throwing an error
+    redirect('/auth');
+    // The code below will never execute due to the redirect, but TypeScript needs this
+    return null;
   }
   
   // Pre-compute user initials on the server side

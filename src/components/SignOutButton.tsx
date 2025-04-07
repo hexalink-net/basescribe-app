@@ -15,15 +15,13 @@ export function SignOutButton() {
     try {
       setIsLoading(true);
       await signOut();
+
+      router.push('/auth');
       
       toast({
         title: 'Signed out',
         description: 'You have been successfully signed out.',
       });
-      
-      // The server action will handle the redirect, but we can also do it here
-      // as a fallback
-      router.push('/auth');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An error occurred during sign out';
       toast({

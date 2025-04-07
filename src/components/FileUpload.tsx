@@ -87,11 +87,11 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false }:
         setUploading(false);
       }, 2000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error);
       toast({
         title: "Upload failed",
-        description: "There was an error uploading your file. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
       setUploading(false);
