@@ -96,6 +96,10 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    accept: {
+      'audio/*': ['.mp3', '.wav', '.flac', '.m4a', '.ogg'],
+      'video/*': ['.mp4', '.avi', '.mov', '.webm']
+    },
     maxFiles: multiple ? undefined : 1,
     multiple: multiple,
     disabled: disabled || uploading,
