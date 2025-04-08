@@ -29,6 +29,7 @@
     "@uppy/tus": "^4.2.2",
     "framer-motion": "^12.6.3",
     "next": "15.2.4",
+    "nextjs-toploader": "^3.8.16",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.8",

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { RouteProgressBar } from "@/components/RouteProgressBar";
+import ProgressBarWrapper from '@/components/ui/ProgressBarWrapper';
 
 // Import the ServerUserProfileCheck component
 // If TypeScript still shows an error, it will be resolved after a full build
@@ -23,7 +23,7 @@ export default async function ProtectedLayout({
   
   return (
     <ServerUserProfileCheck userId={user.id}>
-      <RouteProgressBar />
+      <ProgressBarWrapper />
       {children}
     </ServerUserProfileCheck>
   );
