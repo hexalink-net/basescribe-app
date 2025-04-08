@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { FileUpload } from '@/components/FileUpload';
+import { FileUpload } from '@/components/dashboard/FileUpload';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/UseToast';
 import { Upload } from 'lucide-react';

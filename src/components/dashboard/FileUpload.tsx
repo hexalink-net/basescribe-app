@@ -141,12 +141,20 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
       updateFileStatus(id, 'uploading');
       console.log('FileUpload: uploading file:', file.name);
       
-      // Simulate progress for better UX
+      // Set initial progress to make it visible immediately
+      updateFileProgress(id, 5);
+      
+      // Simulate progress for better UX with more frequent updates
       progressInterval = setInterval(() => {
-        setFiles(prev => prev.map(f => 
-          f.id === id ? { ...f, progress: Math.min(f.progress + 5, 90) } : f
-        ));
-      }, 300);
+        setFiles(prev => prev.map(f => {
+          if (f.id === id) {
+            // Increase progress more gradually
+            const increment = f.progress < 30 ? 3 : (f.progress < 60 ? 2 : 1);
+            return { ...f, progress: Math.min(f.progress + increment, 90) };
+          }
+          return f;
+        }));
+      }, 200);
       
       // Store the interval in our ref for cleanup
       activeIntervalsRef.current[id] = progressInterval;
@@ -160,8 +168,16 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
         delete activeIntervalsRef.current[id];
       }
       
-      updateFileProgress(id, 100);
-      updateFileStatus(id, 'success');
+      // Smoothly transition to 100%
+      setFiles(prev => prev.map(f => 
+        f.id === id ? { ...f, progress: 95 } : f
+      ));
+      
+      // Small delay before showing 100% to make the transition visible
+      setTimeout(() => {
+        updateFileProgress(id, 100);
+        updateFileStatus(id, 'success');
+      }, 300);
       
     } catch (error: any) {
       console.error("Upload error:", error);
