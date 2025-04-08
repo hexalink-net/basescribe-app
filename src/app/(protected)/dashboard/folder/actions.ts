@@ -23,11 +23,11 @@ export async function createFolder(name: string, parentId: string | null) {
       return { success: false, error: 'Folder name is too long (maximum 100 characters)' }
     }
     
-    // If creating in a parent folder, verify parent folder ownership
+    // If creating in a parent folder, verify parent folder ownership and check if it's a root-level folder
     if (parentId !== null) {
       const { data: folder, error: folderError } = await supabase
         .from('folders')
-        .select('id')
+        .select('id, parent_id')
         .eq('id', parentId)
         .eq('user_id', user.id)
         .single()
@@ -36,23 +36,29 @@ export async function createFolder(name: string, parentId: string | null) {
         console.error('Error verifying parent folder ownership:', folderError)
         return { success: false, error: 'Parent folder not found or not owned by user' }
       }
+      
+      // Check if the parent folder is already a child folder (has a parent_id)
+      if (folder.parent_id !== null) {
+        return { success: false, error: 'Cannot create folders inside child folders. Only root folders can contain subfolders.' }
+      }
     }
     
-    const { data, error } = await supabase
+    const { data: folder, error: folderError } = await supabase
     .rpc('create_or_get_folder', {
       folder_name: trimmedName,
-      uid: user.id
+      uid: user.id,
+      parent_id: parentId
     });
     
-    if (error) {
-      console.error('Error creating folder:', error)
+    if (folderError) {
+      console.error('Error creating folder:', folderError)
       return { success: false, error: 'Unable to create folder' }
     }
     
     // Revalidate the dashboard page to refresh the folders list
     revalidatePath('/dashboard')
     
-    return { success: true, data }
+    return { success: true, data: folder }
   } catch (error) {
     console.error('Error creating folder:', error)
     return { 

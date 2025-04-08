@@ -70,25 +70,6 @@ interface DashboardClientProps {
   currentFolder: Folder | null;
 }
 
-
-
-// Memoize the format functions outside the component to avoid recreation on each render
-const formatDateFn = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-const formatTimeFn = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true,
-  });
-};
-
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder }: DashboardClientProps) {
   // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -585,13 +566,18 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   // Memoize the action buttons to improve LCP
   const ActionButtons = useCallback(() => (
     <div className="flex gap-2">
-      <Button 
-        variant="outline" 
-        className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
-        onClick={() => setIsNewFolderModalOpen(true)}
-      >
-        Create Folder
-      </Button>
+
+      {/* Only show Create Folder button in root view or in a root-level folder */}
+      {(!currentFolder || (currentFolder && currentFolder.parent_id === null)) && (
+        <Button 
+          variant="outline" 
+          className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+          onClick={() => setIsNewFolderModalOpen(true)}
+        >
+          Create Folder
+        </Button>
+      )}
+
       <Button 
         className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 shadow-md transition-all duration-200 ease-in-out hover:shadow-lg flex items-center gap-2" 
         onClick={() => setIsUploadModalOpen(true)}
@@ -646,7 +632,6 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           folders={folders}
           currentFolder={currentFolder}
           userProfile={userProfile}
-          onCreateFolder={() => setIsNewFolderModalOpen(true)}
           onRenameFolder={handleFolderRenameClick}
           onDeleteFolder={handleFolderDeleteClick}
           onMoveFolder={handleFolderMoveClick}

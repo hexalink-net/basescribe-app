@@ -7,6 +7,11 @@ import { FolderIcon, FolderPlus, ChevronRight, Pencil, Trash2, ArrowRight, MoreV
 import { Folder, UserProfile } from '@/types/DashboardInterface';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
+import { useRouter } from 'next/navigation';
+import { createFolder } from '@/app/(protected)/dashboard/folder/actions';
+import { useToast } from '@/components/ui/UseToast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +24,6 @@ interface FolderSidebarProps {
   folders: Folder[];
   currentFolder: Folder | null;
   userProfile: UserProfile;
-  onCreateFolder: () => void;
   onRenameFolder: (folder: Folder) => void;
   onDeleteFolder: (folder: Folder) => void;
   onMoveFolder: (folder: Folder) => void;
@@ -36,33 +40,57 @@ export default function FolderSidebar({
   folders,
   currentFolder,
   userProfile,
-  onCreateFolder,
   onRenameFolder,
   onDeleteFolder,
   onMoveFolder
 }: FolderSidebarProps) {
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const router = useRouter();
+  const { toast } = useToast();
 
-  // Helper function to check if a folder is a descendant of another folder
-  const isDescendantOf = (folderId: string | undefined, ancestorId: string | undefined, foldersList: Folder[]): boolean => {
-    if (!folderId || !ancestorId) return false;
-    
-    let currentId: string | null = folderId;
-    const visited = new Set<string>();
-    
-    while (currentId) {
-      // Prevent infinite loops
-      if (visited.has(currentId)) return false;
-      visited.add(currentId);
-      
-      const folder = foldersList.find(f => f.id === currentId);
-      if (!folder) return false;
-      
-      if (folder.parent_id === ancestorId) return true;
-      currentId = folder.parent_id;
+  // Handle create folder at root level
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast({
+        title: "Error",
+        description: "Folder name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
     }
     
-    return false;
+    try {
+      // Always create at root level (null parent_id)
+      const result = await createFolder(newFolderName, null);
+      
+      if (result.success && result) {
+        setIsNewFolderModalOpen(false);
+        setNewFolderName('');
+        
+        // Navigate to the newly created folder
+        router.push(`/dashboard/folder/${result.data}`);
+        router.refresh();
+        toast({
+          title: "Folder created",
+          description: "The folder has been successfully created.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to create folder.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while creating the folder.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -80,18 +108,18 @@ export default function FolderSidebar({
         <div className="px-4 pt-4 pb-1 border-t border-[#2a2a2a]">
           <div className="flex justify-between items-center">
             <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 w-6 p-0 cursor-pointer" 
-              onClick={() => {
-                // Create folder in root
-                onCreateFolder();
-              }}
-              title="Create folder in root"
-            >
-              <FolderPlus className="h-4 w-4" />
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0 cursor-pointer" 
+                onClick={() => {
+                  // Open the folder creation dialog
+                  setIsNewFolderModalOpen(true);
+                }}
+                title="Create a new folder in the root directory"
+              >
+                <FolderPlus className="h-4 w-4" />
+              </Button>
           </div>
         </div>
       </div>
@@ -292,6 +320,43 @@ export default function FolderSidebar({
           </div>
         </div>
       </div>
+
+      {/* New Folder Dialog */}
+      {isNewFolderModalOpen && (
+        <Dialog open={isNewFolderModalOpen} onOpenChange={setIsNewFolderModalOpen}>
+          <DialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+            <DialogHeader>
+              <DialogTitle>Create New Folder</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Create a new folder in the root directory
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Input
+                placeholder="Folder name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                className="bg-[#2a2a2a] border-[#3a3a3a]"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsNewFolderModalOpen(false);
+                  setNewFolderName('');
+                }}
+                className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCreateFolder} className="cursor-pointer">
+                Create Folder
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
