@@ -1,10 +1,20 @@
 "use client";
 
-import { useState, memo, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, memo, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderUp, Pencil } from 'lucide-react';
 import { Upload, Folder } from '@/types/DashboardInterface';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/AlertDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +37,49 @@ interface FileTableProps {
   onRenameUpload: (upload: Upload) => void;
   selectAll: boolean;
 }
+
+// Delete Upload Dialog Props
+interface DeleteUploadDialogProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  upload: Upload | null;
+  isDeleting: boolean;
+  handleDelete: () => void;
+}
+
+// Memoized Delete Upload Dialog Component
+const DeleteUploadDialog = memo(({ isOpen, onOpenChange, upload, isDeleting, handleDelete }: DeleteUploadDialogProps) => {
+  if (!isOpen) return null;
+  
+  return (
+    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Upload</AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-400">
+            Are you sure you want to delete the upload &quot;{upload?.file_name}&quot;?
+            <br /><br />
+            This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleDelete}
+            className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+});
+
+DeleteUploadDialog.displayName = 'DeleteUploadDialog';
 
 // Empty state component is now directly used in the table
 
@@ -63,6 +116,8 @@ const FileRow = memo(({
   onMoveUpload: (uploadId: string) => void,
   onRenameUpload: (upload: Upload) => void
 }) => {
+  // State for delete confirmation dialog
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   // Memoize the duration calculation to avoid recalculating on every render
   const duration = useMemo(() => {
     const minutes = Math.floor(upload.duration_seconds / 60);
@@ -75,7 +130,8 @@ const FileRow = memo(({
     return `${formatDate(upload.created_at)}, ${formatTime(upload.created_at)}`;
   }, [upload.created_at, formatDate, formatTime]);
 
-  return (
+  // Create the row element
+  const rowElement = (
     <tr className={`border-b border-[#2a2a2a] hover:bg-[#2a2a2a] ${isSelected ? 'bg-[#2a2a2a]' : ''}`}>
       <td className="px-4 py-3">
         <input 
@@ -133,15 +189,33 @@ const FileRow = memo(({
             <DropdownMenuItem 
               className="text-red-500 hover:text-white hover:bg-red-600 cursor-pointer focus:bg-red-600 focus:text-white px-3 py-2 text-sm font-medium transition-colors flex items-center"
               disabled={isDeleting}
-              onClick={() => onDeleteUpload(upload.id)}
+              onClick={() => setShowDeleteDialog(true)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </td>
     </tr>
+  );
+  
+  return (
+    <>
+      {rowElement}
+      
+      {/* Delete Upload Confirmation Dialog */}
+      <DeleteUploadDialog
+        isOpen={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        upload={upload}
+        isDeleting={isDeleting}
+        handleDelete={() => {
+          onDeleteUpload(upload.id);
+          setShowDeleteDialog(false);
+        }}
+      />
+    </>
   );
 });
 
