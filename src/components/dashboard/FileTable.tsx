@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo, useMemo, useEffect, useRef } from 'react';
+import { useState, memo, useMemo, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderUp, Pencil } from 'lucide-react';
@@ -240,10 +240,35 @@ const FileTable = ({
   // State for client-side rendering to avoid hydration mismatch
   const [isMounted, setIsMounted] = useState(false);
   
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10; // Show 10 files per page
+  const totalPages = Math.ceil(uploads.length / itemsPerPage);
+  
+  // Get paginated uploads
+  const paginatedUploads = useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage;
+    return uploads.slice(startIndex, startIndex + itemsPerPage);
+  }, [uploads, page, itemsPerPage]);
+  
   // Set mounted state after component mounts (client-side only)
   useEffect(() => {
     setIsMounted(true);
   }, []);
+  
+  // Reset pagination when folder changes or uploads change
+  useEffect(() => {
+    setPage(1);
+  }, [currentFolder, uploads.length]);
+  
+  // Handle pagination
+  const handlePreviousPage = useCallback(() => {
+    setPage(prev => Math.max(prev - 1, 1));
+  }, []);
+  
+  const handleNextPage = useCallback(() => {
+    setPage(prev => Math.min(prev + 1, totalPages));
+  }, [totalPages]);
   
   // Memoize the empty state component
   const emptyState = useMemo(() => 
@@ -281,7 +306,7 @@ const FileTable = ({
             </thead>
             <tbody>
               {emptyState || (
-                uploads.map((upload) => (
+                paginatedUploads.map((upload) => (
                   <FileRow 
                     key={upload.id}
                     upload={upload}
@@ -300,6 +325,38 @@ const FileTable = ({
           </table>
         </div>
       </div>
+      
+      {/* Pagination controls */}
+      {uploads.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[#2a2a2a]">
+          <div className="text-sm text-gray-400">
+            Showing {((page - 1) * itemsPerPage) + 1} to {Math.min(page * itemsPerPage, uploads.length)} of {uploads.length} uploads
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handlePreviousPage} 
+              disabled={page === 1}
+              className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white"
+            >
+              Previous
+            </Button>
+            <div className="flex items-center px-3 text-sm text-gray-400">
+              Page {page} of {totalPages}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleNextPage} 
+              disabled={page === totalPages}
+              className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -312,6 +369,7 @@ export default memo(FileTable, (prevProps, nextProps) => {
     prevProps.uploads === nextProps.uploads &&
     prevProps.selectedUploads === nextProps.selectedUploads &&
     prevProps.currentFolder === nextProps.currentFolder &&
-    prevProps.selectAll === nextProps.selectAll
+    prevProps.selectAll === nextProps.selectAll &&
+    JSON.stringify(prevProps.isDeleting) === JSON.stringify(nextProps.isDeleting)
   );
 });

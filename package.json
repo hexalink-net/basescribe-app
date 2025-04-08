@@ -24,6 +24,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.3",
+    "@tanstack/react-virtual": "^3.13.6",
     "@types/uuid": "^10.0.0",
     "@uppy/core": "^4.4.3",
     "@uppy/tus": "^4.2.2",
