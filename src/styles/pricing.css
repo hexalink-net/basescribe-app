@@ -94,7 +94,7 @@ background-base {
   }
   
   .featured-price-title {
-    position: relative;
+    
   }
   .featured-price-title::before {
     content: '';
