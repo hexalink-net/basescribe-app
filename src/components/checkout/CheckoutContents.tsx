@@ -20,7 +20,7 @@ interface Props {
 export function CheckoutContents({ userEmail }: Props) {
   const { priceId } = useParams<PathParams>();
   const [quantity, setQuantity] = useState<number>(1);
-  const [paddle, setPaddle] = useState<Paddle | null>(null);
+  const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
   const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
 
   const handleCheckoutEvents = (event: CheckoutEventsData) => {
@@ -56,9 +56,10 @@ export function CheckoutContents({ userEmail }: Props) {
             successUrl: '/checkout/success',
           },
         },
-      }).then(async (paddle) => {
-        console.log(checkoutData)
+      }).then((paddle) => {
+        console.log(priceId)
         if (paddle && priceId) {
+            console.log(paddle, priceId)
           setPaddle(paddle);
           paddle.Checkout.open({
             ...(userEmail && { customer: { email: userEmail } }),
@@ -74,6 +75,7 @@ export function CheckoutContents({ userEmail }: Props) {
       updateItems(paddle, priceId, quantity);
     }
   }, [paddle, priceId, quantity, updateItems]);
+
 
   return (
     <div

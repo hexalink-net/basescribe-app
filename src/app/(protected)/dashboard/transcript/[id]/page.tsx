@@ -1,6 +1,7 @@
 import { createClient, getUserUploadSSR } from '@/lib/supabase/server';
 import TranscriptClient from './TranscriptClient';
 import { redirect } from 'next/navigation';
+import { bucketNameUpload } from '@/constants/SupabaseBucket';
 
 export default async function TranscriptPage({ params }: { params: { id: string } }) {
   // Ensure params is properly awaited
@@ -34,7 +35,7 @@ export default async function TranscriptPage({ params }: { params: { id: string 
   let audioUrl = '';
   if (upload.file_path) {
     const { data, error } = await supabase.storage
-      .from('user-uploads')
+      .from(bucketNameUpload)
       .createSignedUrl(upload.file_path, 3600); // 1 hour expiry;
 
     if (error) {

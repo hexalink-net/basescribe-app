@@ -1,0 +1,1 @@
+export const bucketNameUpload = 'user-uploads-basescribe-invqqnmrvigbgktwrxaf-10102025';

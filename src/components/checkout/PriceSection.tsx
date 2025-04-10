@@ -12,7 +12,6 @@ interface Props {
 }
 
 export function PriceSection({ checkoutData, handleQuantityChange, quantity }: Props) {
-    console.log(checkoutData, quantity)
   return (
     <>
       <div className={'hidden md:block'}>
