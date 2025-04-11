@@ -6,7 +6,7 @@ import Image from 'next/image';
 export function CheckoutHeader() {
   return (
     <div className={'flex gap-4'}>
-      <Link href={'/'}>
+      <Link href={'/pricing'}>
         <Button variant={'secondary'} className={'h-[32px] bg-[#182222] border-border w-[32px] p-0 rounded-[4px]'}>
           <ChevronLeft />
         </Button>

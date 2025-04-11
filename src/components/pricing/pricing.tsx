@@ -9,9 +9,10 @@ import { usePaddlePrices } from '@/hooks/UsePaddlePrices';
 
 interface Props {
   country: string;
+  user?: { id: string; email?: string } | null;
 }
 
-export function Pricing({ country }: Props) {
+export function Pricing({ country, user }: Props) {
   const [frequency, setFrequency] = useState<IBillingFrequency>(BillingFrequency[0]);
   const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
 
@@ -33,7 +34,7 @@ export function Pricing({ country }: Props) {
   return (
     <div className="mx-auto max-w-7xl w-full relative px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center gap-8">
       <Toggle frequency={frequency} setFrequency={setFrequency} />
-      <PriceCards frequency={frequency} loading={loading} priceMap={prices} />
+      <PriceCards frequency={frequency} loading={loading} priceMap={prices} user={user} />
     </div>
   );
 }

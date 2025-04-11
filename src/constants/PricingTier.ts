@@ -10,15 +10,6 @@ export interface Tier {
   
   export const PricingTier: Tier[] = [
     {
-      name: 'Free',
-      id: 'free',
-      icon: '/assets/icons/price-tiers/free-icon.svg',
-      description: 'Ideal for individuals who want to get started with simple design tasks.',
-      features: ['1 workspace', 'Limited collaboration', 'Export to PNG and SVG'],
-      featured: false,
-      priceId: { month: 'pri_01jragd254tcrrdmwtk1c8h776', year: 'pri_01jrcqk5576zvh8f7qhq2xsdqm' },
-    },
-    {
       name: 'Pro',
       id: 'pro',
       icon: '/assets/icons/price-tiers/basic-icon.svg',

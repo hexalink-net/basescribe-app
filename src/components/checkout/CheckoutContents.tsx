@@ -19,7 +19,7 @@ interface Props {
 
 export function CheckoutContents({ userEmail }: Props) {
   const { priceId } = useParams<PathParams>();
-  const [quantity, setQuantity] = useState<number>(1);
+  const quantity = 1;
   const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
   const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
 
@@ -49,7 +49,7 @@ export function CheckoutContents({ userEmail }: Props) {
             variant: 'one-page',
             displayMode: 'inline',
             theme: 'dark',
-            allowLogout: !userEmail,
+            allowLogout: false,
             frameTarget: 'paddle-checkout-frame',
             frameInitialHeight: 450,
             frameStyle: 'width: 100%; background-color: transparent; border: none',
@@ -57,9 +57,7 @@ export function CheckoutContents({ userEmail }: Props) {
           },
         },
       }).then((paddle) => {
-        console.log(priceId)
         if (paddle && priceId) {
-            console.log(paddle, priceId)
           setPaddle(paddle);
           paddle.Checkout.open({
             ...(userEmail && { customer: { email: userEmail } }),
@@ -86,7 +84,7 @@ export function CheckoutContents({ userEmail }: Props) {
       <CheckoutFormGradients />
       <div className={'flex flex-col md:flex-row gap-8 md:gap-16'}>
         <div className={'w-full md:w-[400px]'}>
-          <PriceSection checkoutData={checkoutData} quantity={quantity} handleQuantityChange={setQuantity} />
+          <PriceSection checkoutData={checkoutData} quantity={quantity} />
         </div>
         <div className={'min-w-[375px] lg:min-w-[535px]'}>
           <div className={'text-base leading-[20px] font-semibold mb-8'}>Payment details</div>
