@@ -111,19 +111,27 @@ export async function createNewUserSSR(supabase: SupabaseClient, userId: string,
 
 export async function updateUserSubscriptionSSR(
     supabase: SupabaseClient,
-    userId: string,
-    planId: string,
+    customerId: string,
+    productId: string,
+    priceId: string,
     subscriptionId: string,
-    planStartDate: Date,
-    planEndDate: Date
+    planStartDate: string,
+    planEndDate: string
   ) {    
-    await supabase.rpc('update_user_subscription', {
-      user_id: userId,
-      new_plan_id: planId,
+    const { data, error } = await supabase.rpc('update_user_subscription', {
+      new_product_id: productId,
+      new_price_id: priceId,
       new_subscription_id: subscriptionId,
       new_plan_start_date: planStartDate,
-      new_plan_end_date: planEndDate
-    });
+      new_plan_end_date: planEndDate,
+      customer_id_paddle: customerId
+    }).select();
+
+    if (error) {
+      console.error("Error updating user subscription:", error);
+    }
+
+    return { data, error };
   }
 
 export async function updateUserUsageSSR(

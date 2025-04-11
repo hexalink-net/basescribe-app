@@ -5,7 +5,7 @@ import { CheckoutFormGradients } from '@/components/checkout/CheckoutFromGradien
 import { type Environments, initializePaddle, type Paddle } from '@paddle/paddle-js';
 import type { CheckoutEventsData } from '@paddle/paddle-js/types/checkout/events';
 import throttle from 'lodash.throttle';
-import { useParams } from 'next/navigation';
+import { redirect, useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 interface PathParams {
@@ -15,10 +15,10 @@ interface PathParams {
 
 interface Props {
   userEmail?: string;
+  updateCustomerId?: (customerId: string) => Promise<any>;
 }
 
-export function CheckoutContents({ userEmail }: Props) {
-  const { priceId } = useParams<PathParams>();
+export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  const { priceId } = useParams<PathParams>();
   const quantity = 1;
   const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
   const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
@@ -39,9 +39,21 @@ export function CheckoutContents({ userEmail }: Props) {
       initializePaddle({
         token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
         environment: process.env.NEXT_PUBLIC_PADDLE_ENV as Environments,
-        eventCallback: (event) => {
+        eventCallback: async (event) => {
           if (event.data && event.name) {
             handleCheckoutEvents(event.data);
+          }
+
+          if (event.name === 'checkout.completed' && updateCustomerId) {
+            try {
+              const customerId = event.data?.customer?.id ?? '';
+              updateCustomerId(customerId)
+                .finally(() => {
+                  window.location.href = '/checkout/success';
+                });
+            } catch (error) {
+              console.error('Error updating customer ID');
+            }
           }
         },
         checkout: {
@@ -53,7 +65,6 @@ export function CheckoutContents({ userEmail }: Props) {
             frameTarget: 'paddle-checkout-frame',
             frameInitialHeight: 450,
             frameStyle: 'width: 100%; background-color: transparent; border: none',
-            successUrl: '/checkout/success',
           },
         },
       }).then((paddle) => {
