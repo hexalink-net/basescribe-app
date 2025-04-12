@@ -22,6 +22,7 @@ export async function uploadFile(
         .upload(filePath, file);
       
       if (error) {
+        console.error(error)
         throw new Error(`Storage upload failed`);
       }
       return;

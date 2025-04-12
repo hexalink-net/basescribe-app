@@ -10,6 +10,12 @@ export interface UserProfile {
   monthly_usage_seconds: number;
 }
 
+interface TranscriptSegment {
+  start: number;
+  end: number;
+  text: string;
+}
+
 export interface Upload {
   id: string;
   user_id: string;
@@ -21,7 +27,7 @@ export interface Upload {
   duration_seconds: number;
   status: 'pending' | 'processing' | 'completed'| 'error';
   transcript_text?: string | null;
-  transcript_json?: any | null;
+  transcript_json?: TranscriptSegment[] | null;
 }
 
 export interface Folder {

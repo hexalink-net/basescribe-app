@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 
 type PlanActionFormProps = {
   planType: 'free' | 'pro';
-  action: (formData: FormData) => Promise<any>;
+  action: (formData: FormData) => void | Promise<void>;
   buttonText: string;
   variant?: 'default' | 'outline' | 'destructive';
 };
 
 export function PlanActionForm({ 
-  planType, 
   action, 
   buttonText, 
   variant = 'default' 

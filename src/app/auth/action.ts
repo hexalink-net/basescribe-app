@@ -1,6 +1,5 @@
 "use server"
 import { createClient, createNewUserSSR } from "@/lib/supabase/server";
-import { Environments, initializePaddle } from "@paddle/paddle-js";
 import { redirect } from "next/navigation";
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : "http://localhost:3000"

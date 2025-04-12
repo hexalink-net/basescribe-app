@@ -144,7 +144,7 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
                 <div className="space-y-4 max-h-[300px] overflow-y-auto">
                   {(() => {
                     try {
-                      const segments = JSON.parse(upload.transcript_json);
+                      const segments = upload.transcript_json;
                       return segments.map((segment: { start: number; end: number; text: string }, index: number) => (
                         <div key={index} className="p-3 bg-muted rounded-md">
                           <div className="flex justify-between text-sm text-muted-foreground mb-1">

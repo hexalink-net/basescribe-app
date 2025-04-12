@@ -27,11 +27,8 @@ export async function updatePlan(userId: string, planType: 'free' | 'pro') {
     if (error) throw error;
     
     // Revalidate the profile page to show updated data
-    revalidatePath('/profile');
-    
-    return { success: true };
+    revalidatePath('/profile');    
   } catch (error: unknown) {
     console.error(`Error ${planType === 'pro' ? 'upgrading' : 'downgrading'} plan:`, error);
-    return { success: false, error: "Unable to update plan" };
   }
 }

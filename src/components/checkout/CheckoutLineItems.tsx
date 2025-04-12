@@ -1,4 +1,3 @@
-import { QuantityField } from '@/components/checkout/QuantityField';
 import { Separator } from '@/components/ui/separator';
 import { CheckoutEventsData } from '@paddle/paddle-js/types/checkout/events';
 import { formatMoney } from '@/lib/paddle/ParseMoney';

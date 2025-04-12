@@ -63,7 +63,7 @@ export function AuthForm() {
         }
       } else {
         // Sign in
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -78,10 +78,10 @@ export function AuthForm() {
         router.push('/dashboard');
         router.refresh();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Authentication error',
-        description: error.message || 'An error occurred during authentication',
+        description: error instanceof Error ? error.message : 'An error occurred during authentication',
         variant: 'destructive',
       });
     } finally {
@@ -99,10 +99,10 @@ export function AuthForm() {
       });
 
       if (error) throw error;
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Authentication error',
-        description: error.message || 'An error occurred during Google authentication',
+        description: error instanceof Error ? error.message : 'An error occurred during Google authentication',
         variant: 'destructive',
       });
     }

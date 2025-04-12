@@ -3,10 +3,11 @@ import TranscriptClient from './TranscriptClient';
 import { redirect } from 'next/navigation';
 import { bucketNameUpload } from '@/constants/SupabaseBucket';
 
-export default async function TranscriptPage({ params }: { params: { id: string } }) {
+type tParams = Promise<{ id: string }>;
+
+export default async function TranscriptPage({ params }: { params: tParams }) {
   // Ensure params is properly awaited
-  const param = await params;
-  const id = param.id;
+  const { id } = await params;
   
   // Get server-side Supabase client
   const supabase = await createClient();

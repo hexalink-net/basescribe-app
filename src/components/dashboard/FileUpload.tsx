@@ -179,7 +179,7 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
         updateFileStatus(id, 'success');
       }, 300);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload error:", error);
       
       // Clear and remove the interval
@@ -188,10 +188,10 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
         delete activeIntervalsRef.current[id];
       }
       
-      updateFileStatus(id, 'error', error.message);
+      updateFileStatus(id, 'error', error instanceof Error ? error.message : 'An error occurred during upload');
       toast({
         title: "Upload failed",
-        description: `${file.name}: ${error.message}`,
+        description: `${file.name}: ${error instanceof Error ? error.message : 'An error occurred during upload'}`,
         variant: "destructive",
       });
     }

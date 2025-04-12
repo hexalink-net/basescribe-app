@@ -198,8 +198,6 @@ DeleteFolderDialog.displayName = 'DeleteFolderDialog';
 
 // Memoized Move Folder Dialog Component
 const MoveFolderDialog = memo(({ isOpen, onOpenChange, folder, isMoving, handleMove, folders, isDescendantOf }: MoveFolderDialogProps) => {
-  if (!isOpen) return null;
-  
   // Memoize filtered folders to prevent recomputation on every render
   const filteredFolders = useMemo(() => {
     return folders.filter((f: Folder) => 
@@ -207,6 +205,8 @@ const MoveFolderDialog = memo(({ isOpen, onOpenChange, folder, isMoving, handleM
       !isDescendantOf(f.id, folder?.id, folders)
     );
   }, [folders, folder, isDescendantOf]);
+  
+  if (!isOpen) return null;
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

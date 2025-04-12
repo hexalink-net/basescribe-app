@@ -4,7 +4,9 @@ import DashboardClient from '../../DashboardClient';
 import { getFolders } from '../actions';
 import { UserProfile } from '@/types/DashboardInterface';
 
-export default async function FolderPage({ params }: { params: { id: string } }) {
+type tParams = Promise<{ id: string }>;
+
+export default async function FolderPage({ params }: { params:  tParams })  {
   // Get server-side Supabase client
   const { id } = await params;
   const supabase = await createClient();

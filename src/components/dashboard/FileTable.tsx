@@ -84,7 +84,7 @@ DeleteUploadDialog.displayName = 'DeleteUploadDialog';
 // Empty state component is now directly used in the table
 
 // Memoized empty state component
-const EmptyState = memo(({ currentFolder }: { currentFolder: Folder | null }) => (
+export const EmptyState = memo(({ currentFolder }: { currentFolder: Folder | null }) => (
   <tr>
     <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
       {currentFolder 
@@ -94,8 +94,10 @@ const EmptyState = memo(({ currentFolder }: { currentFolder: Folder | null }) =>
   </tr>
 ));
 
+EmptyState.displayName = 'EmptyState';
+
 // Memoized file row component to prevent unnecessary re-renders
-const FileRow = memo(({ 
+export const FileRow = memo(({ 
   upload, 
   isSelected, 
   isDeleting,
@@ -199,7 +201,7 @@ const FileRow = memo(({
       </td>
     </tr>
   );
-  
+
   return (
     <>
       {rowElement}
@@ -218,6 +220,8 @@ const FileRow = memo(({
     </>
   );
 });
+
+FileRow.displayName = 'FileRow';
 
 // Main FileTable component with memoization
 const FileTable = ({

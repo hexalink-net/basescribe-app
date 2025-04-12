@@ -5,7 +5,7 @@ import { CheckoutFormGradients } from '@/components/checkout/CheckoutFromGradien
 import { type Environments, initializePaddle, type Paddle } from '@paddle/paddle-js';
 import type { CheckoutEventsData } from '@paddle/paddle-js/types/checkout/events';
 import throttle from 'lodash.throttle';
-import { redirect, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 interface PathParams {
@@ -15,7 +15,7 @@ interface PathParams {
 
 interface Props {
   userEmail?: string;
-  updateCustomerId?: (customerId: string) => Promise<any>;
+  updateCustomerId?: (customerId: string) => Promise<void>;
 }
 
 export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  const { priceId } = useParams<PathParams>();
@@ -23,14 +23,17 @@ export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  cons
   const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
   const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
 
-  const handleCheckoutEvents = (event: CheckoutEventsData) => {
+  const handleCheckoutEvents = useCallback((event: CheckoutEventsData) => {
     setCheckoutData(event);
-  };
+  }, []);
 
   const updateItems = useCallback(
-    throttle((paddle: Paddle, priceId: string, quantity: number) => {
-      paddle.Checkout.updateItems([{ priceId, quantity }]);
-    }, 1000),
+    (paddle: Paddle, priceId: string, quantity: number) => {
+      const throttledUpdate = throttle((p: Paddle, id: string, qty: number) => {
+        p.Checkout.updateItems([{ priceId: id, quantity: qty }]);
+      }, 1000);
+      throttledUpdate(paddle, priceId, quantity);
+    },
     [],
   );
 
@@ -51,8 +54,8 @@ export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  cons
                 .finally(() => {
                   window.location.href = '/checkout/success';
                 });
-            } catch (error) {
-              console.error('Error updating customer ID');
+            } catch (error: unknown) {
+              console.error('Error updating customer ID:', error);
             }
           }
         },
@@ -77,7 +80,7 @@ export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  cons
         }
       });
     }
-  }, [paddle?.Initialized, priceId, userEmail]);
+  }, [paddle?.Initialized, priceId, userEmail, updateCustomerId, handleCheckoutEvents]);
 
   useEffect(() => {
     if (paddle && priceId && paddle.Initialized) {
