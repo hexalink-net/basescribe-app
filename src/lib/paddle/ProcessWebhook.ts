@@ -19,7 +19,7 @@ import {
       locale: string;
       created_at: string; // ISO timestamp
       updated_at: string; // ISO timestamp
-      import_meta: any; // adjust type if needed
+      import_meta: string | null; // adjust type if needed
     };
     meta: {
       request_id: string;
