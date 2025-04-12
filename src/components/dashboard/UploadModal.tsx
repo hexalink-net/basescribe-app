@@ -39,7 +39,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
     }
     
     // Check if user can upload based on their plan type
-    const maxFileSize = userProfile?.plan_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
+    const maxFileSize = userProfile?.product_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
     
     if (file.size > maxFileSize) {
       toast({
@@ -96,7 +96,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         <div className="w-full overflow-y-auto flex-grow">
           <FileUpload 
             onFileSelected={handleFileUpload} 
-            maxSizeInBytes={userProfile?.plan_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
+            maxSizeInBytes={userProfile?.product_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
             disabled={loading}
             multiple={multiple}
           />

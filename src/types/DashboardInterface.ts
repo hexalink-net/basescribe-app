@@ -2,7 +2,7 @@ export interface UserProfile {
   id: string;
   email?: string;
   created_at?: Date | null;
-  plan_id?: string | null;
+  product_id?: string | null;
   subscription_id?: string | null;
   plan_start_date?: Date | null;
   plan_end_date?: Date | null;

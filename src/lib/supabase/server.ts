@@ -98,7 +98,7 @@ export async function createNewUserSSR(supabase: SupabaseClient, userId: string,
       { 
         id: userId,
         email: userEmail,
-        plan_id: "test"
+        product_id: "test"
       }
     ]);
 

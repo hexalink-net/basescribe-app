@@ -15,10 +15,10 @@ export async function updatePlan(userId: string, planType: 'free' | 'pro') {
         plan_type: planType,
         // For Pro plan, add simulated subscription data
         ...(planType === 'pro' ? {
-          plan_id: 'simulated_plan_id',
-          paddle_id: 'simulated_paddle_id'
+          product_id: 'simulated_plan_id',
+          subscription_id: 'simulated_paddle_id'
         } : {
-          plan_id: null,
+          product_id: null,
           paddle_id: null
         })
       })

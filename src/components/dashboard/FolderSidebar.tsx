@@ -295,18 +295,18 @@ export default function FolderSidebar({
           <div>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-400">
-                {userProfile.plan_id === 'free' 
+                {userProfile.product_id === 'free' 
                   ? `${formatDuration(userProfile.total_usage_seconds || 0)} / 30:00` 
                   : `${formatDuration(userProfile.monthly_usage_seconds || 0)} / 60:00`}
               </span>
               <span className="text-gray-400">
-                {userProfile.plan_id === 'free' 
+                {userProfile.product_id === 'free' 
                   ? `${Math.round((userProfile.total_usage_seconds / (30 * 60)) * 100)}%` 
                   : `${Math.round((userProfile.monthly_usage_seconds / (60 * 60)) * 100)}%`}
               </span>
             </div>
             <Progress 
-              value={userProfile.plan_id === 'free' 
+              value={userProfile.product_id === 'free' 
                 ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (30 * 60)) * 100) 
                 : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
               className="h-1 bg-[#2a2a2a]" 
@@ -314,7 +314,7 @@ export default function FolderSidebar({
             />
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            {userProfile.plan_id === 'free' 
+            {userProfile.product_id === 'free' 
               ? 'Free plan: 30 minutes total limit' 
               : 'Pro plan: 60 minutes per month'}
           </div>

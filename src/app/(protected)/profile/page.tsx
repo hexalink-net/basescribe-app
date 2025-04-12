@@ -62,7 +62,7 @@ export default async function ProfilePage() {
             <CardHeader>
               <CardTitle>Usage</CardTitle>
               <CardDescription className="text-gray-400">
-                {userProfile.data.plan_id === 'free' 
+                {userProfile.data.product_id === 'free' 
                   ? 'Free plan: 30 minutes total limit' 
                   : 'Pro plan: 60 minutes per month'}
               </CardDescription>
@@ -72,18 +72,18 @@ export default async function ProfilePage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span>
-                      {userProfile.data.plan_id === 'free' 
+                      {userProfile.data.product_id === 'free' 
                         ? `Total usage: ${formatDuration(userProfile.data.total_usage_seconds || 0)} / 30:00 minutes` 
                         : `Monthly usage: ${formatDuration(userProfile.data.monthly_usage_seconds || 0)} / 60:00 minutes`}
                     </span>
                     <span>
-                      {userProfile.data.plan_id === 'free' 
+                      {userProfile.data.product_id === 'free' 
                         ? `${Math.round((userProfile.data.total_usage_seconds / (30 * 60)) * 100)}%` 
                         : `${Math.round((userProfile.data.monthly_usage_seconds / (60 * 60)) * 100)}%`}
                     </span>
                   </div>
                   <Progress 
-                    value={userProfile.data.plan_id === 'free' 
+                    value={userProfile.data.product_id === 'free' 
                       ? Math.min(100, ((userProfile.data.total_usage_seconds || 0) / (30 * 60)) * 100) 
                       : Math.min(100, ((userProfile.data.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
                     className="h-1 bg-[#2a2a2a]" 
@@ -129,7 +129,7 @@ export default async function ProfilePage() {
                 <div>
                   <p className="text-sm font-medium text-gray-400">Current Plan</p>
                   <p className="font-medium">
-                    {userProfile.data.plan_id === 'free' ? 'Free' : 'Pro'}
+                    {userProfile.data.product_id === 'free' ? 'Free' : 'Pro'}
                   </p>
                 </div>
                 
