@@ -2,7 +2,7 @@
 import { createClient, createNewUserSSR } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL;
+const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'http://localhost:3000';
 
 // Google OAuth sign-in
 export async function signInWithGoogle() {
