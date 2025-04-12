@@ -61,7 +61,7 @@ import {
         
         const customer: PaddleCustomerResponse = await res.json();
         
-        await updateUserSubscriptionSSR(
+        const {error} = await updateUserSubscriptionSSR(
             supabase,
             customer.data.email,
             eventData.data.items[0].price?.productId ?? '',
@@ -70,6 +70,10 @@ import {
             eventData.data.currentBillingPeriod?.startsAt ?? '',
             eventData.data.currentBillingPeriod?.endsAt ?? ''
         );
+        
+        if (error) {
+          throw error;
+        }
         
         console.log('Subscription updated successfully');
       } catch (e) {
