@@ -590,7 +590,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         Transcribe
       </Button>
     </div>
-  ), [setIsNewFolderModalOpen, setIsUploadModalOpen]);
+  ), [setIsNewFolderModalOpen, setIsUploadModalOpen, currentFolder]);
 
   // Memoize UI interaction handlers (these are different from the actual operation handlers)
   const handleFolderRenameClick = useCallback((folder: Folder) => {

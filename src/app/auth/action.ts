@@ -96,27 +96,3 @@ export async function signOut() {
     const supabase = await createClient()
     await supabase.auth.signOut()
 }
-
-async function createFreeTierSubscription(userEmail: string) {
-    if (process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && process.env.NEXT_PUBLIC_PADDLE_ENV) {
-        const paddle = await initializePaddle({
-            token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
-            environment: process.env.NEXT_PUBLIC_PADDLE_ENV as Environments,
-            checkout: {
-              settings: {
-                successUrl: `${PUBLIC_URL}/auth/callback`,
-              },
-            },
-        });
-
-        await paddle?.Checkout.open({
-            items: [{
-                priceId: process.env.NEXT_PUBLIC_FREE_TIER_PRICE_ID!,
-                quantity: 1
-            }],
-            customer: {
-                email: userEmail
-            }
-        })
-    }
-}

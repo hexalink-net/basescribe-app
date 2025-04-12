@@ -55,11 +55,11 @@ export default function PrivacyPage() {
           <h2>7. Third-Party Services</h2>
           <p>We may use third-party services to support our website and services. These third parties have access to your personal information only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose.</p>
           
-          <h2>8. Children's Privacy</h2>
+          <h2>8. Children&rsquo;s Privacy</h2>
           <p>Our service is not intended for use by children under the age of 13. We do not knowingly collect personally identifiable information from children under 13. If you are a parent or guardian and you are aware that your child has provided us with personal data, please contact us.</p>
           
           <h2>9. Changes to This Privacy Policy</h2>
-          <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date at the top of this Privacy Policy.</p>
+          <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &ldquo;Last updated&rdquo; date at the top of this Privacy Policy.</p>
           
           <h2>10. Contact Us</h2>
           <p>If you have any questions about this Privacy Policy, please contact us at privacy@basescribe.com.</p>

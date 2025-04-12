@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 // Server actions for plan management
-export async function updatePlan(userId: string, planType: 'free' | 'pro', formData: FormData) {
+export async function updatePlan(userId: string, planType: 'free' | 'pro') {
   const supabase = await createClient();
   
   try {
@@ -30,7 +30,7 @@ export async function updatePlan(userId: string, planType: 'free' | 'pro', formD
     revalidatePath('/profile');
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error ${planType === 'pro' ? 'upgrading' : 'downgrading'} plan:`, error);
     return { success: false, error: "Unable to update plan" };
   }

@@ -12,7 +12,7 @@ export default function TermsPage() {
           <p className="text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           
           <h2>1. Introduction</h2>
-          <p>Welcome to BaseScribe ("we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of the BaseScribe website and services, including any content, functionality, and services offered on or through our website (the "Service").</p>
+          <p>Welcome to BaseScribe (&ldquo;we,&rdquo; &ldquo;our,&rdquo; or &ldquo;us&rdquo;). These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of the BaseScribe website and services, including any content, functionality, and services offered on or through our website (the &ldquo;Service&rdquo;).</p>
           
           <h2>2. Acceptance of Terms</h2>
           <p>By accessing or using the Service, you agree to be bound by these Terms. If you do not agree to these Terms, you must not access or use the Service.</p>
@@ -39,7 +39,7 @@ export default function TermsPage() {
           <p>We may terminate or suspend your account and access to the Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
           
           <h2>10. Disclaimer of Warranties</h2>
-          <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis, without any warranties of any kind, either express or implied. We disclaim all warranties, including but not limited to, implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
+          <p>The Service is provided on an &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE&rdquo; basis, without any warranties of any kind, either express or implied. We disclaim all warranties, including but not limited to, implied warranties of merchantability, fitness for a particular purpose, and non-infringement.</p>
           
           <h2>11. Limitation of Liability</h2>
           <p>In no event will BaseScribe, its affiliates, or their licensors, service providers, employees, agents, officers, or directors be liable for damages of any kind, under any legal theory, arising out of or in connection with your use, or inability to use, the Service.</p>

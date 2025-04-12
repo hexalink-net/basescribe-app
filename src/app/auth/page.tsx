@@ -60,10 +60,10 @@ export default function AuthPage() {
           router.push('/dashboard');
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "An error occurred during authentication",
+        description: error instanceof Error ? error.message : "An error occurred during authentication",
         variant: "destructive",
       });
     } finally {
@@ -145,7 +145,7 @@ export default function AuthPage() {
                 </p>
               ) : (
                 <p>
-                  Don't have an account?{" "}
+                  Don&rsquo;t have an account?{" "}
                   <a
                     href="/auth?mode=signup"
                     className="underline underline-offset-4 hover:text-primary"

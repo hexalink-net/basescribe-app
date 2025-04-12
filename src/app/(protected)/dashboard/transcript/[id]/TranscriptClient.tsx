@@ -85,7 +85,7 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-4">Transcript Not Found</h2>
-          <p className="mb-6">The transcript you're looking for could not be found.</p>
+          <p className="mb-6">The transcript you&apos;re looking for could not be found.</p>
           <Button asChild>
             <Link href="/dashboard">Return to Dashboard</Link>
           </Button>
@@ -145,7 +145,7 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
                   {(() => {
                     try {
                       const segments = JSON.parse(upload.transcript_json);
-                      return segments.map((segment: any, index: number) => (
+                      return segments.map((segment: { start: number; end: number; text: string }, index: number) => (
                         <div key={index} className="p-3 bg-muted rounded-md">
                           <div className="flex justify-between text-sm text-muted-foreground mb-1">
                             <span>{formatTimestamp(segment.start)}</span>
@@ -154,19 +154,11 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
                           <p>{segment.text}</p>
                         </div>
                       ));
-                    } catch (error) {
-                      // Show toast notification for parsing error
-                      useEffect(() => {
-                        toast({
-                          title: "Error parsing transcript data",
-                          description: "The transcript data could not be parsed correctly. The file may be corrupted.",
-                          variant: "destructive"
-                        });
-                      }, []);
-                      
+                    } catch (error: unknown) {
+                      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
                       return (
                         <div className="p-3 bg-muted rounded-md text-center">
-                          <p className="text-muted-foreground">Error parsing transcript data</p>
+                          <p className="text-muted-foreground">Error parsing transcript data: {errorMessage}</p>
                           <p className="text-xs text-muted-foreground mt-2">The transcript data could not be parsed correctly. Please try downloading the original file instead.</p>
                         </div>
                       );
