@@ -12,7 +12,7 @@ import {
     data: {
       id: string;
       status: 'active' | 'archived' | 'deleted';
-      custom_data: Record<string, any> | null;
+      custom_data: Record<string, unknown> | null;
       name: string;
       email: string;
       marketing_consent: boolean;
