@@ -5,13 +5,13 @@ import { CheckoutFormGradients } from '@/components/checkout/CheckoutFromGradien
 import { type Environments, initializePaddle, type Paddle } from '@paddle/paddle-js';
 import type { CheckoutEventsData } from '@paddle/paddle-js/types/checkout/events';
 import throttle from 'lodash.throttle';
-import { useParams } from 'next/navigation';
+// import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-interface PathParams {
-  priceId: string;
-  [key: string]: string | string[];
-}
+// interface PathParams {
+//   priceId: string;
+//   [key: string]: string | string[];
+// }
 
 interface Props {
   userEmail?: string;
