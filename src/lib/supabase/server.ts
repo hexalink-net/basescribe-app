@@ -112,6 +112,7 @@ export async function createNewUserSSR(supabase: SupabaseClient, userId: string,
 export async function updateUserSubscriptionSSR(
     supabase: SupabaseClient,
     customerEmail: string,
+    customerIdPaddle: string,
     productId: string,
     priceId: string,
     subscriptionId: string,
@@ -124,7 +125,8 @@ export async function updateUserSubscriptionSSR(
       new_subscription_id: subscriptionId,
       new_plan_start_date: planStartDate,
       new_plan_end_date: planEndDate,
-      customer_email: customerEmail
+      customer_email: customerEmail,
+      new_customer_id: customerIdPaddle
     }).select();
 
     if (error) {

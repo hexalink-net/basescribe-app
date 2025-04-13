@@ -64,6 +64,7 @@ import {
         const {error} = await updateUserSubscriptionSSR(
             supabase,
             customer.data.email,
+            eventData.data.customerId,
             eventData.data.items[0].price?.productId ?? '',
             eventData.data.items[0].price?.id ?? '',
             eventData.data.id,

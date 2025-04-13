@@ -10,10 +10,9 @@ import { useCallback, useEffect, useState } from 'react';
 
 interface Props {
   userEmail?: string;
-  updateCustomerId?: (customerId: string) => Promise<void>;
 }
 
-export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  
+export function CheckoutContents({ userEmail }: Props) {  
   const params = useParams<{priceId: string}>();
   const priceId = params.priceId;
   const quantity = 1;
@@ -43,18 +42,6 @@ export function CheckoutContents({ userEmail, updateCustomerId }: Props) {
           if (event.data && event.name) {
             handleCheckoutEvents(event.data);
           }
-
-          if (event.name === 'checkout.completed' && updateCustomerId) {
-            try {
-              const customerId = event.data?.customer?.id ?? '';
-              updateCustomerId(customerId)
-                .finally(() => {
-                  window.location.href = '/checkout/success';
-                });
-            } catch (error: unknown) {
-              console.error('Error updating customer ID:', error);
-            }
-          }
         },
         checkout: {
           settings: {
@@ -77,7 +64,7 @@ export function CheckoutContents({ userEmail, updateCustomerId }: Props) {
         }
       });
     }
-  }, [paddle?.Initialized, priceId, userEmail, updateCustomerId, handleCheckoutEvents]);
+  }, [paddle?.Initialized, priceId, userEmail, handleCheckoutEvents]);
 
   useEffect(() => {
     if (paddle && priceId && paddle.Initialized) {
