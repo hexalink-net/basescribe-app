@@ -8,17 +8,14 @@ import throttle from 'lodash.throttle';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
-interface PathParams extends Record<string, string | string[]> {
-  priceId: string;
-}
-
 interface Props {
   userEmail?: string;
   updateCustomerId?: (customerId: string) => Promise<void>;
 }
 
 export function CheckoutContents({ userEmail, updateCustomerId }: Props) {  
-  const { priceId } = useParams<PathParams>();
+  const params = useParams<{priceId: string}>();
+  const priceId = params.priceId;
   const quantity = 1;
   const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
   const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
