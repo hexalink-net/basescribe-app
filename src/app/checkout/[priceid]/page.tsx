@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 type tParams = Promise<{ priceId: string }>;
 
 export default async function CheckoutPage({ params }: { params: tParams }) {
-  const { priceId } = await params;
-  console.log(priceId)
+  const paramsData= await params;
+  console.log(paramsData)
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   return (
@@ -15,7 +15,7 @@ export default async function CheckoutPage({ params }: { params: tParams }) {
         className={'mx-auto max-w-6xl relative px-[16px] md:px-[32px] py-[24px] flex flex-col gap-6 justify-between'}
       >
         <CheckoutHeader />
-        <CheckoutContents userEmail={data.user?.email} priceId={priceId}/>
+        <CheckoutContents userEmail={data.user?.email} priceId={paramsData.priceId}/>
       </div>
     </div>
   );
