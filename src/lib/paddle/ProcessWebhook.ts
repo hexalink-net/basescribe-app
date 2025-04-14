@@ -39,8 +39,14 @@ import {
           break;
       }
     }
+
+    //make new function for subscription cancelled
+    //make new function for subscription renewal
+    //make new function for subscription past due
+    //make new function for customer created
+    //make new function for customer updated
   
-    private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent) {
+    private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent) { //change to subscription activated
       try {
         const supabase = await createClient();
 
