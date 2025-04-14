@@ -6,6 +6,7 @@ type tParams = Promise<{ priceId: string }>;
 
 export default async function CheckoutPage({ params }: { params: tParams }) {
   const { priceId } = await params;
+  console.log(priceId)
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   return (
