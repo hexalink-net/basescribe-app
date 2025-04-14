@@ -3,7 +3,7 @@ import { createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server';
 import { getMediaDuration } from '@/lib/MediaUtils';
 import { Uppy } from '@uppy/core';
 import Tus from '@uppy/tus';
-import { bucketNameUpload } from '@/constants/SupabaseBucket';
+import { BucketNameUpload } from '@/constants/SupabaseBucket';
 
 // Upload functions
 /**
@@ -13,7 +13,7 @@ export async function uploadFile(
     file: File,
     filePath: string,
     fileSize: number,
-    bucketName: string = bucketNameUpload
+    bucketName: string = BucketNameUpload
   ) {
 
     if (fileSize <= 6000 * 1000) {

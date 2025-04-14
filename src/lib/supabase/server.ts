@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { SupabaseClient } from '@supabase/supabase-js'
-import { bucketNameUpload } from '@/constants/SupabaseBucket';
+import { BucketNameUpload } from '@/constants/SupabaseBucket';
 
 export async function createClient() {
     const { cookies } = await import('next/headers')
@@ -193,7 +193,7 @@ export async function deleteUserUploadSSR(
     if (upload?.file_path) {
       const { error: storageError } = await supabase
         .storage
-        .from(bucketNameUpload)
+        .from(BucketNameUpload)
         .remove([upload.file_path]);
       
       if (storageError) {

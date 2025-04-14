@@ -1,0 +1,1 @@
+export const LinkGetCustomerInfoPaddle = 'https://sandbox-api.paddle.com/customers/';

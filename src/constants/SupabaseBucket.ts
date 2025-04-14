@@ -1,1 +1,1 @@
-export const bucketNameUpload = 'user-uploads-basescribe-invqqnmrvigbgktwrxaf-10102025';
+export const BucketNameUpload = 'user-uploads-basescribe-invqqnmrvigbgktwrxaf-10102025';

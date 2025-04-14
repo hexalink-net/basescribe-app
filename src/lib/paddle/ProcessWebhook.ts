@@ -6,10 +6,11 @@ import {
     SubscriptionCreatedEvent,
     SubscriptionUpdatedEvent,
   } from '@paddle/paddle-node-sdk';
-  import { createClient, updateUserSubscriptionSSR } from '@/lib/supabase/server';
+import { createClient, updateUserSubscriptionSSR } from '@/lib/supabase/server';
+import { LinkGetCustomerInfoPaddle } from '@/constants/paddleUrl';
 
-  interface PaddleCustomerResponse {
-    data: {
+interface PaddleCustomerResponse {
+  data: {
       id: string;
       status: 'active' | 'archived' | 'deleted';
       custom_data: Record<string, unknown> | null;
@@ -24,9 +25,9 @@ import {
     meta: {
       request_id: string;
     };
-  }
+}
   
-  export class ProcessWebhook {
+export class ProcessWebhook {
     async processEvent(eventData: EventEntity) {
       switch (eventData.eventType) {
         case EventName.SubscriptionCreated:
@@ -38,7 +39,7 @@ import {
           await this.updateCustomerData(eventData);
           break;
       }
-    }
+}
 
     //make new function for subscription cancelled
     //make new function for subscription renewal
@@ -46,13 +47,14 @@ import {
     //make new function for customer created
     //make new function for customer updated
   
-    private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent) { //change to subscription activated
-      try {
-        const supabase = await createClient();
+private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent) { //change to subscription activated
+    try {
+      const supabase = await createClient();
+      const getCustomerInfoPaddleUrl = `${LinkGetCustomerInfoPaddle}/${eventData.data.customerId}`;
 
-        const res = await fetch(`https://sandbox-api.paddle.com/customers/${eventData.data.customerId}`, {
-          method: 'GET',
-          headers: {
+      const res = await fetch(getCustomerInfoPaddleUrl, {
+        method: 'GET',
+        headers: {
             Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -60,14 +62,14 @@ import {
           next: { revalidate: 0 }, // disables caching
         });
       
-        if (!res.ok) {
-          console.error('Failed to fetch Paddle customer:', await res.text());
-          throw new Error('Failed to fetch Paddle customer');
-        }
+      if (!res.ok) {
+        console.error('Failed to fetch Paddle customer:', await res.text());
+        throw new Error('Failed to fetch Paddle customer');
+      }
         
-        const customer: PaddleCustomerResponse = await res.json();
+      const customer: PaddleCustomerResponse = await res.json();
         
-        const {error} = await updateUserSubscriptionSSR(
+      const {error} = await updateUserSubscriptionSSR(
             supabase,
             customer.data.email,
             eventData.data.customerId,
@@ -76,24 +78,24 @@ import {
             eventData.data.id,
             eventData.data.currentBillingPeriod?.startsAt ?? '',
             eventData.data.currentBillingPeriod?.endsAt ?? ''
-        );
+      );
         
-        if (error) {
-          throw error;
-        }
-        
-        console.log('Subscription updated successfully');
-      } catch (e) {
-        console.error(e);
+      if (error) {
+        throw error;
       }
+        
+      console.log('Subscription updated successfully');
+    } catch (e) {
+      console.error(e);
     }
+}
   
-    private async updateCustomerData(eventData: CustomerCreatedEvent | CustomerUpdatedEvent) {
-      try {
-        const supabase = await createClient();
-        const response = await supabase
-          .from('customers')
-          .upsert({
+private async updateCustomerData(eventData: CustomerCreatedEvent | CustomerUpdatedEvent) {
+    try {
+      const supabase = await createClient();
+      const response = await supabase
+        .from('customers')
+        .upsert({
             customer_id: eventData.data.id,
             email: eventData.data.email,
           })
@@ -103,4 +105,4 @@ import {
         console.error(e);
       }
     }
-  }  
+}  
