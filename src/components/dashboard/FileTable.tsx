@@ -3,7 +3,14 @@
 import { useState, memo, useMemo, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, FileAudio, MoreVertical, Trash2, FolderUp, Pencil } from 'lucide-react';
+import dynamic from 'next/dynamic';
+// Lazy load icons to improve initial load performance
+const CheckCircle2 = dynamic(() => import('lucide-react').then(mod => mod.CheckCircle2), { ssr: false, loading: () => <div className="h-4 w-4 bg-green-500/20 rounded-full animate-pulse" /> });
+const FileAudio = dynamic(() => import('lucide-react').then(mod => mod.FileAudio), { ssr: false, loading: () => <div className="h-5 w-5 bg-blue-400/20 rounded animate-pulse" /> });
+const MoreVertical = dynamic(() => import('lucide-react').then(mod => mod.MoreVertical), { ssr: false });
+const Trash2 = dynamic(() => import('lucide-react').then(mod => mod.Trash2), { ssr: false });
+const FolderUp = dynamic(() => import('lucide-react').then(mod => mod.FolderUp), { ssr: false });
+const Pencil = dynamic(() => import('lucide-react').then(mod => mod.Pencil), { ssr: false });
 import { Upload, Folder } from '@/types/DashboardInterface';
 import {
   AlertDialog,
@@ -156,12 +163,16 @@ export const FileRow = memo(({
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center">
-          <FileAudio className="h-5 w-5 text-blue-400 mr-2" />
+          <div className="h-5 w-5 text-blue-400 mr-2 flex items-center justify-center">
+            <FileAudio className="h-4 w-4" />
+          </div>
         </div>
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center">
-          <CheckCircle2 className="h-4 w-4 text-green-500 mr-1" />
+          <div className="h-4 w-4 text-green-500 mr-1 flex items-center justify-center">
+            <CheckCircle2 className="h-3 w-3" />
+          </div>
           <span className="text-green-500 text-sm">Completed</span>
         </div>
       </td>
@@ -223,6 +234,42 @@ export const FileRow = memo(({
 
 FileRow.displayName = 'FileRow';
 
+// Optimized skeleton loader component for table with memoization to prevent re-renders
+const SkeletonTable = memo(() => {
+  // Pre-generate skeleton rows to avoid map operation during render
+  const skeletonRows = useMemo(() => {
+    return Array(5).fill(0).map((_, i) => (
+      <div key={i} className="border-b border-[#2a2a2a] py-4 px-4 flex items-center">
+        <div className="w-[20px] h-5 bg-[#2a2a2a] rounded mr-4"></div>
+        <div className="w-1/4 h-5 bg-[#2a2a2a] rounded mr-4"></div>
+        <div className="w-1/5 h-5 bg-[#2a2a2a] rounded mr-4"></div>
+        <div className="w-1/6 h-5 bg-[#2a2a2a] rounded mr-4"></div>
+        <div className="w-1/6 h-5 bg-[#2a2a2a] rounded mr-4"></div>
+        <div className="w-1/6 h-5 bg-[#2a2a2a] rounded"></div>
+      </div>
+    ));
+  }, []);
+  
+  return (
+    <div className="animate-pulse" style={{ contentVisibility: 'auto' }}>
+      {/* Skeleton header with lower opacity to reduce paint complexity */}
+      <div className="border-b border-[#2a2a2a] py-3 px-4 flex">
+        <div className="w-[20px] h-5 bg-[#2a2a2a]/80 rounded mr-4"></div>
+        <div className="w-1/4 h-5 bg-[#2a2a2a]/80 rounded mr-4"></div>
+        <div className="w-1/5 h-5 bg-[#2a2a2a]/80 rounded mr-4"></div>
+        <div className="w-1/6 h-5 bg-[#2a2a2a]/80 rounded mr-4"></div>
+        <div className="w-1/6 h-5 bg-[#2a2a2a]/80 rounded mr-4"></div>
+        <div className="w-1/6 h-5 bg-[#2a2a2a]/80 rounded"></div>
+      </div>
+      
+      {/* Render pre-generated skeleton rows */}
+      {skeletonRows}
+    </div>
+  );
+});
+
+SkeletonTable.displayName = 'SkeletonTable';
+
 // Main FileTable component with memoization
 const FileTable = ({
   uploads,
@@ -238,6 +285,23 @@ const FileTable = ({
   onRenameUpload,
   selectAll
 }: FileTableProps) => {
+  // Add loading state for progressive rendering to improve LCP
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Set loading to false after initial render with a short delay
+  // Using requestIdleCallback for better performance when browser is idle
+  useEffect(() => {
+    const loadContent = () => setIsLoading(false);
+    
+    // Use requestIdleCallback if available, otherwise fallback to setTimeout
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const id = requestIdleCallback(loadContent, { timeout: 200 });
+      return () => cancelIdleCallback(id);
+    } else {
+      const timer = setTimeout(loadContent, 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
   // Ref for the table container
   const tableContainerRef = useRef<HTMLDivElement>(null);
   
@@ -281,12 +345,16 @@ const FileTable = ({
 
   return (
     <div className="bg-[#1a1a1a] rounded-md overflow-hidden flex flex-col">
-      <div className="w-full flex flex-col">
-        {/* Table with sticky header */}
-        <div 
-          ref={tableContainerRef}
-          className={`overflow-y-auto ${isMounted ? 'max-h-[calc(100vh-220px)]' : 'max-h-[600px]'}`}
-        >
+      {isLoading ? (
+        <SkeletonTable />
+      ) : (
+        <>
+          <div className="w-full flex flex-col">
+            {/* Table with sticky header */}
+            <div 
+              ref={tableContainerRef}
+              className={`overflow-y-auto ${isMounted ? 'max-h-[calc(100vh-220px)]' : 'max-h-[600px]'}`}
+            >
           <table className="w-full table-fixed border-collapse">
             {/* Apply sticky positioning to the thead */}
             <thead className="sticky top-0 bg-[#1a1a1a] z-10">
@@ -327,39 +395,40 @@ const FileTable = ({
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-      
-      {/* Pagination controls */}
-      {uploads.length > 0 && totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-[#2a2a2a]">
-          <div className="text-sm text-gray-400">
-            Showing {((page - 1) * itemsPerPage) + 1} to {Math.min(page * itemsPerPage, uploads.length)} of {uploads.length} uploads
-          </div>
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handlePreviousPage} 
-              disabled={page === 1}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white"
-            >
-              Previous
-            </Button>
-            <div className="flex items-center px-3 text-sm text-gray-400">
-              Page {page} of {totalPages}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleNextPage} 
-              disabled={page === totalPages}
-              className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white"
-            >
-              Next
-            </Button>
           </div>
-        </div>
+          
+          {uploads.length > 0 && totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-[#2a2a2a]">
+              <div className="text-sm text-gray-400">
+                Showing {((page - 1) * itemsPerPage) + 1} to {Math.min(page * itemsPerPage, uploads.length)} of {uploads.length} uploads
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handlePreviousPage} 
+                  disabled={page === 1}
+                  className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white"
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center px-3 text-sm text-gray-400">
+                  Page {page} of {totalPages}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleNextPage} 
+                  disabled={page === totalPages}
+                  className="border-[#3a3a3a] hover:bg-[#2a2a2a] text-white"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
