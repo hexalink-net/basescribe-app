@@ -4,34 +4,29 @@ import { PriceSection } from '@/components/checkout/PriceSection';
 import { CheckoutFormGradients } from '@/components/checkout/CheckoutFromGradients';
 import { type Environments, initializePaddle, type Paddle } from '@paddle/paddle-js';
 import type { CheckoutEventsData } from '@paddle/paddle-js/types/checkout/events';
-import throttle from 'lodash.throttle';
 import { useCallback, useEffect, useState } from 'react';
 
 interface Props {
   priceId: string;
   userEmail?: string;
+  quantity?: number;
 }
 
-export function CheckoutContents({ priceId, userEmail }: Props) {  
-  const quantity = 1;
+export function CheckoutContents({ priceId, userEmail, quantity = 1 }: Props) {  
   const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
   const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleCheckoutEvents = useCallback((event: CheckoutEventsData) => {
     setCheckoutData(event);
   }, []);
 
-  const updateItems = useCallback(
-    (paddle: Paddle, priceId: string, quantity: number) => {
-      const throttledUpdate = throttle((p: Paddle, id: string, qty: number) => {
-        p.Checkout.updateItems([{ priceId: id, quantity: qty }]);
-      }, 1000);
-      throttledUpdate(paddle, priceId, quantity);
-    },
-    [],
-  );
-
   useEffect(() => {
+    if (!priceId) {
+      setErrorMessage('Missing product info. Please refresh or contact support.');
+      return;
+    }
+
     if (!paddle?.Initialized && process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && process.env.NEXT_PUBLIC_PADDLE_ENV) {
       initializePaddle({
         token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
@@ -57,19 +52,23 @@ export function CheckoutContents({ priceId, userEmail }: Props) {
           setPaddle(paddle);
           paddle.Checkout.open({
             ...(userEmail && { customer: { email: userEmail } }),
-            items: [{ priceId: priceId, quantity: 1 }],
+            items: [{ priceId: priceId, quantity }],
           });
         }
+      }).catch((err) => {
+        console.error('Paddle init failed:', err);
+        setErrorMessage('Payment system failed to load. Please try again later.');
       });
     }
-  }, [paddle?.Initialized, priceId, userEmail, handleCheckoutEvents]);
+  }, [paddle?.Initialized, priceId, userEmail, handleCheckoutEvents, quantity]);
 
-  useEffect(() => {
-    if (paddle && priceId && paddle.Initialized) {
-      updateItems(paddle, priceId, quantity);
-    }
-  }, [paddle, priceId, quantity, updateItems]);
-
+  if (errorMessage) {
+    return (
+      <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-200">
+        {errorMessage}
+      </div>
+    );
+  }
 
   return (
     <div

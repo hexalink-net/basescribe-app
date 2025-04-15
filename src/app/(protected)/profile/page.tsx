@@ -36,7 +36,7 @@ export default async function ProfilePage() {
       <div className="flex-1 overflow-auto p-6">
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold mb-4">Failed to load profile data</h2>
-          <p className="mb-6">We're sorry, but we were unable to load your profile data. Please try again later.</p>
+          <p className="mb-6">We&apos;re sorry, but we were unable to load your profile data. Please try again later.</p>
           <Button asChild>
             <Link href="/dashboard">Go to Dashboard</Link>
           </Button>

@@ -14,20 +14,6 @@ interface TranscriptClientProps {
 }
 
 export default function TranscriptClient({ upload, audioUrl }: TranscriptClientProps) {
-  if (!upload) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">Transcript Not Found</h2>
-          <p className="mb-6">The transcript you&apos;re looking for could not be found.</p>
-          <Button asChild>
-            <Link href="/dashboard">Return to Dashboard</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
@@ -89,6 +75,20 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
             <div className="h-8 w-8 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto"></div>
             <p className="mt-4 text-gray-400">Loading transcript...</p>
           </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!upload) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Transcript Not Found</h2>
+          <p className="mb-6">The transcript you&apos;re looking for could not be found.</p>
+          <Button asChild>
+            <Link href="/dashboard">Return to Dashboard</Link>
+          </Button>
         </div>
       </div>
     );
