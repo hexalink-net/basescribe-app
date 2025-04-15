@@ -89,7 +89,7 @@ export class ProcessWebhook {
       let planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
       let planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;
 
-      if (eventData.data.status === 'past_due' || eventData.data.status === 'canceled') {
+      if (eventData.data.status === 'past_due') {
         planEndDate = null;
         planStartDate = null;  
       }
