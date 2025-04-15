@@ -20,16 +20,10 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
   }
   
   // Get the upload details using server-side function
-  const { data: upload, error } = await getUserUploadSSR(supabase, user.id, id);
-  
-  if (error) {
-    console.error('Error fetching upload:', error);
-    throw new Error(`Failed to fetch transcript: ${error.message}`);
-  }
+  const { data: upload } = await getUserUploadSSR(supabase, user.id, id);
   
   if (!upload) {
-    console.error('Transcript not found');
-    throw new Error('Transcript not found. It may have been deleted or you may not have permission to view it.');
+    return <TranscriptClient upload={null} audioUrl={''} />;
   }
   
   // Generate the public URL for the audio file on the server
@@ -39,12 +33,11 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
       .from(BucketNameUpload)
       .createSignedUrl(upload.file_path, 3600); // 1 hour expiry;
 
-    if (error) {
-      console.error('Error creating signed URL:', error);
-      throw new Error(`Failed to generate audio URL: ${error.message}`);
+    if (!error && data?.signedUrl) {
+      audioUrl = data.signedUrl;
+    } else {
+      console.error('Failed to create signed URL');
     }
-
-    audioUrl = data.signedUrl;
   }
 
   // Return the client component with the data

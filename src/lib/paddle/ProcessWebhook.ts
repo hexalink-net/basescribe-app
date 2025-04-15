@@ -7,7 +7,7 @@ import {
     SubscriptionUpdatedEvent,
   } from '@paddle/paddle-node-sdk';
 import { createClient, updateUserSubscriptionSSR } from '@/lib/supabase/server';
-import { LinkGetCustomerInfoPaddle } from '@/constants/paddleUrl';
+import { LinkGetCustomerInfoPaddle } from '@/constants/PaddleUrl';
 
 interface PaddleCustomerResponse {
   data: {
@@ -60,7 +60,7 @@ private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | Subsc
             'Accept': 'application/json',
           },
           next: { revalidate: 0 }, // disables caching
-        });
+      });
       
       if (!res.ok) {
         console.error('Failed to fetch Paddle customer:', await res.text());
@@ -69,7 +69,7 @@ private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | Subsc
         
       const customer: PaddleCustomerResponse = await res.json();
         
-      const {error} = await updateUserSubscriptionSSR(
+      const {error: updateError} = await updateUserSubscriptionSSR(
             supabase,
             customer.data.email,
             eventData.data.customerId,
@@ -80,13 +80,15 @@ private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | Subsc
             eventData.data.currentBillingPeriod?.endsAt ?? ''
       );
         
-      if (error) {
-        throw error;
+      if (updateError) {
+        throw updateError;
       }
         
       console.log('Subscription updated successfully');
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+
+      throw new Error('Failed to update subscription');
     }
 }
   
@@ -100,9 +102,11 @@ private async updateCustomerData(eventData: CustomerCreatedEvent | CustomerUpdat
             email: eventData.data.email,
           })
           .select();
-        console.log(response);
-      } catch (e) {
-        console.error(e);
-      }
+      console.log(response);    
+    } catch (error) {
+      console.error('Error updating customer data:', error);
+
+      throw new Error('Failed to update customer data');
     }
+  }
 }  

@@ -13,8 +13,6 @@ export default async function DashboardPage() {
   // If user is not authenticated, redirect to auth page instead of throwing error
   if (!user) {
     redirect('/auth');
-    // The code below will never execute due to the redirect, but TypeScript needs this
-    return null;
   }
   
   // Get user profile from database

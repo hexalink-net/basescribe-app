@@ -6,6 +6,7 @@ import { PlanActionForm } from '@/components/PlanActionForm';
 import { updatePlan } from './actions';
 import { Progress } from '@/components/ui/progress';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 // Format seconds to minutes:seconds format
 function formatDuration(seconds: number): string {
@@ -22,19 +23,26 @@ export default async function ProfilePage() {
   if (!user) {
     // Redirect to auth page instead of throwing an error
     redirect('/auth');
-    // The code below will never execute due to the redirect, but TypeScript needs this
-    return null;
   }
   
   // Pre-compute user initials on the server side
   const userInitials = !user.email ? '?' : user.email.charAt(0).toUpperCase();
   
   // Get user profile from database
-  const userProfile = await getUserProfileSSR(supabase, user.id);
+  const {data: userProfile, error: userProfileError} = await getUserProfileSSR(supabase, user.id);
     
-  if (!userProfile) {
-    console.error('Error fetching user profile:');
-    throw new Error('Unable to load profile data');
+  if (userProfileError) {
+    return (
+      <div className="flex-1 overflow-auto p-6">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Failed to load profile data</h2>
+          <p className="mb-6">We're sorry, but we were unable to load your profile data. Please try again later.</p>
+          <Button asChild>
+            <Link href="/dashboard">Go to Dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   // Create bound server actions with the user ID
@@ -62,7 +70,7 @@ export default async function ProfilePage() {
             <CardHeader>
               <CardTitle>Usage</CardTitle>
               <CardDescription className="text-gray-400">
-                {userProfile.data.product_id === 'free' 
+                {userProfile.product_id === 'free' 
                   ? 'Free plan: 30 minutes total limit' 
                   : 'Pro plan: 60 minutes per month'}
               </CardDescription>
@@ -72,20 +80,20 @@ export default async function ProfilePage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span>
-                      {userProfile.data.product_id === 'free' 
-                        ? `Total usage: ${formatDuration(userProfile.data.total_usage_seconds || 0)} / 30:00 minutes` 
-                        : `Monthly usage: ${formatDuration(userProfile.data.monthly_usage_seconds || 0)} / 60:00 minutes`}
+                      {userProfile.product_id === 'free' 
+                        ? `Total usage: ${formatDuration(userProfile.total_usage_seconds || 0)} / 30:00 minutes` 
+                        : `Monthly usage: ${formatDuration(userProfile.monthly_usage_seconds || 0)} / 60:00 minutes`}
                     </span>
                     <span>
-                      {userProfile.data.product_id === 'free' 
-                        ? `${Math.round((userProfile.data.total_usage_seconds / (30 * 60)) * 100)}%` 
-                        : `${Math.round((userProfile.data.monthly_usage_seconds / (60 * 60)) * 100)}%`}
+                      {userProfile.product_id === 'free' 
+                        ? `${Math.round((userProfile.total_usage_seconds / (30 * 60)) * 100)}%` 
+                        : `${Math.round((userProfile.monthly_usage_seconds / (60 * 60)) * 100)}%`}
                     </span>
                   </div>
                   <Progress 
-                    value={userProfile.data.product_id === 'free' 
-                      ? Math.min(100, ((userProfile.data.total_usage_seconds || 0) / (30 * 60)) * 100) 
-                      : Math.min(100, ((userProfile.data.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
+                    value={userProfile.product_id === 'free' 
+                      ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (30 * 60)) * 100) 
+                      : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
                     className="h-1 bg-[#2a2a2a]" 
                     indicatorClassName="bg-[#3b82f6]" 
                   />
@@ -110,7 +118,7 @@ export default async function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-400">Account Created</p>
-                  <p>{new Date(userProfile.data.created_at).toLocaleDateString()}</p>
+                  <p>{new Date(userProfile.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -129,14 +137,14 @@ export default async function ProfilePage() {
                 <div>
                   <p className="text-sm font-medium text-gray-400">Current Plan</p>
                   <p className="font-medium">
-                    {userProfile.data.product_id === 'free' ? 'Free' : 'Pro'}
+                    {userProfile.product_id === 'free' ? 'Free' : 'Pro'}
                   </p>
                 </div>
                 
                 <div>
                   <p className="text-sm font-medium text-gray-400">Usage Limit</p>
                   <p>
-                    {userProfile.data.plan_type === 'free' 
+                    {userProfile.plan_type === 'free' 
                       ? '30 minutes total (lifetime)' 
                       : '60 minutes per month'}
                   </p>
@@ -144,7 +152,7 @@ export default async function ProfilePage() {
               </div>
             </CardContent>
             <CardFooter>
-              {userProfile.data.plan_type === 'free' ? (
+              {userProfile.plan_type === 'free' ? (
                 <PlanActionForm 
                   planType="pro" 
                   action={upgradeToPro} 
