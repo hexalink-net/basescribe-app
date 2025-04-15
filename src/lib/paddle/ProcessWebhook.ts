@@ -1,12 +1,10 @@
 import {
-    CustomerCreatedEvent,
-    CustomerUpdatedEvent,
     EventEntity,
     EventName,
     SubscriptionCreatedEvent,
-    SubscriptionUpdatedEvent,
+    SubscriptionUpdatedEvent
   } from '@paddle/paddle-node-sdk';
-import { createClient, updateUserSubscriptionSSR } from '@/lib/supabase/server';
+import { createClient, updateUserSubscriptionSSR, renewedSubscriptionStatusSSR } from '@/lib/supabase/server';
 import { LinkGetCustomerInfoPaddle } from '@/constants/PaddleUrl';
 
 interface PaddleCustomerResponse {
@@ -28,26 +26,18 @@ interface PaddleCustomerResponse {
 }
   
 export class ProcessWebhook {
-    async processEvent(eventData: EventEntity) {
-      switch (eventData.eventType) {
-        case EventName.SubscriptionCreated:
-        case EventName.SubscriptionUpdated:
-          await this.updateSubscriptionData(eventData);
-          break;
-        case EventName.CustomerCreated:
-        case EventName.CustomerUpdated:
-          await this.updateCustomerData(eventData);
-          break;
-      }
-}
-
-    //make new function for subscription cancelled
-    //make new function for subscription renewal
-    //make new function for subscription past due
-    //make new function for customer created
-    //make new function for customer updated
+  async processEvent(eventData: EventEntity) {
+    switch (eventData.eventType) {
+      case EventName.SubscriptionCreated:
+        await this.updateSubscriptionData(eventData);
+        break;
+      case EventName.SubscriptionUpdated:
+        await this.renewedSubscriptionStatus(eventData);
+        break;
+    }
+  }
   
-private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | SubscriptionUpdatedEvent) { //change to subscription activated
+  private async updateSubscriptionData(eventData: SubscriptionCreatedEvent) {
     try {
       const supabase = await createClient();
       const getCustomerInfoPaddleUrl = `${LinkGetCustomerInfoPaddle}/${eventData.data.customerId}`;
@@ -76,6 +66,7 @@ private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | Subsc
             eventData.data.items[0].price?.productId ?? '',
             eventData.data.items[0].price?.id ?? '',
             eventData.data.id,
+            eventData.data.status,
             eventData.data.currentBillingPeriod?.startsAt ?? '',
             eventData.data.currentBillingPeriod?.endsAt ?? ''
       );
@@ -84,29 +75,43 @@ private async updateSubscriptionData(eventData: SubscriptionCreatedEvent | Subsc
         throw updateError;
       }
         
-      console.log('Subscription updated successfully');
+      console.log('Subscription created successfully');
     } catch (error) {
-      console.error('Error updating subscription:', error);
+      console.error('Error creating subscription:', error);
 
-      throw new Error('Failed to update subscription');
+      throw new Error('Failed to create subscription');
     }
 }
-  
-private async updateCustomerData(eventData: CustomerCreatedEvent | CustomerUpdatedEvent) {
+
+  private async renewedSubscriptionStatus(eventData: SubscriptionUpdatedEvent) {
     try {
       const supabase = await createClient();
-      const response = await supabase
-        .from('customers')
-        .upsert({
-            customer_id: eventData.data.id,
-            email: eventData.data.email,
-          })
-          .select();
-      console.log(response);    
-    } catch (error) {
-      console.error('Error updating customer data:', error);
+      let planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
+      let planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;
 
-      throw new Error('Failed to update customer data');
+      if (eventData.data.status === 'past_due' || eventData.data.status === 'canceled') {
+        planEndDate = null;
+        planStartDate = null;  
+      }
+        
+      const {error: updateError} = await renewedSubscriptionStatusSSR(
+            supabase,
+            eventData.data.customerId,
+            eventData.data.id,
+            eventData.data.status,
+            planStartDate,
+            planEndDate,
+      );
+        
+      if (updateError) {
+        throw updateError;
+      }
+        
+      console.log('Subscription renewed successfully');
+    } catch (error) {
+      console.error('Error renewing subscription:', error);
+
+      throw new Error('Failed to renew subscription');
     }
   }
-}  
+}

@@ -116,6 +116,7 @@ export async function updateUserSubscriptionSSR(
     productId: string,
     priceId: string,
     subscriptionId: string,
+    subscriptionStatus: string,
     planStartDate: string,
     planEndDate: string
   ) {    
@@ -123,6 +124,7 @@ export async function updateUserSubscriptionSSR(
       new_product_id: productId,
       new_price_id: priceId,
       new_subscription_id: subscriptionId,
+      new_subscription_status: subscriptionStatus,
       new_plan_start_date: planStartDate,
       new_plan_end_date: planEndDate,
       customer_email: customerEmail,
@@ -131,6 +133,29 @@ export async function updateUserSubscriptionSSR(
 
     if (error) {
       console.error("Error updating user subscription:", error);
+    }
+
+    return { data, error };
+  }
+
+export async function renewedSubscriptionStatusSSR(
+    supabase: SupabaseClient,
+    customerIdPaddle: string,
+    subscriptionId: string,
+    subscriptionStatus: string,
+    planStartDate: string | null,
+    planEndDate: string | null
+  ) {    
+    const { data, error } = await supabase.rpc('renewed_user_subscription_status', {
+      new_subscription_id: subscriptionId,
+      new_subscription_status: subscriptionStatus,
+      new_plan_start_date: planStartDate,
+      new_plan_end_date: planEndDate,
+      new_customer_id: customerIdPaddle
+    }).select();
+
+    if (error) {
+      console.error("Error renewing user subscription:", error);
     }
 
     return { data, error };
