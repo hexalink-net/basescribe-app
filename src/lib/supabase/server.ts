@@ -147,11 +147,11 @@ export async function renewedSubscriptionStatusSSR(
     planEndDate: string | null
   ) {    
     const { data, error } = await supabase.rpc('renewed_user_subscription_status', {
-      new_subscription_id: subscriptionId,
+      current_subscription_id: subscriptionId,
       new_subscription_status: subscriptionStatus,
       new_plan_start_date: planStartDate,
       new_plan_end_date: planEndDate,
-      new_customer_id: customerIdPaddle
+      current_customer_id: customerIdPaddle
     }).select();
 
     if (error) {
