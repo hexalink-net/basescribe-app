@@ -361,7 +361,7 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
     if (newParentId) {
       const { data: parentFolder, error: parentError } = await supabase
         .from('folders')
-        .select('id')
+        .select('id, parent_id')
         .eq('id', newParentId)
         .eq('user_id', user.id)
         .single()
@@ -373,6 +373,10 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       
       if (!parentFolder) {
         return { success: false, error: 'Parent folder not found or not owned by user' }
+      }
+
+      if (parentFolder.parent_id !== null) {
+        return { success: false, error: 'Parent folder must be a root folder' }
       }
 
       // Prevent circular references - check if newParentId is not a descendant of folderId
