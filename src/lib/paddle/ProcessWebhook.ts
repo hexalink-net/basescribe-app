@@ -40,7 +40,7 @@ export class ProcessWebhook {
   private async updateSubscriptionData(eventData: SubscriptionCreatedEvent) {
     try {
       const supabase = await createClient();
-      const getCustomerInfoPaddleUrl = `${LinkGetCustomerInfoPaddle}/${eventData.data.customerId}`;
+      const getCustomerInfoPaddleUrl = `${LinkGetCustomerInfoPaddle}${eventData.data.customerId}`;
 
       const res = await fetch(getCustomerInfoPaddleUrl, {
         method: 'GET',
