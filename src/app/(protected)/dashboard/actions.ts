@@ -1,6 +1,6 @@
 'use server'
 
-import { deleteUserUploadSSR, createClient } from '@/lib/supabase/server'
+import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 export async function deleteUpload(uploadId: string, userId: string) {
@@ -136,5 +136,72 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
       success: false, 
       error: 'Unable to rename file' 
     }
+  }
+}
+
+export async function checkUserTranscriptionLimit(userId: string, fileDurations: number[]): Promise<boolean> {
+  try {
+    // Calculate total duration of all files
+    const totalDuration = fileDurations.reduce((acc, duration) => acc + duration, 0);
+    
+    // Get user's product ID and transcription limit from database
+    const supabase = await createClient();
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('product_id')
+      .eq('id', userId)
+      .single();
+      
+    if (userError) {
+      throw new Error(`Failed to get user data: ${userError.message}`);
+    }
+
+    const { data: productData, error: productError } = await supabase
+      .from('products')
+      .select('transcription_limit_seconds_per_month')
+      .eq('id', userData.product_id)
+      .single();
+
+    if (productError) {
+      throw new Error(`Failed to get product data: ${productError.message}`);
+    }
+
+    if (!productData) {
+      throw new Error('Product not found');
+    }
+
+    const limitDuration = productData.transcription_limit_seconds_per_month;
+    return totalDuration < limitDuration;
+  } catch (error) {
+    console.error("Error checking transcription limit:", error);
+    return false;
+  }
+}
+
+export async function processUploadedFile(
+  userId: string,
+  fileName: string,
+  filePath: string,
+  fileSize: number,
+  durationSeconds: number,
+  folderId?: string | null
+) {
+
+  try{
+    const supabase = await createClient();
+    // Update user usage with the actual duration
+    const { error } = await updateUserUsageSSR(supabase, userId, durationSeconds);
+
+    if (error) {
+      throw new Error(`Failed to update user usage`);
+    }
+    
+    // Create upload record in database
+    await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, folderId);
+
+    return;
+
+  } catch (error) {
+    throw error;
   }
 }

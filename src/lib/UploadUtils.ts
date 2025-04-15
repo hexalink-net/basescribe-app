@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
 import { createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server';
-import { getMediaDuration } from '@/lib/MediaUtils';
 import { Uppy } from '@uppy/core';
 import Tus from '@uppy/tus';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
@@ -62,29 +61,3 @@ export async function uploadFile(
 
     throw new Error(`File size exceeds maximum allowed`);
   }
-  
-  /**
-   * Process file after upload - calculate duration and update database
-   */
-export async function processUploadedFile(
-    userId: string,
-    fileName: string,
-    filePath: string,
-    fileSize: number,
-    file: File,
-    folderId?: string | null
-) {
-    // Calculate duration in seconds
-    let durationSeconds = await getMediaDuration(file);
-    if (durationSeconds === null) {
-      durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
-    }
-    
-    // Create upload record in database
-    await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, folderId);
-    
-    // Update user usage with the actual duration
-    await updateUserUsageSSR(supabase, userId, durationSeconds);
-    
-    return;
-}

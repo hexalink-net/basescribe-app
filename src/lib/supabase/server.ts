@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
+import { getMediaDuration } from '../MediaUtils';
 
 export async function createClient() {
     const { cookies } = await import('next/headers')
@@ -167,10 +168,16 @@ export async function updateUserUsageSSR(
     usageSeconds: number,
   ) {
     
-    await supabase.rpc('update_user_usage', {
+    const { data, error } = await supabase.rpc('update_user_usage', {
       user_id: userId,
       usage_seconds: usageSeconds,
     });
+
+    if (error) {
+      console.error("Error updating user usage:", error);
+    }
+
+    return { data, error };
   }
 
 export async function resetMonthlyUserUsageSSR(
@@ -228,4 +235,35 @@ export async function deleteUserUploadSSR(
     }
     
     return { success: true };
+  }
+
+export const checkTranscriptionLimit = async (userId: string, files: File[]): Promise<{ isWithinLimit: boolean;}> => {
+    try {
+      // First, get the user profile to determine their product ID
+      const supabase = await createClient();
+      const { data: userData, error: userError } = await supabase.from('users').select('product_id').eq('id', userId).single();
+      if (userError) {
+        throw new Error(`Failed to get user data: ${userError.message}`);
+      }
+  
+      const { data: productData, error: productError } = await supabase.from('products').select('transcription_limit_seconds_per_month').eq('id', userData.product_id).single();
+  
+      if (productError) {
+        throw new Error(`Failed to get product data: ${productError.message}`);
+      }
+  
+      if (!productData) {
+        throw new Error('Product not found');
+      }
+  
+      const totalDuration = (await Promise.all(files.map(getMediaDuration))).reduce((acc, duration) => acc + duration, 0);
+      const limitDuration = productData.transcription_limit_seconds_per_month;
+      
+      const isWithinLimit = totalDuration < limitDuration;
+      
+      return { isWithinLimit };
+    } catch (error) {
+      console.error('Error checking transcription limit:', error);
+      throw error;
+    }
   }

@@ -7,7 +7,9 @@ import { useToast } from '@/components/ui/UseToast';
 import { Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UserProfile } from '@/types/DashboardInterface';
-import { uploadFile, processUploadedFile } from '@/lib/UploadUtils';
+import { uploadFile } from '@/lib/UploadUtils';
+import { getMediaDuration } from '@/lib/MediaUtils';
+import { processUploadedFile } from '@/app/(protected)/dashboard/actions';
 
 // 5 GB max file size for free users
 const MAX_FILE_SIZE_FREE = 5000 * 1000 * 1000;
@@ -58,12 +60,18 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
     
     try {
       setLoading(true);
-      
-      // Upload to storage
-      await uploadFile(file, filePath, fileSize);
+
+      let durationSeconds = await getMediaDuration(file);
+
+      if (durationSeconds === null) {
+        durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
+      }
 
       // Process the upload
-      await processUploadedFile(userId, fileName, filePath, fileSize, file, folderId);
+      await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, folderId);
+
+      // Upload to storage
+      await uploadFile(file, filePath, fileSize);
     
       // Show success message
       toast({
@@ -95,6 +103,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         </DialogHeader>
         <div className="w-full overflow-y-auto flex-grow">
           <FileUpload 
+            userId={userId}
             onFileSelected={handleFileUpload} 
             maxSizeInBytes={userProfile?.product_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
             disabled={loading}

@@ -7,13 +7,16 @@ import { updatePlan } from './actions';
 import { Progress } from '@/components/ui/progress';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { pro } from '@/constants/PaddleProduct';
 
 // Format seconds to minutes:seconds format
 function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
+
 
 export default async function ProfilePage() {
   // Get user data from server-side Supabase client
@@ -70,9 +73,9 @@ export default async function ProfilePage() {
             <CardHeader>
               <CardTitle>Usage</CardTitle>
               <CardDescription className="text-gray-400">
-                {userProfile.product_id === 'free' 
-                  ? 'Free plan: 30 minutes total limit' 
-                  : 'Pro plan: 60 minutes per month'}
+                {userProfile.product_id === pro 
+                  ? 'Pro plan: 15 hours per month' 
+                  : 'Free plan: 30 minutes per month'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -80,20 +83,20 @@ export default async function ProfilePage() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span>
-                      {userProfile.product_id === 'free' 
-                        ? `Total usage: ${formatDuration(userProfile.total_usage_seconds || 0)} / 30:00 minutes` 
+                      {userProfile.product_id === pro
+                        ? `Monthly usage: ${formatDuration(userProfile.monthly_usage_seconds || 0)} / 15:00:00 hours` 
                         : `Monthly usage: ${formatDuration(userProfile.monthly_usage_seconds || 0)} / 60:00 minutes`}
                     </span>
                     <span>
-                      {userProfile.product_id === 'free' 
-                        ? `${Math.round((userProfile.total_usage_seconds / (30 * 60)) * 100)}%` 
-                        : `${Math.round((userProfile.monthly_usage_seconds / (60 * 60)) * 100)}%`}
+                      {userProfile.product_id === pro
+                        ? `${Math.round((userProfile.monthly_usage_seconds / (15 * 60 * 60)) * 100)}%` 
+                        : `${Math.round((userProfile.monthly_usage_seconds / (30 * 60)) * 100)}%`}
                     </span>
                   </div>
                   <Progress 
-                    value={userProfile.product_id === 'free' 
-                      ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (30 * 60)) * 100) 
-                      : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
+                    value={userProfile.product_id === pro
+                      ? Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (15 * 60 * 60)) * 100) 
+                      : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (30 * 60)) * 100)} 
                     className="h-1 bg-[#2a2a2a]" 
                     indicatorClassName="bg-[#3b82f6]" 
                   />
@@ -137,33 +140,33 @@ export default async function ProfilePage() {
                 <div>
                   <p className="text-sm font-medium text-gray-400">Current Plan</p>
                   <p className="font-medium">
-                    {userProfile.product_id === 'free' ? 'Free' : 'Pro'}
+                    {userProfile.product_id === pro ? 'Pro' : 'Free'}
                   </p>
                 </div>
                 
                 <div>
                   <p className="text-sm font-medium text-gray-400">Usage Limit</p>
                   <p>
-                    {userProfile.plan_type === 'free' 
-                      ? '30 minutes total (lifetime)' 
-                      : '60 minutes per month'}
+                    {userProfile.product_id === pro 
+                      ? '15 hours per month' 
+                      : '30 minutes per month'}
                   </p>
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              {userProfile.plan_type === 'free' ? (
+              {userProfile.product_id === pro ? (
+                <PlanActionForm 
+                planType="free" 
+                action={downgradeToFree} 
+                buttonText="Downgrade to Free" 
+                variant="outline" 
+              />
+              ) : (
                 <PlanActionForm 
                   planType="pro" 
                   action={upgradeToPro} 
                   buttonText="Upgrade to Pro" 
-                />
-              ) : (
-                <PlanActionForm 
-                  planType="free" 
-                  action={downgradeToFree} 
-                  buttonText="Downgrade to Free" 
-                  variant="outline" 
                 />
               )}
             </CardFooter>

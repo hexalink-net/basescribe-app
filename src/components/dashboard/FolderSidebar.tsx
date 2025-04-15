@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
+import { pro } from '@/constants/PaddleProduct';
 
 interface FolderSidebarProps {
   folders: Folder[];
@@ -31,9 +32,10 @@ interface FolderSidebarProps {
 
 // Format seconds to minutes:seconds format
 function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 export default function FolderSidebar({
@@ -295,28 +297,28 @@ export default function FolderSidebar({
           <div>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-400">
-                {userProfile.product_id === 'free' 
-                  ? `${formatDuration(userProfile.total_usage_seconds || 0)} / 30:00` 
-                  : `${formatDuration(userProfile.monthly_usage_seconds || 0)} / 60:00`}
+                {userProfile.product_id === pro
+                  ? `${formatDuration(userProfile.monthly_usage_seconds || 0)} / 15:00:00` 
+                  : `${formatDuration(userProfile.monthly_usage_seconds || 0)} / 00:30:00`}
               </span>
               <span className="text-gray-400">
-                {userProfile.product_id === 'free' 
-                  ? `${Math.round((userProfile.total_usage_seconds / (30 * 60)) * 100)}%` 
-                  : `${Math.round((userProfile.monthly_usage_seconds / (60 * 60)) * 100)}%`}
+                {userProfile.product_id === pro
+                  ? `${Math.round((userProfile.monthly_usage_seconds / (15 * 60 * 60)) * 100)}%` 
+                  : `${Math.round((userProfile.monthly_usage_seconds / (30 * 60)) * 100)}%`}
               </span>
             </div>
             <Progress 
-              value={userProfile.product_id === 'free' 
-                ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (30 * 60)) * 100) 
-                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (60 * 60)) * 100)} 
+              value={userProfile.product_id === pro
+                ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (15 * 60 * 60)) * 100) 
+                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (30 * 60)) * 100)} 
               className="h-1 bg-[#2a2a2a]" 
               indicatorClassName="bg-[#3b82f6]" 
             />
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            {userProfile.product_id === 'free' 
-              ? 'Free plan: 30 minutes total limit' 
-              : 'Pro plan: 60 minutes per month'}
+            {userProfile.product_id === pro
+              ? 'Pro plan: 15 hours per month' 
+              : 'Pro plan: 30 minutes per month'}
           </div>
         </div>
       </div>

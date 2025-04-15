@@ -5,10 +5,12 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { formatFileSize, validateAudioOrVideoFile } from '@/lib/MediaUtils';
+import { formatFileSize, validateAudioOrVideoFile, getMediaDuration } from '@/lib/MediaUtils';
 import { useToast } from '@/components/ui/UseToast';
+import { checkUserTranscriptionLimit } from '@/app/(protected)/dashboard/actions';
 
 interface FileUploadProps {
+  userId: string;
   onFileSelected: (file: File) => Promise<void>;
   maxSizeInBytes: number;
   disabled?: boolean;
@@ -25,7 +27,7 @@ interface FileWithStatus {
   error?: string;
 }
 
-export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
+export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
   const [files, setFiles] = useState<FileWithStatus[]>([]);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -205,6 +207,23 @@ export function FileUpload({ onFileSelected, maxSizeInBytes, disabled = false, m
     try {
       // Filter only idle files
       const filesToUpload = files.filter(f => f.status === 'idle');
+      
+      // Get the duration of each file
+      const fileDurations = await Promise.all(
+        filesToUpload.map(async (f) => await getMediaDuration(f.file))
+      );
+      
+      // Check if the user has enough transcription limit remaining using server action
+      const isWithinLimit = await checkUserTranscriptionLimit(userId, fileDurations);
+      
+      if (!isWithinLimit) {
+        toast({
+          title: "Transcription limit exceeded",
+          description: "You have reached your monthly transcription limit. Please upgrade your plan for more transcription minutes.",
+          variant: "destructive",
+        });
+        throw new Error(`Transcription limit exceeded.`);
+      }
       
       // Start all uploads in parallel
       const uploadPromises = filesToUpload.map(fileWithStatus => 
