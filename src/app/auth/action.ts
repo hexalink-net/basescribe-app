@@ -1,6 +1,7 @@
 "use server"
 import { createClient, createNewUserSSR } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { log } from "@/lib/logger";
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'http://localhost:3000';
 
@@ -9,7 +10,12 @@ export async function signInWithGoogle() {
     // Make sure the redirect URL is absolute and includes the origin
     const supabase = await createClient();
     const redirectUrl = `${PUBLIC_URL}/auth/callback`;
-    console.log('Google auth redirect URL:', redirectUrl);
+
+    log({
+        logLevel: 'info',
+        action: 'signInWithGoogle',
+        message: 'Google auth redirect',
+    });
         
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -22,7 +28,15 @@ export async function signInWithGoogle() {
         redirect(data.url)
     }
         
-    if (error) throw error;
+    if (error) {
+        log({
+            logLevel: 'error',
+            action: 'signInWithGoogle',
+            message: error.message
+        })
+        
+        throw new Error(error.message);
+    }
 }
 
 // Email/password sign-in
@@ -35,12 +49,25 @@ export async function signInWithEmailPassword(formData: FormData) {
     }
   
     const supabase = await createClient()
+
+    log({
+        logLevel: 'info',
+        action: 'signInWithEmailPassword',
+        message: 'Email and password sign-in',
+    });
+
     const { error } = await supabase.auth.signInWithPassword({
         email,
         password
     })
   
     if (error) {
+        log({
+            logLevel: 'error',
+            action: 'signInWithEmailPassword',
+            message: error.message
+        })
+        
         return { error: error.message }
     }
   
@@ -62,6 +89,12 @@ export async function signUpWithEmailPassword(formData: FormData) {
   
     const redirectUrl = `${PUBLIC_URL}/auth/callback`
     const supabase = await createClient()
+
+    log({
+        logLevel: 'info',
+        action: 'signUpWithEmailPassword',
+        message: 'Email and password sign-up'
+    });
     
     const { data, error } = await supabase.auth.signUp({
         email,
@@ -72,6 +105,11 @@ export async function signUpWithEmailPassword(formData: FormData) {
     })
   
     if (error) {
+        log({
+            logLevel: 'error',
+            action: 'signUpWithEmailPassword',
+            message: error.message
+        })
         return { error: error.message }
     }
   
@@ -79,8 +117,12 @@ export async function signUpWithEmailPassword(formData: FormData) {
     if (data.user) {
         const { error } = await createNewUserSSR(supabase, data.user.id, email);
         if (error) {
-            console.error('Error creating user profile:', error);
-            // Continue anyway, as the auth part succeeded
+            log({
+                logLevel: 'error',
+                action: 'createNewUserSSR',
+                message: error.message,
+                userId: data.user.id,
+            });
         }
     }
   
@@ -93,5 +135,13 @@ export async function signUpWithEmailPassword(formData: FormData) {
 // Sign out
 export async function signOut() {
     const supabase = await createClient()
-    await supabase.auth.signOut()
+    const { error } =await supabase.auth.signOut()
+
+    if (error) {
+        log({
+            logLevel: 'error',
+            action: 'signOut',
+            message: error.message
+        })
+    }
 }

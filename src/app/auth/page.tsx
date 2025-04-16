@@ -43,18 +43,14 @@ function AuthContent() {
           description: result.message || "We've sent you a confirmation link to complete your signup.",
         });
         
-      } else {
-        console.log('Attempting sign in with password');
-        
+      } else {        
         const result = await signInWithEmailPassword(formData);
         
         if (result.error) {
           throw new Error(result.error);
         }
         
-        if (result.success) {
-          console.log('Sign-in successful, redirecting to dashboard');
-          
+        if (result.success) {          
           toast({
             title: "Signed in successfully",
             description: "Welcome back to BaseScribe!",

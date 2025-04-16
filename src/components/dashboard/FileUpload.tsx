@@ -114,12 +114,6 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
       Object.values(activeIntervalsRef.current).forEach(interval => {
         clearInterval(interval);
       });
-      
-      // If there are any uploading files, log that they were cancelled
-      const uploadingFiles = files.filter(f => f.status === 'uploading');
-      if (uploadingFiles.length > 0) {
-        console.log(`FileUpload: Cancelled ${uploadingFiles.length} in-progress uploads due to component unmount`);
-      }
     };
   }, [files]);
 
@@ -141,7 +135,6 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
     
     try {
       updateFileStatus(id, 'uploading');
-      console.log('FileUpload: uploading file:', file.name);
       
       // Set initial progress to make it visible immediately
       updateFileProgress(id, 5);
@@ -181,9 +174,7 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
         updateFileStatus(id, 'success');
       }, 300);
       
-    } catch (error: unknown) {
-      console.error("Upload error:", error);
-      
+    } catch (error: unknown) {      
       // Clear and remove the interval
       if (progressInterval) {
         clearInterval(progressInterval);

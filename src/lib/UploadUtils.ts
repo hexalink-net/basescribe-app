@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase/client';
-import { createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server';
 import { Uppy } from '@uppy/core';
 import Tus from '@uppy/tus';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
@@ -21,7 +20,6 @@ export async function uploadFile(
         .upload(filePath, file);
       
       if (error) {
-        console.error(error)
         throw new Error(`Storage upload failed`);
       }
       return;

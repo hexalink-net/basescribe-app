@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
-import { getMediaDuration } from '../MediaUtils';
+import { log } from '@/lib/logger';
 
 export async function createClient() {
     const { cookies } = await import('next/headers')
@@ -34,7 +34,12 @@ export async function createClient() {
 export async function getUserProfileSSR(supabase: SupabaseClient, userId: string) {
     const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
     if (error) {
-      console.error("Error fetching user profile:", error);
+      log({
+        logLevel: 'error',
+        action: 'getUserProfileSSR',
+        message: 'Error fetching user profile',
+        metadata: { userId, error }
+      });
     }
     return { data, error };
 }
@@ -54,7 +59,12 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
   .select();
   
   if (error) {
-    console.error('Database insert error:', error);
+    log({
+      logLevel: 'error',
+      action: 'createUploadSSR',
+      message: 'Database insert error for upload record',
+      metadata: { error, uploadRecord: { user_id: userId, file_name: fileName, file_path: filePath, file_size: fileSize, duration_seconds: durationSeconds, folder_id: folderId || null, status: 'completed' } }
+    });
     throw error;
   }
 
@@ -69,7 +79,12 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
     .order('created_at', { ascending: false });
   
     if (error) {
-      console.error("Error fetching user uploads:", error);
+      log({
+        logLevel: 'error',
+        action: 'getAllUserUploadsSSR',
+        message: 'Error fetching user uploads',
+        metadata: { userId, error }
+      });
       return null;
     }
   
@@ -85,7 +100,12 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
     .single();
   
     if (error) {
-      console.error("Error fetching user upload:", error);
+      log({
+        logLevel: 'error',
+        action: 'getUserUploadSSR',
+        message: 'Error fetching specific user upload',
+        metadata: { userId, uploadId, error }
+      });
     }
   
     return { data, error };
@@ -104,7 +124,12 @@ export async function createNewUserSSR(supabase: SupabaseClient, userId: string,
     ]);
 
     if (error) {
-      console.error("Error creating user profile:", error);
+      log({
+        logLevel: 'error',
+        action: 'createNewUserSSR',
+        message: 'Error creating user profile in database',
+        metadata: { userId, email: userEmail, error }
+      });
     }
     
     return { data, error };
@@ -133,7 +158,12 @@ export async function updateUserSubscriptionSSR(
     }).select();
 
     if (error) {
-      console.error("Error updating user subscription:", error);
+      log({
+        logLevel: 'error',
+        action: 'updateUserSubscriptionSSR',
+        message: 'Error updating user subscription',
+        metadata: { customerEmail, customerIdPaddle, productId, priceId, subscriptionId, subscriptionStatus, planStartDate, planEndDate, error }
+      });
     }
 
     return { data, error };
@@ -156,7 +186,12 @@ export async function renewedSubscriptionStatusSSR(
     }).select();
 
     if (error) {
-      console.error("Error renewing user subscription:", error);
+      log({
+        logLevel: 'error',
+        action: 'renewedSubscriptionStatusSSR',
+        message: 'Error renewing user subscription',
+        metadata: { customerIdPaddle, subscriptionId, subscriptionStatus, planStartDate, planEndDate, error }
+      });
     }
 
     return { data, error };
@@ -174,7 +209,12 @@ export async function updateUserUsageSSR(
     });
 
     if (error) {
-      console.error("Error updating user usage:", error);
+      log({
+        logLevel: 'error',
+        action: 'updateUserUsageSSR',
+        message: 'Error updating user usage',
+        metadata: { userId, usageSeconds, error }
+      });
     }
 
     return { data, error };
@@ -205,7 +245,12 @@ export async function deleteUserUploadSSR(
       .single();
     
     if (fetchError) {
-      console.error("Error fetching upload for deletion:", fetchError);
+      log({
+        logLevel: 'error',
+        action: 'deleteUserUploadSSR.fetch',
+        message: 'Error fetching upload record before deletion',
+        metadata: { userId, uploadId, error: fetchError }
+      });
       return { error: fetchError };
     }
     
@@ -217,7 +262,12 @@ export async function deleteUserUploadSSR(
       .eq('user_id', userId);
     
     if (deleteError) {
-      console.error("Error deleting upload:", deleteError);
+      log({
+        logLevel: 'error',
+        action: 'deleteUserUploadSSR.deleteDbRecord',
+        message: 'Error deleting upload record from database',
+        metadata: { userId, uploadId, error: deleteError }
+      });
       return { error: deleteError };
     }
     
@@ -229,41 +279,14 @@ export async function deleteUserUploadSSR(
         .remove([upload.file_path]);
       
       if (storageError) {
-        console.error("Error deleting file from storage:", storageError);
-        return { error: storageError };
+        log({
+          logLevel: 'warn', // Corrected from 'warning'
+          action: 'deleteUserUploadSSR.deleteStorageFile',
+          message: 'Error deleting file from storage, but DB record deleted',
+          metadata: { userId, uploadId, storagePath: upload.file_path, error: storageError }
+        });
       }
     }
     
     return { success: true };
-  }
-
-export const checkTranscriptionLimit = async (userId: string, files: File[]): Promise<{ isWithinLimit: boolean;}> => {
-    try {
-      // First, get the user profile to determine their product ID
-      const supabase = await createClient();
-      const { data: userData, error: userError } = await supabase.from('users').select('product_id').eq('id', userId).single();
-      if (userError) {
-        throw new Error(`Failed to get user data: ${userError.message}`);
-      }
-  
-      const { data: productData, error: productError } = await supabase.from('products').select('transcription_limit_seconds_per_month').eq('id', userData.product_id).single();
-  
-      if (productError) {
-        throw new Error(`Failed to get product data: ${productError.message}`);
-      }
-  
-      if (!productData) {
-        throw new Error('Product not found');
-      }
-  
-      const totalDuration = (await Promise.all(files.map(getMediaDuration))).reduce((acc, duration) => acc + duration, 0);
-      const limitDuration = productData.transcription_limit_seconds_per_month;
-      
-      const isWithinLimit = totalDuration < limitDuration;
-      
-      return { isWithinLimit };
-    } catch (error) {
-      console.error('Error checking transcription limit:', error);
-      throw error;
-    }
   }

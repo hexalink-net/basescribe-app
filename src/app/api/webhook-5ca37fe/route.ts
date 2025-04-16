@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { ProcessWebhook } from '@/lib/paddle/ProcessWebhook';
 import { getPaddleInstance } from '@/lib/paddle/GetPaddleInstance';
+import { log } from '@/lib/logger';
 
 const webhookProcessor = new ProcessWebhook();
 
@@ -17,7 +18,12 @@ export async function POST(request: NextRequest) {
   let eventName: string | null = null;
 
   if (!signature || !rawRequestBody) {
-    console.error('Missing signature or request body');
+    log({
+      logLevel: 'error',
+      action: 'Webhook POST',
+      message: 'Missing signature or request body',
+      metadata: { signature: !!signature, body: !!rawRequestBody }
+    });
     return new Response(JSON.stringify({ error: 'Missing signature or body' }), {
       status: 400,
     });
@@ -28,7 +34,12 @@ export async function POST(request: NextRequest) {
     const eventData = await paddle.webhooks.unmarshal(rawRequestBody, privateKey, signature);
 
     if (!eventData) {
-      console.warn('Webhook payload could not be unmarshalled');
+      log({
+        logLevel: 'error',
+        action: 'Webhook POST',
+        message: 'Webhook payload could not be unmarshalled',
+        metadata: { requestBody: rawRequestBody }
+      });
       return new Response(JSON.stringify({ error: 'Invalid webhook payload' }), {
         status: 400,
       });
@@ -42,12 +53,18 @@ export async function POST(request: NextRequest) {
       status: 200,
     });
   } catch (error: unknown) {
-    console.error('Webhook processing failed:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'Webhook POST ProcessEvent',
+      message: 'Webhook processing failed',
+      metadata: { error: errorMessage, requestBody: rawRequestBody }
+    });
 
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { message: error }),
+        ...(process.env.NODE_ENV === 'development' && { message: errorMessage }),
       }),
       { status: 500 }
     );

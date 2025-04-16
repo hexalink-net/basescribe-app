@@ -86,7 +86,6 @@ export default function FolderSidebar({
         });
       }
     } catch (error) {
-      console.error("Error creating folder:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred while creating the folder.",

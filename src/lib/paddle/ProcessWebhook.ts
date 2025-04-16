@@ -6,6 +6,7 @@ import {
   } from '@paddle/paddle-node-sdk';
 import { createClient, updateUserSubscriptionSSR, renewedSubscriptionStatusSSR } from '@/lib/supabase/server';
 import { LinkGetCustomerInfoPaddle } from '@/constants/PaddleUrl';
+import { log } from '@/lib/logger';
 
 interface PaddleCustomerResponse {
   data: {
@@ -39,6 +40,12 @@ export class ProcessWebhook {
   
   private async updateSubscriptionData(eventData: SubscriptionCreatedEvent) {
     try {
+      log({
+        logLevel: 'info',
+        action: 'updateSubscriptionData',
+        message: 'Processing subscription creation event'
+      });
+
       const supabase = await createClient();
       const getCustomerInfoPaddleUrl = `${LinkGetCustomerInfoPaddle}${eventData.data.customerId}`;
 
@@ -53,7 +60,14 @@ export class ProcessWebhook {
       });
       
       if (!res.ok) {
-        console.error('Failed to fetch Paddle customer:', await res.text());
+        log({
+          logLevel: 'error',
+          action: 'updateSubscriptionData',
+          message: 'Failed to fetch Paddle customer',
+          metadata: {
+            response: await res.text()
+          }
+        });
         throw new Error('Failed to fetch Paddle customer');
       }
         
@@ -73,18 +87,28 @@ export class ProcessWebhook {
         
       if (updateError) {
         throw updateError;
-      }
-        
-      console.log('Subscription created successfully');
+      }        
     } catch (error) {
-      console.error('Error creating subscription:', error);
-
+      log({
+        logLevel: 'error',
+        action: 'updateSubscriptionData',
+        message: 'Error creating subscription',
+        metadata: {
+          error: error
+        }
+      });
+      
       throw new Error('Failed to create subscription');
     }
 }
 
   private async renewedSubscriptionStatus(eventData: SubscriptionUpdatedEvent) {
     try {
+      log({
+        logLevel: 'info',
+        action: 'renewedSubscriptionStatus',
+        message: 'Processing subscription update event'
+      });
       const supabase = await createClient();
       let planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
       let planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;
@@ -106,10 +130,15 @@ export class ProcessWebhook {
       if (updateError) {
         throw updateError;
       }
-        
-      console.log('Subscription renewed successfully');
     } catch (error) {
-      console.error('Error renewing subscription:', error);
+      log({
+        logLevel: 'error',
+        action: 'renewedSubscriptionStatus',
+        message: 'Error renewing subscription',
+        metadata: {
+          error: error
+        }
+      });
 
       throw new Error('Failed to renew subscription');
     }

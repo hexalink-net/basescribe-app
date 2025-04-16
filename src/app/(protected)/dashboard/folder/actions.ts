@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { Folder } from '@/types/DashboardInterface'
+import { log } from '@/lib/logger'
 
 export async function createFolder(name: string, parentId: string | null) {
   try {
@@ -33,7 +34,12 @@ export async function createFolder(name: string, parentId: string | null) {
         .single()
       
       if (folderError || !folder) {
-        console.error('Error verifying parent folder ownership:', folderError)
+        log({
+          logLevel: 'error',
+          action: 'createFolder',
+          message: 'Error verifying parent folder ownership',
+          metadata: { parentId, error: folderError }
+        })
         return { success: false, error: 'Parent folder not found or not owned by user' }
       }
       
@@ -51,7 +57,12 @@ export async function createFolder(name: string, parentId: string | null) {
     });
     
     if (folderError) {
-      console.error('Error creating folder:', folderError)
+      log({
+        logLevel: 'error',
+        action: 'createFolder',
+        message: 'Error creating folder',
+        metadata: { name, parentId, error: folderError }
+      })
       return { success: false, error: 'Unable to create folder' }
     }
     
@@ -60,7 +71,12 @@ export async function createFolder(name: string, parentId: string | null) {
     
     return { success: true, data: folder }
   } catch (error) {
-    console.error('Error creating folder:', error)
+    log({
+      logLevel: 'error',
+      action: 'createFolder',
+      message: 'Error creating folder',
+      metadata: { name, parentId, error }
+    })
     return { 
       success: false, 
       error: 'Unable to create folder' 
@@ -84,13 +100,23 @@ export async function getFolders() {
       .order('created_at', { ascending: false })
     
     if (error) {
-      console.error('Error fetching folders:', error)
+      log({
+        logLevel: 'error',
+        action: 'getFolders',
+        message: 'Error fetching folders',
+        metadata: { error }
+      })
       return { success: false, error: 'Unable to fetch folders', data: [] }
     }
     
     return { success: true, data: data as Folder[] }
   } catch (error) {
-    console.error('Error fetching folders:', error)
+    log({
+      logLevel: 'error',
+      action: 'getFolders',
+      message: 'Error fetching folders',
+      metadata: { error }
+    })
     return { 
       success: false, 
       data: [],
@@ -119,7 +145,12 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
         .single()
       
       if (folderError || !folder) {
-        console.error('Error verifying folder ownership:', folderError)
+        log({
+          logLevel: 'error',
+          action: 'moveUploadToFolder',
+          message: 'Error verifying folder ownership',
+          metadata: { folderId, error: folderError }
+        })
         return { success: false, error: 'Folder not found or not owned by user' }
       }
     }
@@ -132,7 +163,12 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
       .eq('user_id', user.id) 
     
     if (error) {
-      console.error('Error moving upload to folder:', error)
+      log({
+        logLevel: 'error',
+        action: 'moveUploadToFolder',
+        message: 'Error moving upload to folder',
+        metadata: { uploadId, folderId, error }
+      })
       return { success: false, error: 'Unable to move file to folder' }
     }
     
@@ -142,7 +178,12 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
     
     return { success: true }
   } catch (error) {
-    console.error('Error moving upload to folder:', error)
+    log({
+      logLevel: 'error',
+      action: 'moveUploadToFolder',
+      message: 'Error moving upload to folder',
+      metadata: { uploadId, folderId, error }
+    })
     return { 
       success: false, 
       error: 'Unable to move file to folder' 
@@ -169,7 +210,12 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
         .single()
       
       if (folderError || !folder) {
-        console.error('Error verifying folder ownership:', folderError)
+        log({
+          logLevel: 'error',
+          action: 'bulkMoveUploadsToFolder',
+          message: 'Error verifying folder ownership',
+          metadata: { folderId, error: folderError }
+        })
         return { success: false, error: 'Folder not found or not owned by user' }
       }
     }
@@ -183,7 +229,12 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
       .select()
     
     if (error) {
-      console.error('Error bulk moving uploads to folder:', error)
+      log({
+        logLevel: 'error',
+        action: 'bulkMoveUploadsToFolder',
+        message: 'Error bulk moving uploads to folder',
+        metadata: { uploadIds, folderId, error }
+      })
       return { success: false, error: 'Unable to move files to folder' }
     }
 
@@ -197,7 +248,12 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
     
     return { success: true }
   } catch (error) {
-    console.error('Error bulk moving uploads to folder:', error)
+    log({
+      logLevel: 'error',
+      action: 'bulkMoveUploadsToFolder',
+      message: 'Error bulk moving uploads to folder',
+      metadata: { uploadIds, folderId, error }
+    })
     return { 
       success: false, 
       error: 'Unable to move files to folder' 
@@ -227,7 +283,12 @@ export async function deleteFolder(folderId: string) {
       .eq('user_id', user.id)
     
     if (uploadsError) {
-      console.error('Error checking uploads in folder:', uploadsError)
+      log({
+        logLevel: 'error',
+        action: 'deleteFolder',
+        message: 'Error checking uploads in folder',
+        metadata: { folderId, error: uploadsError }
+      })
       throw uploadsError
     }
 
@@ -241,7 +302,12 @@ export async function deleteFolder(folderId: string) {
         .eq('user_id', user.id)
       
       if (moveError) {
-        console.error('Error moving uploads out of folder:', moveError)
+        log({
+          logLevel: 'error',
+          action: 'deleteFolder',
+          message: 'Error moving uploads out of folder',
+          metadata: { folderId, error: moveError }
+        })
         throw moveError
       }
     }
@@ -254,7 +320,12 @@ export async function deleteFolder(folderId: string) {
       .eq('user_id', user.id)
     
     if (subfoldersError) {
-      console.error('Error checking subfolders:', subfoldersError)
+      log({
+        logLevel: 'error',
+        action: 'deleteFolder',
+        message: 'Error checking subfolders',
+        metadata: { folderId, error: subfoldersError }
+      })
       throw subfoldersError
     }
 
@@ -267,7 +338,12 @@ export async function deleteFolder(folderId: string) {
         .eq('user_id', user.id)
       
       if (moveSubfoldersError) {
-        console.error('Error moving subfolders to root:', moveSubfoldersError)
+        log({
+          logLevel: 'error',
+          action: 'deleteFolder',
+          message: 'Error moving subfolders to root',
+          metadata: { folderId, error: moveSubfoldersError }
+        })
         throw moveSubfoldersError
       }
     }
@@ -280,7 +356,12 @@ export async function deleteFolder(folderId: string) {
       .eq('user_id', user.id)
     
     if (error) {
-      console.error('Error deleting folder:', error)
+      log({
+        logLevel: 'error',
+        action: 'deleteFolder',
+        message: 'Error deleting folder',
+        metadata: { folderId, error }
+      })
       throw error
     }
     
@@ -290,7 +371,12 @@ export async function deleteFolder(folderId: string) {
     
     return { success: true }
   } catch (error) {
-    console.error('Error deleting folder:', error)
+    log({
+      logLevel: 'error',
+      action: 'deleteFolder',
+      message: 'Error deleting folder',
+      metadata: { folderId, error }
+    })
     return { 
       success: false, 
       error: 'Unable to delete folder' 
@@ -325,7 +411,12 @@ export async function renameFolder(folderId: string, newName: string) {
       .eq('user_id', user.id)
     
     if (error) {
-      console.error('Error renaming folder:', error)
+      log({
+        logLevel: 'error',
+        action: 'renameFolder',
+        message: 'Error renaming folder',
+        metadata: { folderId, newName, error }
+      })
       throw error
     }
     
@@ -335,7 +426,12 @@ export async function renameFolder(folderId: string, newName: string) {
     
     return { success: true }
   } catch (error) {
-    console.error('Error renaming folder:', error)
+    log({
+      logLevel: 'error',
+      action: 'renameFolder',
+      message: 'Error renaming folder',
+      metadata: { folderId, newName, error }
+    })
     return { 
       success: false, 
       error: 'Unable to rename folder' 
@@ -367,7 +463,12 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
         .single()
       
       if (parentError) {
-        console.error('Error finding parent folder:', parentError)
+        log({
+          logLevel: 'error',
+          action: 'moveFolder',
+          message: 'Error finding parent folder',
+          metadata: { newParentId, error: parentError }
+        })
         throw parentError
       }
       
@@ -417,7 +518,12 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       .eq('user_id', user.id)
     
     if (error) {
-      console.error('Error moving folder:', error)
+      log({
+        logLevel: 'error',
+        action: 'moveFolder',
+        message: 'Error moving folder',
+        metadata: { folderId, newParentId, error }
+      })
       throw error
     }
     
@@ -431,7 +537,12 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
     
     return { success: true }
   } catch (error) {
-    console.error('Error moving folder:', error)
+    log({
+      logLevel: 'error',
+      action: 'moveFolder',
+      message: 'Error moving folder',
+      metadata: { folderId, newParentId, error }
+    })
     return { 
       success: false, 
       error: 'Unable to move folder' 

@@ -1,4 +1,5 @@
 import { Environment, LogLevel, Paddle, PaddleOptions } from '@paddle/paddle-node-sdk';
+import { log } from '@/lib/logger';
 
 export function getPaddleInstance() {
   const paddleOptions: PaddleOptions = {
@@ -7,7 +8,11 @@ export function getPaddleInstance() {
   };
 
   if (!process.env.PADDLE_API_KEY) {
-    console.error('Paddle API key is missing');
+    log({
+      logLevel: 'error',
+      action: 'getPaddleInstance',
+      message: 'Paddle API key is missing'
+    });
   }
 
   return new Paddle(process.env.PADDLE_API_KEY!, paddleOptions);

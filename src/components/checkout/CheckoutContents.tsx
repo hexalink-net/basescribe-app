@@ -57,7 +57,6 @@ export function CheckoutContents({ priceId, userEmail, quantity = 1 }: Props) {
           });
         }
       }).catch((err) => {
-        console.error('Paddle init failed:', err);
         setErrorMessage('Payment system failed to load. Please try again later.');
       });
     }

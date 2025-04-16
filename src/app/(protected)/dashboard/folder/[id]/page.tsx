@@ -40,7 +40,6 @@ export default async function FolderPage({ params }: { params:  tParams })  {
     .order('created_at', { ascending: false });
   
   if (uploadsError) {
-    console.error('Error fetching uploads:', uploadsError);
     throw new Error('Failed to fetch uploads in this folder');
   }
   
@@ -48,7 +47,6 @@ export default async function FolderPage({ params }: { params:  tParams })  {
   const userProfile = await getUserProfileSSR(supabase, user.id);
   
   if (!userProfile) {
-    console.error('Error fetching user profile');
     throw new Error('Failed to fetch user profile');
   }
   

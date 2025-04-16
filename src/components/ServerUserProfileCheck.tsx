@@ -1,4 +1,5 @@
 import { createClient, getUserProfileSSR } from "@/lib/supabase/server";
+import { log } from '@/lib/logger';
 
 export default async function ServerUserProfileCheck({ 
   children, 
@@ -15,7 +16,11 @@ export default async function ServerUserProfileCheck({
   
   // If user doesn't exist, create a new record
   if (!existingUser && !userError) {
-    console.log('[ServerUserCheck] Creating new user profile');
+    log({
+      logLevel: 'info',
+      action: 'ServerUserProfileCheck',
+      message: 'Creating new user profile'
+    });
     
     // Get user email from auth
     const { data: userData } = await supabase.auth.getUser(userId);
@@ -35,9 +40,15 @@ export default async function ServerUserProfileCheck({
               monthly_usage_minutes: 0,
             }
           ]);
-        console.log('[ServerUserCheck] User profile created successfully');
       } catch (createError) {
-        console.error('[ServerUserCheck] Error creating user profile:', createError);
+        log({
+          logLevel: 'error',
+          action: 'ServerUserProfileCheck',
+          message: 'Error creating user profile',
+          metadata: {
+            error: createError
+          }
+        });
       }
     }
   }

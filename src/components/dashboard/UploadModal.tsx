@@ -82,7 +82,6 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       router.refresh();
 
     } catch (error: unknown) {
-      console.error('Upload failed:', error);
       throw error;
     } finally {
       setLoading(false);

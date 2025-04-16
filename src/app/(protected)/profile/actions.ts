@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { log } from '@/lib/logger';
 
 // Server actions for plan management
 export async function updatePlan(userId: string, planType: 'free' | 'pro') {
@@ -29,6 +30,11 @@ export async function updatePlan(userId: string, planType: 'free' | 'pro') {
     // Revalidate the profile page to show updated data
     revalidatePath('/profile');    
   } catch (error: unknown) {
-    console.error(`Error ${planType === 'pro' ? 'upgrading' : 'downgrading'} plan:`, error);
+    log({
+      logLevel: 'error',
+      action: 'updatePlan',
+      message: `Error ${planType === 'pro' ? 'upgrading' : 'downgrading'} plan`,
+      metadata: { userId, planType, error }
+    });
   }
 }

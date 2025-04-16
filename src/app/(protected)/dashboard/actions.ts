@@ -2,6 +2,7 @@
 
 import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { log } from '@/lib/logger'
 
 export async function deleteUpload(uploadId: string, userId: string) {
   try {
@@ -11,12 +12,23 @@ export async function deleteUpload(uploadId: string, userId: string) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user || user.id !== userId) {
+      log({
+        logLevel: 'error',
+        action: 'deleteUpload',
+        message: 'Not authenticated',
+        metadata: { userId, uploadId }
+      })
       return { success: false, error: 'Not authenticated' }
     }
     const result = await deleteUserUploadSSR(supabase, userId, uploadId)
     
     if (result.error) {
-      console.error('Error from deleteUserUploadSSR:', result.error)
+      log({
+        logLevel: 'error',
+        action: 'deleteUpload.deleteUserUploadSSR',
+        message: 'Error from deleteUserUploadSSR',
+        metadata: { userId, uploadId, error: result.error }
+      })
       throw result.error
     }
     
@@ -25,12 +37,18 @@ export async function deleteUpload(uploadId: string, userId: string) {
     revalidatePath('/dashboard/folder/[id]', 'page')
     
     return { success: true }
-  } catch (error) {
-    console.error('Error deleting upload:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'deleteUpload',
+      message: 'Error deleting upload',
+      metadata: { userId, uploadId, error: errorMessage }
+    })
     return { 
       success: false, 
-      error: 'Unable to delete file' 
-    }
+      error: `Unable to delete file`
+    } 
   }
 }
 
@@ -41,6 +59,12 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
     // Check if user is authenticated
     const { data: { user } } = await supabase.auth.getUser()
     if (!user || user.id !== userId) {
+      log({
+        logLevel: 'error',
+        action: 'bulkDeleteUploads',
+        message: 'Not authenticated',
+        metadata: { userId, uploadIds }
+      })
       return { success: false, error: 'Not authenticated' }
     }
     
@@ -55,7 +79,12 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
       .map(result => result.reason)
     
     if (errors.length > 0) {
-      console.error('Errors during bulk deletion:', errors)
+      log({
+        logLevel: 'error',
+        action: 'bulkDeleteUploads',
+        message: 'Errors during bulk deletion',
+        metadata: { userId, uploadIds, errors }
+      })
       // We'll keep this return since it's a business logic error, not a database error
       return { 
         success: false, 
@@ -68,12 +97,18 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
     revalidatePath('/dashboard/folder/[id]', 'page')
     
     return { success: true }
-  } catch (error) {
-    console.error('Error bulk deleting uploads:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'bulkDeleteUploads',
+      message: 'Error bulk deleting uploads',
+      metadata: { userId, uploadIds, error: errorMessage }
+    })
     return { 
       success: false, 
-      error: 'Unable to delete files' 
-    }
+      error: `Unable to delete files`
+    } 
   }
 }
 
@@ -83,10 +118,22 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user || user.id !== userId) {
+      log({
+        logLevel: 'error',
+        action: 'renameUpload',
+        message: 'Not authenticated',
+        metadata: { userId, uploadId }
+      })
       return { success: false, error: 'Not authenticated' }
     }
 
     if (!newFileName.trim()) {
+      log({
+        logLevel: 'error',
+        action: 'renameUpload',
+        message: 'File name cannot be empty',
+        metadata: { userId, uploadId, newFileName }
+      })
       return { success: false, error: 'File name cannot be empty' }
     }
 
@@ -99,11 +146,22 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
       .single()
     
     if (fetchError) {
-      console.error('Error fetching upload for renaming:', fetchError)
+      log({
+        logLevel: 'error',
+        action: 'renameUpload.fetch',
+        message: 'Error fetching upload for renaming',
+        metadata: { userId, uploadId, error: fetchError }
+      })
       throw fetchError
     }
     
     if (!upload) {
+      log({
+        logLevel: 'error',
+        action: 'renameUpload',
+        message: 'Upload not found',
+        metadata: { userId, uploadId }
+      })
       return { 
         success: false, 
         error: 'Upload not found' 
@@ -118,7 +176,12 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
       .eq('user_id', user.id)
     
     if (updateError) {
-      console.error('Error renaming upload:', updateError)
+      log({
+        logLevel: 'error',
+        action: 'renameUpload.update',
+        message: 'Error renaming upload',
+        metadata: { userId, uploadId, newFileName, error: updateError }
+      })
       throw updateError
     }
     
@@ -130,12 +193,18 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
     revalidatePath(`/dashboard/transcript/${uploadId}`)
     
     return { success: true }
-  } catch (error) {
-    console.error('Error renaming upload:', error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'renameUpload',
+      message: 'Error renaming upload',
+      metadata: { userId, uploadId, newFileName, error: errorMessage }
+    })
     return { 
       success: false, 
-      error: 'Unable to rename file' 
-    }
+      error: `Unable to rename file`
+    } 
   }
 }
 
@@ -153,6 +222,12 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
       .single();
       
     if (userError) {
+      log({
+        logLevel: 'error',
+        action: 'checkUserTranscriptionLimit',
+        message: 'Failed to get user data',
+        metadata: { userId, error: userError }
+      })
       throw new Error(`Failed to get user data: ${userError.message}`);
     }
 
@@ -163,17 +238,35 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
       .single();
 
     if (productError) {
+      log({
+        logLevel: 'error',
+        action: 'checkUserTranscriptionLimit',
+        message: 'Failed to get product data',
+        metadata: { userId, error: productError }
+      })
       throw new Error(`Failed to get product data: ${productError.message}`);
     }
 
     if (!productData) {
+      log({
+        logLevel: 'error',
+        action: 'checkUserTranscriptionLimit',
+        message: 'Product not found',
+        metadata: { userId }
+      })
       throw new Error('Product not found');
     }
 
     const limitDuration = productData.transcription_limit_seconds_per_month;
     return totalDuration < limitDuration;
-  } catch (error) {
-    console.error("Error checking transcription limit:", error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'checkUserTranscriptionLimit',
+      message: 'Error checking transcription limit',
+      metadata: { userId, fileDurations, error: errorMessage }
+    })
     return false;
   }
 }
@@ -193,6 +286,12 @@ export async function processUploadedFile(
     const { error } = await updateUserUsageSSR(supabase, userId, durationSeconds);
 
     if (error) {
+      log({
+        logLevel: 'error',
+        action: 'processUploadedFile',
+        message: 'Failed to update user usage',
+        metadata: { userId, error }
+      })
       throw new Error(`Failed to update user usage`);
     }
     
@@ -201,7 +300,15 @@ export async function processUploadedFile(
 
     return;
 
-  } catch (error) {
-    throw error;
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'processUploadedFile',
+      message: 'Error processing uploaded file',
+      metadata: { userId, error: errorMessage }
+    })
+    // Re-throw the error to be caught by the calling component (UploadModal)
+    throw new Error(`Failed to process uploaded file`);
   }
 }
