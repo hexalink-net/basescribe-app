@@ -7,6 +7,7 @@ import {
 import { createClient, updateUserSubscriptionSSR, renewedSubscriptionStatusSSR } from '@/lib/supabase/server';
 import { LinkGetCustomerInfoPaddle } from '@/constants/PaddleUrl';
 import { log } from '@/lib/logger';
+import { z } from 'zod';
 
 interface PaddleCustomerResponse {
   data: {
@@ -25,6 +26,32 @@ interface PaddleCustomerResponse {
       request_id: string;
     };
 }
+
+const paddleWebhookSchema = z.object({
+  data: z.object({
+    customer_id: z.string(),
+    id: z.string(), // subscription ID
+    status: z.string(),
+    current_billing_period: z
+      .object({
+        starts_at: z.string(),
+        ends_at: z.string(),
+      })
+      .nullable(),
+    items: z
+      .array(
+        z.object({
+          price: z
+            .object({
+              product_id: z.string(),
+              id: z.string(),
+            })
+        })
+      )
+      .min(1),
+  }),
+});
+
   
 export class ProcessWebhook {
   async processEvent(eventData: EventEntity) {
@@ -45,6 +72,13 @@ export class ProcessWebhook {
         action: 'updateSubscriptionData',
         message: 'Processing subscription creation event'
       });
+
+      const validateInput = paddleWebhookSchema.safeParse(eventData);
+
+      if (!validateInput.success) {
+        const errorMessage = validateInput.error.issues[0].message;
+        throw new Error(errorMessage);
+      }
 
       const supabase = await createClient();
       const getCustomerInfoPaddleUrl = `${LinkGetCustomerInfoPaddle}${eventData.data.customerId}`;
@@ -97,7 +131,7 @@ export class ProcessWebhook {
           error: error
         }
       });
-      
+
       throw new Error('Failed to create subscription');
     }
 }
@@ -109,6 +143,14 @@ export class ProcessWebhook {
         action: 'renewedSubscriptionStatus',
         message: 'Processing subscription update event'
       });
+
+      const validateInput = paddleWebhookSchema.safeParse(eventData);
+
+      if (!validateInput.success) {
+        const errorMessage = validateInput.error.issues[0].message;
+        throw new Error(errorMessage);
+      }
+
       const supabase = await createClient();
       let planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
       let planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;

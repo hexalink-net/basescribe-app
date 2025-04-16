@@ -2,8 +2,14 @@
 import { createClient, createNewUserSSR } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { log } from "@/lib/logger";
+import { z } from "zod";
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'http://localhost:3000';
+
+const userLoginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8, "Password must be at least 8 characters long")
+});
 
 // Google OAuth sign-in
 export async function signInWithGoogle() {
@@ -43,9 +49,12 @@ export async function signInWithGoogle() {
 export async function signInWithEmailPassword(formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
-  
-    if (!email || !password) {
-        return { error: "Email and password are required" }
+
+    const result = userLoginSchema.safeParse({ email: email, password: password });
+
+    if (!result.success) {
+        const errorMessage = result.error.issues[0].message;
+        return { error: errorMessage }
     }
   
     const supabase = await createClient()
@@ -83,8 +92,11 @@ export async function signUpWithEmailPassword(formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
   
-    if (!email || !password) {
-        return { error: "Email and password are required" }
+    const result = userLoginSchema.safeParse({ email: email, password: password });
+
+    if (!result.success) {
+        const errorMessage = result.error.issues[0].message;
+        return { error: errorMessage }
     }
   
     const redirectUrl = `${PUBLIC_URL}/auth/callback`

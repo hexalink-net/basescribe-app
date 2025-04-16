@@ -4,6 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { Folder } from '@/types/DashboardInterface'
 import { log } from '@/lib/logger'
+import { z } from 'zod'
+
+const folderSchema = z.object({
+    name: z.string().min(1, 'Folder name must be between 1 and 50 characters').max(50, 'Folder name must be between 1 and 50 characters'),
+    parentId: z.string().nullable().default(null)
+})
 
 export async function createFolder(name: string, parentId: string | null) {
   try {
@@ -20,8 +26,11 @@ export async function createFolder(name: string, parentId: string | null) {
       return { success: false, error: 'Folder name cannot be empty' }
     }
 
-    if (trimmedName.length > 100) {
-      return { success: false, error: 'Folder name is too long (maximum 100 characters)' }
+    const result = folderSchema.safeParse({ name: trimmedName, parentId })
+    
+    if (!result.success) {
+      const errorMessage = result.error.issues[0].message;
+      return { success: false, error: errorMessage }
     }
     
     // If creating in a parent folder, verify parent folder ownership and check if it's a root-level folder
@@ -399,8 +408,11 @@ export async function renameFolder(folderId: string, newName: string) {
       return { success: false, error: 'Folder name cannot be empty' }
     }
 
-    if (trimmedName.length > 100) {
-      return { success: false, error: 'Folder name is too long (maximum 100 characters)' }
+    const result = folderSchema.safeParse({ name: trimmedName, parentId: null })
+    
+    if (!result.success) {
+      const errorMessage = result.error.issues[0].message;
+      return { success: false, error: errorMessage }
     }
 
     // Update the folder name
