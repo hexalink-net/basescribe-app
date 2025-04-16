@@ -3,6 +3,23 @@
 import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { log } from '@/lib/logger'
+import { z } from 'zod'
+
+const renameUploadSchema = z.object({
+  uploadId: z.string().uuid(),
+  newFileName: z.string().max(100),
+  userId: z.string().uuid()
+})
+
+const uploadSchema = z.object({
+  userId: z.string().uuid(),
+  uploadId: z.string().uuid(),
+  fileName: z.string().max(100),
+  filePath: z.string(),
+  fileSize: z.number(),
+  durationSeconds: z.number(),
+  folderId: z.string().uuid().nullable()
+})
 
 export async function deleteUpload(uploadId: string, userId: string) {
   try {
@@ -114,6 +131,14 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
 
 export async function renameUpload(uploadId: string, newFileName: string, userId: string) {
   try {
+
+    const validateInput = renameUploadSchema.safeParse({ uploadId, newFileName, userId });
+
+    if (!validateInput.success) {
+      const errorMessage = validateInput.error.issues[0].message;
+      return { success: false, error: errorMessage };
+    }
+    
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
@@ -279,6 +304,12 @@ export async function processUploadedFile(
   durationSeconds: number,
   folderId?: string | null
 ) {
+  const validateInput = uploadSchema.safeParse({ userId, fileName, filePath, fileSize, durationSeconds, folderId });
+
+  if (!validateInput.success) {
+    const errorMessage = validateInput.error.issues[0].message;
+    return { success: false, error: errorMessage };
+  }
 
   try{
     const supabase = await createClient();
