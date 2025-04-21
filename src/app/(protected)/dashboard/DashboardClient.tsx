@@ -190,7 +190,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while deleting the upload.",
@@ -228,7 +228,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while deleting uploads.",
@@ -284,7 +284,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while creating the folder.",
@@ -326,7 +326,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while renaming the folder.",
@@ -366,7 +366,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while deleting the folder.",
@@ -410,7 +410,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while renaming the file.",
@@ -445,7 +445,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while moving the folder.",
@@ -492,7 +492,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         });
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while moving the file.",
@@ -557,7 +557,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         });
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "An unexpected error occurred while moving files.",

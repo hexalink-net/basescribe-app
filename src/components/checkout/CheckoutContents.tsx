@@ -56,7 +56,7 @@ export function CheckoutContents({ priceId, userEmail, quantity = 1 }: Props) {
             items: [{ priceId: priceId, quantity }],
           });
         }
-      }).catch((err) => {
+      }).catch(() => {
         setErrorMessage('Payment system failed to load. Please try again later.');
       });
     }
