@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { log } from '@/lib/logger';
+import { free } from '@/constants/PaddleProduct';
 
 export async function createClient() {
     const { cookies } = await import('next/headers')
@@ -118,7 +119,7 @@ export async function createNewUserSSR(supabase: SupabaseClient, userId: string,
       { 
         id: userId,
         email: userEmail,
-        product_id: "test"
+        product_id: free
       }
     ]);
 

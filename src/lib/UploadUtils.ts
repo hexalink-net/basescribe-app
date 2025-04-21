@@ -1,27 +1,47 @@
 import { supabase } from '@/lib/supabase/client';
-import { Uppy } from '@uppy/core';
+import Uppy from '@uppy/core';
 import Tus from '@uppy/tus';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
 
+// Define the progress callback type
+type ProgressCallback = (percentage: number) => void;
+
 // Upload functions
 /**
- * Standard file upload to Supabase storage
+ * Standard file upload to Supabase storage with progress reporting
  */
 export async function uploadFile(
     file: File,
     filePath: string,
     fileSize: number,
-    bucketName: string = BucketNameUpload
+    bucketName: string = BucketNameUpload,
+    onProgress?: ProgressCallback // Add optional onProgress callback
   ) {
 
     if (fileSize <= 6000 * 1000) {
       const { error } = await supabase.storage
         .from(bucketName)
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          // Add progress reporting for standard uploads
+          contentType: file.type || 'application/octet-stream',
+          duplex: 'half', // Recommended for progress reporting
+          ...(onProgress && { 
+            progress: (event: ProgressEvent) => { 
+              if (event.lengthComputable && event.total > 0) { 
+                const percentage = Math.round((event.loaded / event.total) * 100);
+                onProgress(percentage);
+              }
+            }
+          })
+        });
 
       if (error) {
-        throw new Error(`Storage upload failed`);
+        throw new Error(`Storage upload failed: ${error.message}`);
       }
+      // Ensure 100% is reported on success if callback exists
+      onProgress?.(100);
       return;
     } else if (fileSize > 6000 * 1000 && fileSize <= 5000000 * 1000) {
       // TUS upload for larger files
@@ -58,6 +78,22 @@ export async function uploadFile(
               contentType: file.type, // Set content type based on file MIME type
           };
       });
+      
+      // Add progress reporting for TUS uploads
+      if (onProgress) {
+        uppy.on('upload-progress', (file, progress) => {
+          // Check if bytesTotal is valid before calculating percentage
+          if (progress.bytesTotal && progress.bytesTotal > 0) {
+            const percentage = Math.round(progress.bytesUploaded / progress.bytesTotal * 100);
+            onProgress(percentage);
+          }
+        });
+
+        // Ensure 100% is reported on success
+        uppy.on('upload-success', (file, response) => {
+          onProgress(100);
+        });
+      }
 
       uppy.addFile({
           name: filePath, // Use the consistent filePath

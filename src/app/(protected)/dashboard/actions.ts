@@ -20,6 +20,13 @@ const uploadSchema = z.object({
   folderId: z.string().uuid().nullable()
 })
 
+interface UserWithProductLimit {
+  monthly_usage_seconds: number;
+  product: {
+    transcription_limit_seconds_per_month: number;
+  };
+}
+
 export async function deleteUpload(uploadId: string, userId: string) {
   try {
     const supabase = await createClient()
@@ -249,26 +256,22 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
     .single();
 
     if (error) {
-      log({
-        logLevel: 'error',
-        action: 'checkUserTranscriptionLimit',
-        message: 'Failed to get user usage and limit',
-        metadata: { userId, error }
-      })
-      throw new Error('Unable to get user usage and limit.');
+      throw error;
     }
 
     if (!data || !data.product) return false;
 
-    const limitDuration = data.product[0].transcription_limit_seconds_per_month;
-    return data.monthly_usage_seconds + totalDuration < limitDuration;
+    const { monthly_usage_seconds, product } = data as unknown as UserWithProductLimit;
+
+    const limitDuration = product.transcription_limit_seconds_per_month;
+    return monthly_usage_seconds + totalDuration < limitDuration;
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.log(error)
     log({
       logLevel: 'error',
       action: 'checkUserTranscriptionLimit',
       message: 'Error checking transcription limit',
-      metadata: { userId, fileDurations, error: errorMessage }
+      metadata: {error}
     })
     return false;
   }

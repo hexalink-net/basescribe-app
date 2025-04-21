@@ -10,6 +10,7 @@ import { UserProfile } from '@/types/DashboardInterface';
 import { uploadFile } from '@/lib/UploadUtils';
 import { getMediaDuration } from '@/lib/MediaUtils';
 import { processUploadedFile } from '@/app/(protected)/dashboard/actions';
+import { BucketNameUpload } from '@/constants/SupabaseBucket';
 
 // 5 GB max file size for free users
 const MAX_FILE_SIZE_FREE = 5000 * 1000 * 1000;
@@ -30,7 +31,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleFileUpload = async (file: File): Promise<void> => {
+  const handleFileUpload = async (file: File, onProgress?: (percentage: number) => void): Promise<void> => {
     if (!userId) {
       toast({
         title: "Authentication required",
@@ -70,8 +71,8 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       // Process the upload
       await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, folderId);
 
-      // Upload to storage
-      await uploadFile(file, filePath, fileSize);
+      // Upload to storage with progress reporting
+      await uploadFile(file, filePath, fileSize, BucketNameUpload, onProgress);
     
       // Show success message
       toast({

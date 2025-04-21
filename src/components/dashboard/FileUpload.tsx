@@ -11,7 +11,7 @@ import { checkUserTranscriptionLimit } from '@/app/(protected)/dashboard/actions
 
 interface FileUploadProps {
   userId: string;
-  onFileSelected: (file: File) => Promise<void>;
+  onFileSelected: (file: File, onProgress?: (percentage: number) => void) => Promise<void>;
   maxSizeInBytes: number;
   disabled?: boolean;
   multiple?: boolean;
@@ -139,23 +139,30 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
       // Set initial progress to make it visible immediately
       updateFileProgress(id, 5);
       
-      // Simulate progress for better UX with more frequent updates
+      // Create a progress callback function that will be passed to onFileSelected
+      const handleProgress = (percentage: number) => {
+        // Update the file's progress directly with the real percentage
+        updateFileProgress(id, percentage);
+      };
+      
+      // As a fallback, still use a slow interval for progress in case real progress isn't working
+      // This will be cleared once we get the first real progress update
       progressInterval = setInterval(() => {
         setFiles(prev => prev.map(f => {
-          if (f.id === id) {
-            // Increase progress more gradually
-            const increment = f.progress < 30 ? 3 : (f.progress < 60 ? 2 : 1);
+          if (f.id === id && f.progress < 90) {
+            // Smaller increments for smoother appearance
+            const increment = 0.5;
             return { ...f, progress: Math.min(f.progress + increment, 90) };
           }
           return f;
         }));
-      }, 200);
+      }, 500);
       
       // Store the interval in our ref for cleanup
       activeIntervalsRef.current[id] = progressInterval;
       
-      // Call the parent component's upload function
-      await onFileSelected(file);
+      // Call the parent component's upload function with our progress callback
+      await onFileSelected(file, handleProgress);
       
       // Clear and remove the interval
       if (progressInterval) {
@@ -163,16 +170,9 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
         delete activeIntervalsRef.current[id];
       }
       
-      // Smoothly transition to 100%
-      setFiles(prev => prev.map(f => 
-        f.id === id ? { ...f, progress: 95 } : f
-      ));
-      
-      // Small delay before showing 100% to make the transition visible
-      setTimeout(() => {
-        updateFileProgress(id, 100);
-        updateFileStatus(id, 'success');
-      }, 300);
+      // Ensure we're at 100% at the end
+      updateFileProgress(id, 100);
+      updateFileStatus(id, 'success');
       
     } catch (error: unknown) {      
       // Clear and remove the interval
