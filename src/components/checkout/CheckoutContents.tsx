@@ -45,7 +45,7 @@ export function CheckoutContents({ priceId, userEmail, quantity = 1 }: Props) {
             frameTarget: 'paddle-checkout-frame',
             frameInitialHeight: 450,
             frameStyle: 'width: 100%; background-color: transparent; border: none',
-            successUrl: 'checkout/success'
+            successUrl: '/checkout/success'
           },
         },
       }).then((paddle) => {
