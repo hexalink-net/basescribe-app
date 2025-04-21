@@ -15,13 +15,12 @@ interface LogOptions {
 }
 
 export const log = ({
-  logLevel,
+  logLevel = 'info',
   action,
   message,
   metadata,
   userId,
 }: LogOptions) => {
-    
     const pinoOption: LoggerOptions = {
         level: logLevel,
         base: {
@@ -34,7 +33,12 @@ export const log = ({
 
     const logger = pino(pinoOption);
 
-    const logOutput = logger.child({userId: userId, message: message, metadata: metadata});
+    const logContext = logger.child({userId: userId, message: message, metadata: metadata});
 
-    logOutput.info(action);
+    if (logger[logLevel]) {
+      logger[logLevel](logContext, message); // Common pattern: context object first, then message string
+    } else {
+      // Fallback if an invalid level string was somehow passed
+      logger.info(logContext, `[Fallback Log Level: ${logLevel}] ${message}`);
+    }
 }

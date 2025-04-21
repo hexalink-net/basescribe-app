@@ -18,14 +18,20 @@ export async function uploadFile(
       const { error } = await supabase.storage
         .from(bucketName)
         .upload(filePath, file);
-      
+
       if (error) {
         throw new Error(`Storage upload failed`);
       }
       return;
     } else if (fileSize > 6000 * 1000 && fileSize <= 5000000 * 1000) {
+      // TUS upload for larger files
       const uppy = new Uppy();
       const { data: { session } } = await supabase.auth.getSession();
+
+      // Add a check for the session, crucial for authentication
+      if (!session) {
+          throw new Error("User session not found. Cannot perform TUS upload.");
+      }
 
       uppy.use(Tus, {
         endpoint: `${process.env.NEXT_PUBLIC_SUPABASE_URL!}/storage/v1/upload/resumable`, // Supabase TUS endpoint
@@ -42,19 +48,53 @@ export async function uploadFile(
             "objectName",
             "contentType",
             "cacheControl",
-        ], // Metadata fields allowed for the upload
-        onError: (error) => {console.error("Upload error:", error); throw new Error(`Storage upload failed`);}, // Error handling for uploads
-        }).on("file-added", (file) => {
-            // Attach metadata to each file, including bucket name and content type
-            file.meta = {
-                ...file.meta,
-                bucketName, // Bucket specified by the user of the hook
+        ]
+      }).on("file-added", (file) => {
+          // Attach metadata to each file, including bucket name and content type
+          file.meta = {
+              ...file.meta,
+              bucketName, // Bucket specified by the user of the hook
                 objectName: file.name, // Use file name as object name
-                contentType: file.type, // Set content type based on file MIME type
-            };
-        });
+              contentType: file.type, // Set content type based on file MIME type
+          };
+      });
 
-        return;
+      uppy.addFile({
+          name: filePath, // Use the consistent filePath
+          type: file.type,
+          data: file
+      });
+
+      // Wrap the promise handling in a try...catch block
+      try {
+          // Await the promise that resolves on 'complete' or rejects on 'error'
+          await new Promise((resolve, reject) => {
+              uppy.on('complete', (result) => {
+                  resolve(result);
+              });
+
+              // IMPORTANT: This connects Uppy's error signal to the promise rejection
+              uppy.on('error', (error) => {
+                  // Reject the promise with a new Error object for consistency
+                  reject(new Error(`Large file upload failed`));
+              });
+
+              // Start the upload; catch potential immediate errors
+              uppy.upload().catch(initialError => {
+                  reject(new Error(`Failed to initiate large file upload`));
+              });
+          });
+      } catch (error) {
+          // Re-throw the error so the calling function (e.g., server action) can catch it
+          // Ensure it's an Error object
+          if (error instanceof Error) {
+              throw error;
+          } else {
+              throw new Error(`An unknown error occurred during large file upload: ${String(error)}`);
+          }
+      } 
+
+      return;
     }
 
     throw new Error(`File size exceeds maximum allowed`);

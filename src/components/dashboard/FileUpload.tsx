@@ -222,7 +222,9 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
       );
       
       await Promise.all(uploadPromises);
-    } finally {
+    } catch {
+      throw new Error("Failed to upload files");
+    }finally {
       setUploading(false);
     }
   };

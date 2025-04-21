@@ -65,7 +65,6 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
       message: 'Database insert error for upload record',
       metadata: { error, uploadRecord: { user_id: userId, file_name: fileName, file_path: filePath, file_size: fileSize, duration_seconds: durationSeconds, folder_id: folderId || null, status: 'completed' } }
     });
-    throw error;
   }
 
   return { data, error };

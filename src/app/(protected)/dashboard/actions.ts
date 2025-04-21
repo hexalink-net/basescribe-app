@@ -13,7 +13,6 @@ const renameUploadSchema = z.object({
 
 const uploadSchema = z.object({
   userId: z.string().uuid(),
-  uploadId: z.string().uuid(),
   fileName: z.string().max(100),
   filePath: z.string(),
   fileSize: z.number(),
@@ -240,50 +239,29 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
     
     // Get user's product ID and transcription limit from database
     const supabase = await createClient();
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('product_id')
-      .eq('id', userId)
-      .single();
-      
-    if (userError) {
+    const { data, error } = await supabase
+    .from('users')
+    .select(`
+      monthly_usage_seconds,
+      product:product_id(transcription_limit_seconds_per_month)
+    `)
+    .eq('id', userId)
+    .single();
+
+    if (error) {
       log({
         logLevel: 'error',
         action: 'checkUserTranscriptionLimit',
-        message: 'Failed to get user data',
-        metadata: { userId, error: userError }
+        message: 'Failed to get user usage and limit',
+        metadata: { userId, error }
       })
-      throw new Error(`Failed to get user data: ${userError.message}`);
+      throw new Error('Unable to get user usage and limit.');
     }
 
-    const { data: productData, error: productError } = await supabase
-      .from('products')
-      .select('transcription_limit_seconds_per_month')
-      .eq('id', userData.product_id)
-      .single();
+    if (!data || !data.product) return false;
 
-    if (productError) {
-      log({
-        logLevel: 'error',
-        action: 'checkUserTranscriptionLimit',
-        message: 'Failed to get product data',
-        metadata: { userId, error: productError }
-      })
-      throw new Error(`Failed to get product data: ${productError.message}`);
-    }
-
-    if (!productData) {
-      log({
-        logLevel: 'error',
-        action: 'checkUserTranscriptionLimit',
-        message: 'Product not found',
-        metadata: { userId }
-      })
-      throw new Error('Product not found');
-    }
-
-    const limitDuration = productData.transcription_limit_seconds_per_month;
-    return totalDuration < limitDuration;
+    const limitDuration = data.product[0].transcription_limit_seconds_per_month;
+    return data.monthly_usage_seconds + totalDuration < limitDuration;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log({
@@ -308,7 +286,13 @@ export async function processUploadedFile(
 
   if (!validateInput.success) {
     const errorMessage = validateInput.error.issues[0].message;
-    return { success: false, error: errorMessage };
+    log({
+      logLevel: 'error',
+      action: 'processUploadedFile',
+      message: 'Invalid input',
+      metadata: { userId, fileName, filePath, fileSize, durationSeconds, folderId, error: errorMessage }
+    })
+    throw new Error(errorMessage);
   }
 
   try{
@@ -318,11 +302,15 @@ export async function processUploadedFile(
 
     if (error) {
       log({
-        logLevel: 'error',
+        logLevel: 'debug',
         action: 'processUploadedFile',
         message: 'Failed to update user usage',
         metadata: { userId, error }
       })
+
+      if (error.message === 'Monthly usage quota exceeded') {
+        throw new Error(error.message);
+      }
       throw new Error(`Failed to update user usage`);
     }
     
@@ -340,6 +328,6 @@ export async function processUploadedFile(
       metadata: { userId, error: errorMessage }
     })
     // Re-throw the error to be caught by the calling component (UploadModal)
-    throw new Error(`Failed to process uploaded file`);
+    throw error;
   }
 }
