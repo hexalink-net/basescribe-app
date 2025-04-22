@@ -3,6 +3,15 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { log } from '@/lib/logger';
 import { free } from '@/constants/PaddleProduct';
+import { readRateLimiter } from '@/lib/upstash/ratelimit';
+
+async function checkReadRateLimit(userId: string) {
+  const { success } = await readRateLimiter.limit(userId);
+  
+  if (!success) {
+    throw new Error('Too many requests. Please try again in a few minutes.');
+  }
+}
 
 export async function createClient() {
     const { cookies } = await import('next/headers')
@@ -33,6 +42,8 @@ export async function createClient() {
 }
 
 export async function getUserProfileSSR(supabase: SupabaseClient, userId: string) {
+    await checkReadRateLimit(userId);
+
     const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
     if (error) {
       log({
@@ -72,6 +83,8 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
 }
 
 export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: string) {
+    await checkReadRateLimit(userId);
+
     const { data = [], error } = await supabase
     .from('uploads')
     .select('*')
@@ -92,6 +105,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
   }
 
 export async function getUserUploadSSR(supabase: SupabaseClient, userId: string, uploadId: string) {
+    await checkReadRateLimit(userId);
     const { data, error } = await supabase
     .from('uploads')
     .select('*')

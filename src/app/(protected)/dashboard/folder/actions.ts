@@ -5,11 +5,28 @@ import { revalidatePath } from 'next/cache'
 import { Folder } from '@/types/DashboardInterface'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
+import { folderRateLimiter, readRateLimiter } from '@/lib/upstash/ratelimit'
 
 const folderSchema = z.object({
     name: z.string().min(1, 'Folder name must be between 1 and 50 characters').max(50, 'Folder name must be between 1 and 50 characters'),
     parentId: z.string().nullable().default(null)
 })
+
+async function checkFolderRateLimit(userId: string) {
+  const { success } = await folderRateLimiter.limit(userId);
+  
+  if (!success) {
+    throw new Error('Too many requests. Please try again in a few minutes.');
+  }
+}
+
+async function checkReadRateLimit(userId: string) {
+  const { success } = await readRateLimiter.limit(userId);
+  
+  if (!success) {
+    throw new Error('Too many requests. Please try again in a few minutes.');
+  }
+}
 
 export async function createFolder(name: string, parentId: string | null) {
   try {
@@ -19,6 +36,8 @@ export async function createFolder(name: string, parentId: string | null) {
     if (!user) {
       return { success: false, error: 'Not authenticated' }
     }
+
+    await checkFolderRateLimit(user.id);
 
     // Validate folder name
     const trimmedName = name.trim()
@@ -101,6 +120,8 @@ export async function getFolders() {
     if (!user) {
       return { success: false, error: 'Not authenticated', data: [] }
     }
+
+    await checkReadRateLimit(user.id);
     
     const { data, error } = await supabase
       .from('folders')
@@ -143,6 +164,7 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
       return { success: false, error: 'Not authenticated' }
     }
 
+    await checkFolderRateLimit(user.id);
 
     // If moving to a folder (not root), verify folder ownership
     if (folderId !== null) {
@@ -208,6 +230,8 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
     if (!user) {
       return { success: false, error: 'Not authenticated' }
     }
+
+    await checkFolderRateLimit(user.id);
 
     // If moving to a folder (not root), verify folder ownership
     if (folderId !== null) {
@@ -402,6 +426,8 @@ export async function renameFolder(folderId: string, newName: string) {
       return { success: false, error: 'Not authenticated' }
     }
 
+    await checkFolderRateLimit(user.id);
+
     // Validate folder name
     const trimmedName = newName.trim()
     if (!trimmedName) {
@@ -459,6 +485,8 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
     if (!user) {
       return { success: false, error: 'Not authenticated' }
     }
+
+    await checkFolderRateLimit(user.id);
 
     // Validate input
     if (!folderId) {

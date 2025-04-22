@@ -3,6 +3,8 @@ import { createClient, createNewUserSSR } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { log } from "@/lib/logger";
 import { z } from "zod";
+import { authRateLimiter } from "@/lib/upstash/ratelimit";
+import { headers } from "next/headers";
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'http://localhost:3000';
 
@@ -11,8 +13,18 @@ const userLoginSchema = z.object({
     password: z.string().min(8, "Password must be at least 8 characters long")
 });
 
+async function checkAuthRateLimit() {
+    const ip = (await headers()).get('x-forwarded-for') ?? '';
+    const { success } = await authRateLimiter.limit(ip);
+
+    if (!success) {
+        throw new Error('Too many requests. Please try again in a few minutes.');
+    }
+}
+
 // Google OAuth sign-in
 export async function signInWithGoogle() {
+    await checkAuthRateLimit();
     // Make sure the redirect URL is absolute and includes the origin
     const supabase = await createClient();
     const redirectUrl = `${PUBLIC_URL}/auth/callback`;
@@ -47,6 +59,7 @@ export async function signInWithGoogle() {
 
 // Email/password sign-in
 export async function signInWithEmailPassword(formData: FormData) {
+    await checkAuthRateLimit();
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
@@ -89,6 +102,7 @@ export async function signInWithEmailPassword(formData: FormData) {
 
 // Email/password sign-up
 export async function signUpWithEmailPassword(formData: FormData) {
+    await checkAuthRateLimit();
     const email = formData.get('email') as string
     const password = formData.get('password') as string
   

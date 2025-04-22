@@ -4,7 +4,7 @@ import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR 
 import { revalidatePath } from 'next/cache'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
-import { ratelimit } from '@/lib/upstash/ratelimit'
+import { uploadRateLimiter } from '@/lib/upstash/ratelimit'
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -138,12 +138,17 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
 
 export async function renameUpload(uploadId: string, newFileName: string, userId: string) {
   try {
-
     const validateInput = renameUploadSchema.safeParse({ uploadId, newFileName, userId });
 
     if (!validateInput.success) {
       const errorMessage = validateInput.error.issues[0].message;
       return { success: false, error: errorMessage };
+    }
+
+    const exceedLimit = await checkUploadRateLimit(userId);
+
+    if (!exceedLimit) {
+      throw new Error("Too many requests. Please try again in a few minutes.");
     }
     
     const supabase = await createClient()
@@ -242,6 +247,12 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
 
 export async function checkUserTranscriptionLimit(userId: string, fileDurations: number[]): Promise<boolean> {
   try {
+    const exceedLimit = await checkUploadRateLimit(userId);
+
+    if (!exceedLimit) {
+      throw new Error("Too many requests. Please try again in a few minutes.");
+    }
+
     // Calculate total duration of all files
     const totalDuration = fileDurations.reduce((acc, duration) => acc + duration, 0);
     
@@ -279,7 +290,7 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
 }
 
 export async function checkUploadRateLimit(userId: string) {
-  const { success } = await ratelimit.limit(userId);
+  const { success } = await uploadRateLimiter.limit(userId);
   
   return success;
 }

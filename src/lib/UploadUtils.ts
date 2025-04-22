@@ -23,7 +23,7 @@ export async function uploadFile(
     const exceedLimit = await checkUploadRateLimit(userId);
     
     if (!exceedLimit) {
-      throw new Error("Rate limit exceeded");
+      throw new Error("Too many requests. Please try again in a few minutes.");
     }
 
     if (fileSize <= 6000 * 1000) {
