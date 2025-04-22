@@ -4,6 +4,7 @@ import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR 
 import { revalidatePath } from 'next/cache'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
+import { ratelimit } from '@/lib/upstash/ratelimit'
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -275,6 +276,12 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
     })
     return false;
   }
+}
+
+export async function checkUploadRateLimit(userId: string) {
+  const { success } = await ratelimit.limit(userId);
+  
+  return success;
 }
 
 export async function processUploadedFile(

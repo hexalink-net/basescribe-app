@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 import Uppy from '@uppy/core';
 import Tus from '@uppy/tus';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
+import { checkUploadRateLimit } from '@/app/(protected)/dashboard/actions';
 
 // Define the progress callback type
 type ProgressCallback = (percentage: number) => void;
@@ -11,12 +12,19 @@ type ProgressCallback = (percentage: number) => void;
  * Standard file upload to Supabase storage with progress reporting
  */
 export async function uploadFile(
+    userId: string,
     file: File,
     filePath: string,
     fileSize: number,
     bucketName: string = BucketNameUpload,
     onProgress?: ProgressCallback // Add optional onProgress callback
   ) {
+    // Check rate limit
+    const exceedLimit = await checkUploadRateLimit(userId);
+    
+    if (!exceedLimit) {
+      throw new Error("Rate limit exceeded");
+    }
 
     if (fileSize <= 6000 * 1000) {
       const { error } = await supabase.storage
@@ -81,7 +89,7 @@ export async function uploadFile(
       
       // Add progress reporting for TUS uploads
       if (onProgress) {
-        uppy.on('upload-progress', (file, progress) => {
+        uppy.on('upload-progress', (_, progress) => {
           // Check if bytesTotal is valid before calculating percentage
           if (progress.bytesTotal && progress.bytesTotal > 0) {
             const percentage = Math.round(progress.bytesUploaded / progress.bytesTotal * 100);
@@ -90,7 +98,7 @@ export async function uploadFile(
         });
 
         // Ensure 100% is reported on success
-        uppy.on('upload-success', (file, response) => {
+        uppy.on('upload-success', () => {
           onProgress(100);
         });
       }
@@ -110,13 +118,13 @@ export async function uploadFile(
               });
 
               // IMPORTANT: This connects Uppy's error signal to the promise rejection
-              uppy.on('error', (error) => {
+              uppy.on('error', () => {
                   // Reject the promise with a new Error object for consistency
                   reject(new Error(`Large file upload failed`));
               });
 
               // Start the upload; catch potential immediate errors
-              uppy.upload().catch(initialError => {
+              uppy.upload().catch(() => {
                   reject(new Error(`Failed to initiate large file upload`));
               });
           });

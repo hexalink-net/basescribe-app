@@ -69,7 +69,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       }
 
       // Upload to storage with progress reporting
-      await uploadFile(file, filePath, fileSize, BucketNameUpload, onProgress);
+      await uploadFile(userId, file, filePath, fileSize, BucketNameUpload, onProgress);
 
       // Process the upload
       await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, folderId);
