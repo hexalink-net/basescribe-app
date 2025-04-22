@@ -202,7 +202,8 @@ const MoveFolderDialog = memo(({ isOpen, onOpenChange, folder, isMoving, handleM
   const filteredFolders = useMemo(() => {
     return folders.filter((f: Folder) => 
       f.id !== folder?.id && 
-      !isDescendantOf(f.id, folder?.id, folders)
+      !isDescendantOf(f.id, folder?.id, folders) &&
+      f.parent_id === null
     );
   }, [folders, folder, isDescendantOf]);
   
@@ -217,31 +218,33 @@ const MoveFolderDialog = memo(({ isOpen, onOpenChange, folder, isMoving, handleM
             Select a destination for &quot;{folder?.name}&quot;
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
-          <Button
-            variant="outline"
-            className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-            onClick={() => handleMove(null)}
-            disabled={isMoving || folder?.parent_id === null}
-          >
-            <FolderIcon className="h-4 w-4 mr-2" />
-            Root Directory
-            {folder?.parent_id === null && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
-          </Button>
-          
-          {filteredFolders.map((f: Folder) => (
+        <div className="my-4">
+          <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
             <Button
-              key={f.id}
               variant="outline"
               className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => handleMove(f.id)}
-              disabled={isMoving || f.id === folder?.parent_id}
+              onClick={() => handleMove(null)}
+              disabled={isMoving || folder?.parent_id === null}
             >
               <FolderIcon className="h-4 w-4 mr-2" />
-              {f.name}
-              {f.id === folder?.parent_id && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
+              Root Directory
+              {folder?.parent_id === null && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
             </Button>
-          ))}
+            
+            {filteredFolders.map((f: Folder) => (
+              <Button
+                key={f.id}
+                variant="outline"
+                className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
+                onClick={() => handleMove(f.id)}
+                disabled={isMoving || f.id === folder?.parent_id}
+              >
+                <FolderIcon className="h-4 w-4 mr-2" />
+                {f.name}
+                {f.id === folder?.parent_id && <span className="ml-2 text-xs text-gray-400">(Current)</span>}
+              </Button>
+            ))}
+          </div>
         </div>
         <DialogFooter>
           <Button

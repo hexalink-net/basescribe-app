@@ -76,34 +76,16 @@ export default function FileDialogs({
               }
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
-              onClick={() => {
-                if (selectedUploads.length > 0) {
-                  handleBulkMove(null);
-                } else if (selectedUploadId) {
-                  handleMoveUpload(selectedUploadId, null);
-                }
-              }}
-              disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
-                (selectedUploadId ? isMoving[selectedUploadId] : false) || 
-                isBulkMoving}
-            >
-              <FolderIcon className="h-4 w-4 mr-2" />
-              Root Directory
-            </Button>
-            {folders.map(folder => (
+          <div className="my-4">
+            <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
               <Button
-                key={folder.id}
                 variant="outline"
                 className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
                 onClick={() => {
                   if (selectedUploads.length > 0) {
-                    handleBulkMove(folder.id);
+                    handleBulkMove(null);
                   } else if (selectedUploadId) {
-                    handleMoveUpload(selectedUploadId, folder.id);
+                    handleMoveUpload(selectedUploadId, null);
                   }
                 }}
                 disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
@@ -111,9 +93,29 @@ export default function FileDialogs({
                   isBulkMoving}
               >
                 <FolderIcon className="h-4 w-4 mr-2" />
-                {folder.name}
+                Root Directory
               </Button>
-            ))}
+              {folders.map(folder => (
+                <Button
+                  key={folder.id}
+                  variant="outline"
+                  className="w-full justify-start border-[#3a3a3a] hover:bg-[#2a2a2a]"
+                  onClick={() => {
+                    if (selectedUploads.length > 0) {
+                      handleBulkMove(folder.id);
+                    } else if (selectedUploadId) {
+                      handleMoveUpload(selectedUploadId, folder.id);
+                    }
+                  }}
+                  disabled={(selectedUploads.length === 0 && !selectedUploadId) || 
+                    (selectedUploadId ? isMoving[selectedUploadId] : false) || 
+                    isBulkMoving}
+                >
+                  <FolderIcon className="h-4 w-4 mr-2" />
+                  {folder.name}
+                </Button>
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <Button

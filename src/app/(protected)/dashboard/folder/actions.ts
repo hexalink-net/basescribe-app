@@ -520,6 +520,40 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
 
         currentCheckId = currentFolder.parent_id
       }
+      
+      // Find all descendants of the folder being moved and reset their parent_id to null
+      // This prevents orphaned hierarchies when moving a folder
+      const { data: descendants, error: descendantsError } = await supabase
+        .from('folders')
+        .select('id')
+        .eq('parent_id', folderId)
+        .eq('user_id', user.id)
+      
+      if (descendantsError) {
+        log({
+          logLevel: 'error',
+          action: 'moveFolder',
+          message: 'Error finding descendants',
+          metadata: { folderId, error: descendantsError }
+        })
+        // Continue with the move even if we can't find descendants
+      } else if (descendants && descendants.length > 0) {
+        // Reset parent_id to null for all direct descendants
+        const { error: resetError } = await supabase
+          .from('folders')
+          .update({ parent_id: null })
+          .eq('parent_id', folderId)
+          .eq('user_id', user.id)
+        
+        if (resetError) {
+          log({
+            logLevel: 'error',
+            action: 'moveFolder',
+            message: 'Error resetting descendant parent_id',
+            metadata: { folderId, error: resetError }
+          })
+        }
+      }
     }
 
     // Update the folder's parent_id

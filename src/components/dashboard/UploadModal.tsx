@@ -68,11 +68,11 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
       }
 
-      // Process the upload
-      await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, folderId);
-
       // Upload to storage with progress reporting
       await uploadFile(file, filePath, fileSize, BucketNameUpload, onProgress);
+
+      // Process the upload
+      await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, folderId);
     
       // Show success message
       toast({

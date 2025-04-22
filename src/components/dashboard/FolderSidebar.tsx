@@ -70,14 +70,15 @@ export default function FolderSidebar({
       if (result.success && result) {
         setIsNewFolderModalOpen(false);
         setNewFolderName('');
-        
-        // Navigate to the newly created folder
-        router.push(`/dashboard/folder/${result.data}`);
-        router.refresh();
+
         toast({
           title: "Folder created",
           description: "The folder has been successfully created.",
         });
+        
+        // Navigate to the newly created folder
+        router.push(`/dashboard/folder/${result.data}`);
+        router.refresh();
       } else {
         toast({
           title: "Error",
