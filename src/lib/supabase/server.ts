@@ -56,6 +56,22 @@ export async function getUserProfileSSR(supabase: SupabaseClient, userId: string
     return { data, error };
 }
 
+export async function getUserSubscriptionSSR(supabase: SupabaseClient, userId: string) {
+  await checkReadRateLimit(userId);
+
+  const { data, error } = await supabase.from("users").select("product_id, price_id").eq("id", userId).single();
+  if (error) {
+    log({
+      logLevel: 'error',
+      action: 'getUserSubscriptionSSR',
+      message: 'Error fetching user subscription',
+      metadata: { userId, error }
+    });
+  }
+  return { data, error };
+}
+
+
 export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number, folderId?: string | null) {
   const { data, error } = await supabase
   .from('uploads')

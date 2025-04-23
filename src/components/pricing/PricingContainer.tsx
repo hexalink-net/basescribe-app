@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getUserSubscriptionSSR } from '@/lib/supabase/server';
 import { Pricing } from './pricing';
+import { getUserProfileSSR } from '@/lib/supabase/server';
 
 interface PricingContainerProps {
   country: string;
@@ -11,5 +12,7 @@ export async function PricingContainer({ country }: PricingContainerProps) {
   const { data } = await supabase.auth.getUser();
   const user = data.user;
 
-  return <Pricing country={country} user={user} />;
+  const userSubscription = await getUserSubscriptionSSR(supabase, user?.id || '');
+
+  return <Pricing country={country} user={user} userSubs={userSubscription.data || null}/>;
 }

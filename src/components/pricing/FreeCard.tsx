@@ -4,13 +4,17 @@ import { Button } from '@/components/ui/button';
 import { signInWithGoogle } from '@/app/auth/action';
 import Image from 'next/image';
 import Link from 'next/link';
+import { pro } from '@/constants/PaddleProduct';
 
 interface Props {
   user?: { id: string; email?: string } | null;
+  userSubs?: { product_id: string } | null;
 }
 
-export function FreeCard(user : Props) {
-  const { user: currentUser } = user;
+export function FreeCard({user, userSubs} : Props) {
+  const { id: currentUserId } = user || {};
+  const isSubscribed = userSubs?.product_id === pro;
+
   return (
     <div key="free" className={cn('border rounded-lg bg-background/70 backdrop-blur-[6px] overflow-hidden')}>
       <div className={cn('flex flex-col rounded-lg rounded-b-none pricing-card-border')}>
@@ -32,31 +36,36 @@ export function FreeCard(user : Props) {
         <div className={'px-8 text-[16px] leading-[24px]'}>Free tier is available for all users.</div>
       </div>
       <div className={'px-8 mt-8'}>
-        {currentUser ? (
+        {!currentUserId ? (
+          // User not logged in - show sign up buttons
+          <div className="flex flex-col gap-3">
+            <form action={signInWithGoogle}>
+              <Button 
+                type="submit" 
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-black" 
+                variant="outline"
+              >
+                <Image 
+                  src="/google-logo.png" 
+                  alt="Google logo" 
+                  width={20} 
+                  height={20} 
+                />
+                Start Transcribing for Free
+              </Button>
+            </form>
+            <Button variant="ghost" className="w-full" asChild>
+              <Link href="/auth">Sign up with email address</Link>
+            </Button>
+          </div>
+        ) : !isSubscribed ? (
+          // User logged in but not subscribed - show "Current Plan"
           <Button className={'w-full'} variant={'secondary'} asChild={true}>
             <p>Current Plan</p>
           </Button>
         ) : (
-          <div className="flex flex-col gap-3">
-            <form action={signInWithGoogle}>
-            <Button 
-                type="submit" 
-                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-black" 
-                variant="outline"
-            >
-                <Image 
-                src="/google-logo.png" 
-                alt="Google logo" 
-                width={20} 
-                height={20} 
-                />
-                Start Transcribing for Free
-            </Button>
-            </form>
-            <Button variant="ghost" className="w-full" asChild>
-            <Link href="/auth">Sign up with email address</Link>
-            </Button>
-          </div>
+          // User logged in and subscribed - hide buttons
+          null
         )}
       </div>
     </div>
