@@ -289,7 +289,7 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
         <div className="space-y-4">
           <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium">Files to upload ({files.length})</h3>
+              <h3 className="font-medium">{multiple ? `Files to upload (${files.length})` : 'File to upload'}</h3>
               <div className="flex gap-2">
                 {!uploading && (
                   <Button
@@ -298,7 +298,7 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
                     onClick={removeAllFiles}
                     className="text-gray-400 hover:text-destructive"
                   >
-                    Clear All
+                    {multiple ? 'Clear All' : 'Clear'}
                   </Button>
                 )}
                 <Button 
@@ -307,7 +307,7 @@ export function FileUpload({ userId, onFileSelected, maxSizeInBytes, disabled = 
                   size="sm"
                   disabled={uploading || files.every(f => f.status !== 'idle')}
                 >
-                  {uploading ? 'Uploading...' : 'Upload All'}
+                  {uploading ? 'Uploading...' : (multiple ? 'Upload All' : 'Upload')}
                 </Button>
               </div>
             </div>

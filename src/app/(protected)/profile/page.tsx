@@ -75,7 +75,7 @@ export default async function ProfilePage() {
               <CardDescription className="text-gray-400">
                 {userProfile.product_id === pro 
                   ? 'Pro plan: 15 hours per month' 
-                  : 'Free plan: 30 minutes per month'}
+                  : 'Free plan: 1 hour per month'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -85,18 +85,18 @@ export default async function ProfilePage() {
                     <span>
                       {userProfile.product_id === pro
                         ? `Monthly usage: ${formatDuration(userProfile.monthly_usage_seconds || 0)} / 15:00:00 hours` 
-                        : `Monthly usage: ${formatDuration(userProfile.monthly_usage_seconds || 0)} / 60:00 minutes`}
+                        : `Monthly usage: ${formatDuration(userProfile.monthly_usage_seconds || 0)} / 01:00:00 hour`}
                     </span>
                     <span>
                       {userProfile.product_id === pro
                         ? `${Math.round((userProfile.monthly_usage_seconds / (15 * 60 * 60)) * 100)}%` 
-                        : `${Math.round((userProfile.monthly_usage_seconds / (30 * 60)) * 100)}%`}
+                        : `${Math.round((userProfile.monthly_usage_seconds / (1 * 60 * 60)) * 100)}%`}
                     </span>
                   </div>
                   <Progress 
                     value={userProfile.product_id === pro
                       ? Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (15 * 60 * 60)) * 100) 
-                      : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (30 * 60)) * 100)} 
+                      : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (1 * 60 * 60)) * 100)} 
                     className="h-1 bg-[#2a2a2a]" 
                     indicatorClassName="bg-[#3b82f6]" 
                   />
@@ -149,7 +149,7 @@ export default async function ProfilePage() {
                   <p>
                     {userProfile.product_id === pro 
                       ? '15 hours per month' 
-                      : '30 minutes per month'}
+                      : '1 hour per month'}
                   </p>
                 </div>
               </div>

@@ -11,11 +11,12 @@ import { uploadFile } from '@/lib/UploadUtils';
 import { getMediaDuration } from '@/lib/MediaUtils';
 import { processUploadedFile } from '@/app/(protected)/dashboard/actions';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
+import { pro } from '@/constants/PaddleProduct';
 
 // 5 GB max file size for free users
-const MAX_FILE_SIZE_FREE = 5000 * 1000 * 1000;
+const MAX_FILE_SIZE_FREE = 21 * 1000 * 1000;
 // 5 GB max file size for pro users
-const MAX_FILE_SIZE_PRO = 5000 * 1000 * 1000;
+const MAX_FILE_SIZE_PRO = 5370 * 1000 * 1000;
 
 interface UploadModalProps {
   userId: string;
@@ -105,9 +106,9 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
           <FileUpload 
             userId={userId}
             onFileSelected={handleFileUpload} 
-            maxSizeInBytes={userProfile?.product_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
+            maxSizeInBytes={userProfile?.product_id === pro ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
             disabled={loading}
-            multiple={multiple}
+            multiple={userProfile?.product_id === pro ? multiple : false}
           />
         </div>
       </DialogContent>
