@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
-import { pro } from '@/constants/PaddleProduct';
+import { pro, proDuration, freeDuration } from '@/constants/PaddleProduct';
 
 interface FolderSidebarProps {
   folders: Folder[];
@@ -293,32 +293,39 @@ export default function FolderSidebar({
       {/* Usage Section - positioned at the bottom */}
       <div className="mt-auto p-4 border-t border-[#2a2a2a]">
         <div className="space-y-2">
+        {userProfile.product_id !== pro && (
+            <div className="mb-5">
+              <Button asChild variant="outline" size="sm" className="w-full text-xs">
+                <Link href="/pricing">Upgrade to Pro</Link>
+              </Button>
+            </div>
+          )}
           <h3 className="text-sm font-semibold text-gray-400">Usage</h3>
           <div>
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-400">
                 {userProfile.product_id === pro
-                  ? `${formatDuration(userProfile.monthly_usage_seconds || 0)} / 15:00:00` 
-                  : `${formatDuration(userProfile.monthly_usage_seconds || 0)} / 00:30:00`}
+                  ? `${formatDuration(userProfile.monthly_usage_seconds || 0)} / ${proDuration}:00:00` 
+                  : `${formatDuration(userProfile.monthly_usage_seconds || 0)} / ${freeDuration}:00:00`}
               </span>
               <span className="text-gray-400">
                 {userProfile.product_id === pro
                   ? `${Math.round((userProfile.monthly_usage_seconds / (15 * 60 * 60)) * 100)}%` 
-                  : `${Math.round((userProfile.monthly_usage_seconds / (30 * 60)) * 100)}%`}
+                  : `${Math.round((userProfile.monthly_usage_seconds / (1 * 60 * 60)) * 100)}%`}
               </span>
             </div>
             <Progress 
               value={userProfile.product_id === pro
                 ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (15 * 60 * 60)) * 100) 
-                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (30 * 60)) * 100)} 
+                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (1 *60 * 60)) * 100)} 
               className="h-1 bg-[#2a2a2a]" 
               indicatorClassName="bg-[#3b82f6]" 
             />
           </div>
           <div className="text-xs text-gray-400 mt-1">
             {userProfile.product_id === pro
-              ? 'Pro plan: 15 hours per month' 
-              : 'Pro plan: 30 minutes per month'}
+              ? `Pro plan: ${proDuration} hours per month` 
+              : `Free plan: ${freeDuration} hour per month`}
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { signInWithGoogle } from '@/app/auth/action';
 import Image from 'next/image';
 import { FreeCard } from '@/components/pricing/FreeCard';
-import { pro, proAnnualPriceId, proMonthlyPriceId } from '@/constants/PaddleProduct';
+import { pro, proAnnualPriceId } from '@/constants/PaddleProduct';
 
 interface Props {
   loading: boolean;
@@ -84,7 +84,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
           ) : (
             // User logged in but doesn't have this subscription - show "Get started"
             <Button className={'w-full'} variant={'secondary'} asChild={true}>
-              <Link href={`/checkout/${proMonthlyPriceId}`}>Get started</Link>
+              <Link href={`/checkout/${tier.priceId[frequency.value]}`}>Get started</Link>
             </Button>
           )}
           </div>
