@@ -38,13 +38,11 @@ export function UserMenu({ user, userInitials }: UserMenuProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] text-white rounded-md shadow-lg py-1 min-w-[180px]">
-        <DropdownMenuLabel className="font-medium text-sm px-3 py-2">My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
         <DropdownMenuItem asChild className="text-sm px-3 py-2 cursor-pointer hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] focus:text-white">
           <Link href="/dashboard" className="w-full">Dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="text-sm px-3 py-2 cursor-pointer hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] focus:text-white">
-          <Link href="/profile" className="w-full">Profile</Link>
+          <Link href="/account" className="w-full">Account</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
         <SignOutButton />
