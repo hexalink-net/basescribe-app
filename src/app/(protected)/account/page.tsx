@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
 import { fetchAccountData } from './actions';
 import { UserMenu } from '@/components/UserMenu';
 import { redirect } from 'next/navigation';
