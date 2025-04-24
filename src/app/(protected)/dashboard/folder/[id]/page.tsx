@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import DashboardClient from '../../DashboardClient';
 import { fetchFolderData } from '../actions';
 import { UserProfile } from '@/types/DashboardInterface';
-import { checkPageRateLimit } from '@/lib/ratelimit/pageRateLimit';
+import { checkPageRateLimit } from '@/lib/upstash/ratelimit';
 
 type tParams = Promise<{ id: string }>;
 

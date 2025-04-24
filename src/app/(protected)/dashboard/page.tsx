@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { UserProfile } from '@/types/DashboardInterface';
 import { fetchDashboardData } from './actions';
 import DashboardClient from './DashboardClient';
-import { checkPageRateLimit } from '@/lib/ratelimit/pageRateLimit';
+import { checkPageRateLimit } from '@/lib/upstash/ratelimit';
 
 // Disable automatic revalidation
 export const revalidate = false;
