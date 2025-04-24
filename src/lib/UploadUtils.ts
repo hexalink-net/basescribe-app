@@ -2,7 +2,6 @@ import { supabase } from '@/lib/supabase/client';
 import Uppy from '@uppy/core';
 import Tus from '@uppy/tus';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
-import { checkUploadRateLimit } from '@/app/(protected)/dashboard/actions';
 
 // Define the progress callback type
 type ProgressCallback = (percentage: number) => void;
@@ -12,20 +11,12 @@ type ProgressCallback = (percentage: number) => void;
  * Standard file upload to Supabase storage with progress reporting
  */
 export async function uploadFile(
-    userId: string,
     file: File,
     filePath: string,
     fileSize: number,
     bucketName: string = BucketNameUpload,
     onProgress?: ProgressCallback // Add optional onProgress callback
   ) {
-    // Check rate limit
-    const exceedLimit = await checkUploadRateLimit(userId);
-    
-    if (!exceedLimit) {
-      throw new Error("Too many requests. Please try again in a few minutes.");
-    }
-
     if (fileSize <= 6000 * 1000) {
       const { error } = await supabase.storage
         .from(bucketName)
