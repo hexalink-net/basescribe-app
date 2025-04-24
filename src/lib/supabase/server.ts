@@ -4,14 +4,22 @@ import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { log } from '@/lib/logger';
 import { free } from '@/constants/PaddleProduct';
 import { readRateLimiter } from '@/lib/upstash/ratelimit';
-import { cache } from 'react';
 
+// Skip rate limiting for authenticated users since they've already been authenticated
 async function checkReadRateLimit(userId: string) {
-  const { success } = await readRateLimiter.limit(userId);
+  // For authenticated users with a valid userId, we skip rate limiting on read operations
+  if (userId && userId.length > 0) {
+    return true;
+  }
+  
+  // Only apply rate limiting for unauthenticated or suspicious requests
+  const { success } = await readRateLimiter.limit(userId || 'anonymous');
   
   if (!success) {
     throw new Error('Too many requests. Please try again in a few minutes.');
   }
+  
+  return true;
 }
 
 export async function createClient() {
@@ -42,7 +50,7 @@ export async function createClient() {
     )
 }
 
-export const getUserProfileSSR = cache(async (supabase: SupabaseClient, userId: string) => {
+export const getUserProfileSSR = async (supabase: SupabaseClient, userId: string) => {
     await checkReadRateLimit(userId);
 
     const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
@@ -55,7 +63,7 @@ export const getUserProfileSSR = cache(async (supabase: SupabaseClient, userId: 
       });
     }
     return { data, error };
-});
+}
 
 export async function getUserSubscriptionSSR(supabase: SupabaseClient, userId: string) {
   await checkReadRateLimit(userId);

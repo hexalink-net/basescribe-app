@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import DashboardClient from '../../DashboardClient';
 import { fetchFolderData } from '../actions';
 import { UserProfile } from '@/types/DashboardInterface';
+import { checkPageRateLimit } from '@/lib/ratelimit/pageRateLimit';
 
 type tParams = Promise<{ id: string }>;
 
@@ -17,6 +18,9 @@ export default async function FolderPage({ params }: { params:  tParams })  {
   if (!user) {
     redirect('/auth');
   }
+  
+  // Apply page-level rate limiting instead of per-function rate limiting
+  await checkPageRateLimit(user.id, `/dashboard/folder/${id}`);
   
   // Fetch all folder data in parallel using server action
   const { folder, uploads, userProfile, folders, error } = await fetchFolderData(id);
