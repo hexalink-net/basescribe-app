@@ -1,10 +1,11 @@
 'use server'
 
-import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR } from '@/lib/supabase/server'
+import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
 import { uploadRateLimiter } from '@/lib/upstash/ratelimit'
+import { getFolders } from './folder/actions'
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -26,6 +27,48 @@ interface UserWithProductLimit {
   product: {
     transcription_limit_seconds_per_month: number;
   };
+}
+
+/**
+ * Fetch all dashboard data in parallel
+ * This helps improve performance by fetching user profile, uploads, and folders concurrently
+ */
+export async function fetchDashboardData(userId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Fetch user profile, uploads, and folders in parallel
+    const [userProfileResult, allUploadsResult, foldersResult] = await Promise.all([
+      getUserProfileSSR(supabase, userId),
+      getAllUserUploadsSSR(supabase, userId),
+      getFolders()
+    ]);
+    
+    // Ensure allUploads is always an array
+    const uploads = allUploadsResult || [];
+    
+    return {
+      userProfile: userProfileResult,
+      uploads,
+      folders: foldersResult.data || [],
+      error: null
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'fetchDashboardData',
+      message: 'Error fetching dashboard data',
+      metadata: { userId, error: errorMessage }
+    });
+    
+    return {
+      userProfile: null,
+      uploads: [],
+      folders: [],
+      error: 'Failed to load dashboard data'
+    };
+  }
 }
 
 export async function deleteUpload(uploadId: string, userId: string) {

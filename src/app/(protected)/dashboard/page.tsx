@@ -1,8 +1,11 @@
-import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server';
-import { getFolders } from './folder/actions';
-import { UserProfile } from '@/types/DashboardInterface';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { UserProfile } from '@/types/DashboardInterface';
+import { fetchDashboardData } from './actions';
 import DashboardClient from './DashboardClient';
+
+// Disable automatic revalidation
+export const revalidate = false;
 
 // Server component for the dashboard page
 export default async function DashboardPage() {
@@ -15,17 +18,13 @@ export default async function DashboardPage() {
     redirect('/auth');
   }
   
-  // Get user profile from database
-  const userProfile = await getUserProfileSSR(supabase, user.id);
-    
-  // Get user's uploads
-  const allUploads = await getAllUserUploadsSSR(supabase, user.id);
-    
-  // Ensure allUploads is always an array
-  const uploads = allUploads || [];
-
-  // Get all folders
-  const { data: folders } = await getFolders();
+  // Fetch all dashboard data in parallel using server action
+  const { userProfile, uploads, folders, error } = await fetchDashboardData(user.id);
+  
+  // Handle any errors from data fetching
+  if (error) {
+    console.error('Error loading dashboard data:', error);
+  }
 
   return (
     <DashboardClient 

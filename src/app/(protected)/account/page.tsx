@@ -1,4 +1,5 @@
-import { createClient, getUserProfileSSR } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
+import { fetchAccountData } from './actions';
 import { UserMenu } from '@/components/UserMenu';
 import { redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,22 +11,15 @@ import { BillingSection } from '@/components/account/BillingSection';
 
 
 export default async function AccountPage() {
-  // Get user data from server-side Supabase client
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Fetch all account data using the server action
+  const { user, userProfile, userInitials, error } = await fetchAccountData();
   
   if (!user) {
     // Redirect to auth page instead of throwing an error
     redirect('/auth');
   }
   
-  // Pre-compute user initials on the server side
-  const userInitials = !user.email ? '?' : user.email.charAt(0).toUpperCase();
-  
-  // Get user profile from database
-  const { data: userProfile, error: userProfileError } = await getUserProfileSSR(supabase, user.id);
-    
-  if (!userProfile || userProfileError) {
+  if (!userProfile || error) {
     return (
       <div className="container mx-auto py-10">
         <h1 className="text-2xl font-bold mb-4">Account</h1>

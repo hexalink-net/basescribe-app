@@ -1,18 +1,18 @@
-import { createClient, getUserSubscriptionSSR } from '@/lib/supabase/server';
 import { Pricing } from './pricing';
-import { getUserProfileSSR } from '@/lib/supabase/server';
+import { fetchPricingData } from '@/app/pricing/actions';
 
 interface PricingContainerProps {
   country: string;
 }
 
 export async function PricingContainer({ country }: PricingContainerProps) {
-  // Get the user from server-side authentication
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data.user;
+  // Fetch user and subscription data using server action
+  const { user, userSubscription, error } = await fetchPricingData();
+  
+  // Handle any errors from data fetching
+  if (error) {
+    console.error('Error loading pricing data:', error);
+  }
 
-  const userSubscription = await getUserSubscriptionSSR(supabase, user?.id || '');
-
-  return <Pricing country={country} user={user} userSubs={userSubscription.data || null}/>;
+  return <Pricing country={country} user={user} userSubs={userSubscription} />;
 }

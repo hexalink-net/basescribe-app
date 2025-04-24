@@ -1,7 +1,7 @@
-import { createClient, getUserUploadSSR } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import TranscriptClient from './TranscriptClient';
 import { redirect } from 'next/navigation';
-import { BucketNameUpload } from '@/constants/SupabaseBucket';
+import { fetchTranscriptData } from '../actions';
 
 type tParams = Promise<{ id: string }>;
 
@@ -19,25 +19,16 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
     redirect('/auth');
   }
   
-  // Get the upload details using server-side function
-  const { data: upload } = await getUserUploadSSR(supabase, user.id, id);
+  // Fetch transcript data using server action
+  const { upload, audioUrl, error } = await fetchTranscriptData(id);
+  
+  // Handle any errors
+  if (error) {
+    console.error('Error loading transcript:', error);
+  }
   
   if (!upload) {
     return <TranscriptClient upload={null} audioUrl={''} />;
-  }
-  
-  // Generate the public URL for the audio file on the server
-  let audioUrl = '';
-  if (upload.file_path) {
-    const { data, error } = await supabase.storage
-      .from(BucketNameUpload)
-      .createSignedUrl(upload.file_path, 3600); // 1 hour expiry;
-
-    if (!error && data?.signedUrl) {
-      audioUrl = data.signedUrl;
-    } else {
-      console.error('Failed to create signed URL');
-    }
   }
 
   // Return the client component with the data

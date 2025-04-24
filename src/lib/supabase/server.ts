@@ -4,6 +4,7 @@ import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { log } from '@/lib/logger';
 import { free } from '@/constants/PaddleProduct';
 import { readRateLimiter } from '@/lib/upstash/ratelimit';
+import { cache } from 'react';
 
 async function checkReadRateLimit(userId: string) {
   const { success } = await readRateLimiter.limit(userId);
@@ -41,7 +42,7 @@ export async function createClient() {
     )
 }
 
-export async function getUserProfileSSR(supabase: SupabaseClient, userId: string) {
+export const getUserProfileSSR = cache(async (supabase: SupabaseClient, userId: string) => {
     await checkReadRateLimit(userId);
 
     const { data, error } = await supabase.from("users").select("*").eq("id", userId).single();
@@ -54,7 +55,7 @@ export async function getUserProfileSSR(supabase: SupabaseClient, userId: string
       });
     }
     return { data, error };
-}
+});
 
 export async function getUserSubscriptionSSR(supabase: SupabaseClient, userId: string) {
   await checkReadRateLimit(userId);

@@ -1,8 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getUserProfileSSR } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { Folder } from '@/types/DashboardInterface'
+import { Folder, UserProfile } from '@/types/DashboardInterface'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
 import { folderRateLimiter, readRateLimiter } from '@/lib/upstash/ratelimit'
@@ -621,5 +621,96 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       success: false, 
       error: 'Unable to move folder' 
     }
+  }
+}
+
+/**
+ * Fetch all data needed for the folder page in parallel
+ * This improves performance by fetching folder details, uploads, user profile, and all folders concurrently
+ */
+export async function fetchFolderData(folderId: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return {
+        folder: null,
+        uploads: [],
+        userProfile: null,
+        folders: [],
+        error: 'Not authenticated'
+      };
+    }
+    
+    // Fetch folder details, uploads in folder, user profile, and all folders in parallel
+    const [folderResult, uploadsResult, userProfileResult, foldersResult] = await Promise.all([
+      // Get folder details
+      supabase
+        .from('folders')
+        .select('*')
+        .eq('id', folderId)
+        .eq('user_id', user.id)
+        .single(),
+      
+      // Get uploads in this folder
+      supabase
+        .from('uploads')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('folder_id', folderId)
+        .order('created_at', { ascending: false }),
+      
+      // Get user profile
+      getUserProfileSSR(supabase, user.id),
+      
+      // Get all folders for the sidebar
+      getFolders()
+    ]);
+    
+    // Check for errors
+    if (folderResult.error || !folderResult.data) {
+      return {
+        folder: null,
+        uploads: [],
+        userProfile: null,
+        folders: [],
+        error: 'Folder not found or you do not have permission to view it'
+      };
+    }
+    
+    if (uploadsResult.error) {
+      return {
+        folder: folderResult.data,
+        uploads: [],
+        userProfile: userProfileResult?.data as UserProfile,
+        folders: foldersResult.data || [],
+        error: 'Failed to fetch uploads in this folder'
+      };
+    }
+    
+    return {
+      folder: folderResult.data,
+      uploads: uploadsResult.data || [],
+      userProfile: userProfileResult?.data as UserProfile,
+      folders: foldersResult.data || [],
+      error: null
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'fetchFolderData',
+      message: 'Error fetching folder data',
+      metadata: { folderId, error: errorMessage }
+    });
+    
+    return {
+      folder: null,
+      uploads: [],
+      userProfile: null,
+      folders: [],
+      error: 'Failed to load folder data'
+    };
   }
 }
