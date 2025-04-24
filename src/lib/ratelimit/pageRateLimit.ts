@@ -6,7 +6,7 @@ import { log } from '@/lib/logger'
 
 // Create a dedicated rate limiter for page-level access
 // This allows 20 page loads per minute per user
-export const pageRateLimiter = new Ratelimit({
+const pageRateLimiter = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(20, "60 s"),
   analytics: true,
