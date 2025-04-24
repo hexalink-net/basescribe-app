@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
 import { UserMenu } from '@/components/UserMenu';
@@ -13,7 +13,9 @@ import dynamic from 'next/dynamic';
 
 // Import non-modal components directly
 import FolderSidebar from '@/components/dashboard/FolderSidebar';
+import SkeletonFolderSidebar from '@/components/dashboard/SkeletonFolderSidebar';
 import FileTable from '@/components/dashboard/FileTable';
+import SkeletonTable from '@/components/dashboard/SkeletonTable';
 
 // Dynamically import heavy components with optimized loading strategy
 // Use a more efficient dynamic import approach with preloading
@@ -641,15 +643,17 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       <Header />
       
       <div className="flex flex-1 overflow-hidden h-[calc(100vh-4rem)]">
-        {/* Folder Sidebar with memoized handlers */}
-        <FolderSidebar 
-          folders={folders}
-          currentFolder={currentFolder}
-          userProfile={userProfile}
-          onRenameFolder={handleFolderRenameClick}
-          onDeleteFolder={handleFolderDeleteClick}
-          onMoveFolder={handleFolderMoveClick}
-        />
+        {/* Folder Sidebar with memoized handlers and Suspense fallback */}
+        <Suspense fallback={<SkeletonFolderSidebar />}>
+          <FolderSidebar 
+            folders={folders}
+            currentFolder={currentFolder}
+            userProfile={userProfile}
+            onRenameFolder={handleFolderRenameClick}
+            onDeleteFolder={handleFolderDeleteClick}
+            onMoveFolder={handleFolderMoveClick}
+          />
+        </Suspense>
         
         {/* Main Content - Optimized for LCP */}
         <div className="flex-1 overflow-auto p-6">
@@ -663,20 +667,22 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           
           {/* File Table - Critical for LCP */}
           <div className="bg-[#1a1a1a] rounded-md overflow-hidden">
-            <FileTable 
-              uploads={uploads}
-              currentFolder={currentFolder}
-              selectedUploads={selectedUploads}
-              isDeleting={isDeleting}
-              formatDate={formatDate}
-              formatTime={formatTime}
-              onSelectAll={handleSelectAll}
-              onSelectUpload={handleSelectUpload}
-              onDeleteUpload={handleDeleteUpload}
-              onMoveUpload={handleUploadMoveClick}
-              onRenameUpload={handleUploadRenameClick}
-              selectAll={selectAll}
-            />
+            <Suspense fallback={<SkeletonTable />}>
+              <FileTable 
+                uploads={uploads}
+                currentFolder={currentFolder}
+                selectedUploads={selectedUploads}
+                isDeleting={isDeleting}
+                formatDate={formatDate}
+                formatTime={formatTime}
+                onSelectAll={handleSelectAll}
+                onSelectUpload={handleSelectUpload}
+                onDeleteUpload={handleDeleteUpload}
+                onMoveUpload={handleUploadMoveClick}
+                onRenameUpload={handleUploadRenameClick}
+                selectAll={selectAll}
+              />
+            </Suspense>
           </div>
         </div>
       </div>
