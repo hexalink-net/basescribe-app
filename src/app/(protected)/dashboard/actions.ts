@@ -45,7 +45,7 @@ export async function fetchDashboardData(userId: string) {
     ]);
     
     // Ensure allUploads is always an array
-    const uploads = allUploadsResult || [];
+    const uploads = allUploadsResult.data || [];
     
     return {
       userProfile: userProfileResult,

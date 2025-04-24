@@ -16,7 +16,15 @@ interface TranscriptSegment {
   text: string;
 }
 
-export interface Upload {
+export interface Uploads {
+  id: string;
+  created_at: string;
+  file_name: string;
+  duration_seconds: number;
+  status: 'pending' | 'processing' | 'completed'| 'error';
+}
+
+export interface UploadDetail {
   id: string;
   user_id: string;
   folder_id: string;
@@ -32,9 +40,7 @@ export interface Upload {
 
 export interface Folder {
   id: string;
-  user_id: string;
   parent_id: string | null;
   name: string;
-  created_at: string;
 }
   

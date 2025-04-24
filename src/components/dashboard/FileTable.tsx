@@ -11,7 +11,7 @@ const MoreVertical = dynamic(() => import('lucide-react').then(mod => mod.MoreVe
 const Trash2 = dynamic(() => import('lucide-react').then(mod => mod.Trash2), { ssr: false });
 const FolderUp = dynamic(() => import('lucide-react').then(mod => mod.FolderUp), { ssr: false });
 const Pencil = dynamic(() => import('lucide-react').then(mod => mod.Pencil), { ssr: false });
-import { Upload, Folder } from '@/types/DashboardInterface';
+import { Uploads, Folder } from '@/types/DashboardInterface';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/DropdownMenu';
 
 interface FileTableProps {
-  uploads: Upload[];
+  uploads: Uploads[];
   currentFolder: Folder | null;
   selectedUploads: string[];
   isDeleting: Record<string, boolean>;
@@ -41,7 +41,7 @@ interface FileTableProps {
   onSelectUpload: (uploadId: string) => void;
   onDeleteUpload: (uploadId: string) => void;
   onMoveUpload: (uploadId: string) => void;
-  onRenameUpload: (upload: Upload) => void;
+  onRenameUpload: (upload: Uploads) => void;
   selectAll: boolean;
 }
 
@@ -49,7 +49,7 @@ interface FileTableProps {
 interface DeleteUploadDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  upload: Upload | null;
+  upload: Uploads | null;
   isDeleting: boolean;
   handleDelete: () => void;
 }
@@ -115,7 +115,7 @@ export const FileRow = memo(({
   onMoveUpload,
   onRenameUpload
 }: { 
-  upload: Upload, 
+  upload: Uploads, 
   isSelected: boolean,
   isDeleting: boolean,
   formatDate: (dateString: string) => string,
@@ -123,7 +123,7 @@ export const FileRow = memo(({
   onSelectUpload: (uploadId: string) => void,
   onDeleteUpload: (uploadId: string) => void,
   onMoveUpload: (uploadId: string) => void,
-  onRenameUpload: (upload: Upload) => void
+  onRenameUpload: (upload: Uploads) => void
 }) => {
   // State for delete confirmation dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);

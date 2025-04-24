@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient, getUserProfileSSR } from '@/lib/supabase/server'
+import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { Folder, UserProfile } from '@/types/DashboardInterface'
 import { log } from '@/lib/logger'
@@ -648,18 +648,13 @@ export async function fetchFolderData(folderId: string) {
       // Get folder details
       supabase
         .from('folders')
-        .select('*')
+        .select('id, user_id, parent_id, name')
         .eq('id', folderId)
         .eq('user_id', user.id)
         .single(),
       
       // Get uploads in this folder
-      supabase
-        .from('uploads')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('folder_id', folderId)
-        .order('created_at', { ascending: false }),
+      getAllUserUploadsSSR(supabase, user.id, folderId),
       
       // Get user profile
       getUserProfileSSR(supabase, user.id),

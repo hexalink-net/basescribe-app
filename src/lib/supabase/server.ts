@@ -107,26 +107,45 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
   return { data, error };
 }
 
-export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: string) {
+export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: string, folderId?: string | null) {
     await checkReadRateLimit(userId);
 
-    const { data = [], error } = await supabase
-    .from('uploads')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  
-    if (error) {
-      log({
-        logLevel: 'error',
-        action: 'getAllUserUploadsSSR',
-        message: 'Error fetching user uploads',
-        metadata: { userId, error }
-      });
-      return null;
+    if (folderId !== undefined) {
+      const { data = [], error } = await supabase
+        .from('uploads')
+        .select('id, created_at, file_name, duration_seconds, status')
+        .eq('user_id', userId)
+        .eq('folder_id', folderId)
+        .order('created_at', { ascending: false }); 
+      
+      if (error) {
+        log({
+          logLevel: 'error',
+          action: 'getAllUserUploadsSSR',
+          message: 'Error fetching user uploads',
+          metadata: { userId, folderId, error }
+        });
+      }
+
+      return { data, error };
+    } else {
+      const { data = [], error } = await supabase
+        .from('uploads')
+        .select('id, created_at, file_name, duration_seconds, status')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        log({
+          logLevel: 'error',
+          action: 'getAllUserUploadsSSR',
+          message: 'Error fetching user uploads',
+          metadata: { userId, error }
+        });
+      }
+
+      return { data, error };
     }
-  
-    return data;
   }
 
 export async function getUserUploadSSR(supabase: SupabaseClient, userId: string, uploadId: string) {

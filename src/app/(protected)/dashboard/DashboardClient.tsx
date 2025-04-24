@@ -2,7 +2,7 @@
 
 import { useState, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, UserProfile, Folder } from '@/types/DashboardInterface';
+import { Uploads, UserProfile, Folder } from '@/types/DashboardInterface';
 import { UserMenu } from '@/components/UserMenu';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
@@ -67,7 +67,7 @@ const FileDialogs = dynamic(() => {
 interface DashboardClientProps {
   user: User;
   userProfile: UserProfile;
-  uploads: Upload[];
+  uploads: Uploads[];
   folders: Folder[];
   currentFolder: Folder | null;
 }
@@ -100,7 +100,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [isBulkMoving, setIsBulkMoving] = useState(false);
   const [isRenameUploadModalOpen, setIsRenameUploadModalOpen] = useState(false);
-  const [uploadToRename, setUploadToRename] = useState<Upload | null>(null);
+  const [uploadToRename, setUploadToRename] = useState<Uploads | null>(null);
   const [newUploadName, setNewUploadName] = useState('');
   
   const { toast } = useToast();
@@ -631,7 +631,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     setShowMoveDialog(true);
   }, []);
 
-  const handleUploadRenameClick = useCallback((upload: Upload) => {
+  const handleUploadRenameClick = useCallback((upload: Uploads) => {
     setUploadToRename(upload);
     setNewUploadName(upload.file_name);
     setIsRenameUploadModalOpen(true);
