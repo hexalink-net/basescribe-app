@@ -1,11 +1,12 @@
 'use server'
 
-import { createClient, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { createClient, createClientWithCache, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { Folder, UserProfile } from '@/types/DashboardInterface'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
 import { folderRateLimiter, readRateLimiter } from '@/lib/upstash/ratelimit'
+import { revalidateTag } from 'next/cache'
 
 const folderSchema = z.object({
     name: z.string().min(1, 'Folder name must be between 1 and 50 characters').max(50, 'Folder name must be between 1 and 50 characters'),
@@ -94,8 +95,8 @@ export async function createFolder(name: string, parentId: string | null) {
       return { success: false, error: 'Unable to create folder' }
     }
     
-    // Revalidate the dashboard page to refresh the folders list
-    revalidatePath('/dashboard')
+    // Revalidate the folder tag to refresh the folders list
+    revalidateTag(`folders-${user.id}`)
     
     return { success: true, data: folder }
   } catch (error) {
@@ -112,21 +113,14 @@ export async function createFolder(name: string, parentId: string | null) {
   }
 }
 
-export async function getFolders() {
+export async function getFolders(supabase: SupabaseClient, userId: string) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return { success: false, error: 'Not authenticated', data: [] }
-    }
-
-    await checkReadRateLimit(user.id);
+    await checkReadRateLimit(userId);
     
     const { data, error } = await supabase
       .from('folders')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
     
     if (error) {
@@ -203,9 +197,8 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
       return { success: false, error: 'Unable to move file to folder' }
     }
     
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/folder/[id]', 'page')
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${user.id}`)
     
     return { success: true }
   } catch (error) {
@@ -275,10 +268,9 @@ export async function bulkMoveUploadsToFolder(uploadIds: string[], folderId: str
       return { success: false, error: 'Some files do not belong to you' }
     }
     
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/folder/[id]', 'page')
-    
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${user.id}`)
+
     return { success: true }
   } catch (error) {
     log({
@@ -397,10 +389,9 @@ export async function deleteFolder(folderId: string) {
       })
       throw error
     }
-    
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/folder/[id]', 'page')
+
+    // Revalidate the folder tag to refresh the folders list
+    revalidateTag(`folders-${user.id}`)
     
     return { success: true }
   } catch (error) {
@@ -457,11 +448,10 @@ export async function renameFolder(folderId: string, newName: string) {
       })
       throw error
     }
-    
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    revalidatePath(`/dashboard/folder/${folderId}`)
-    
+
+    // Revalidate the folder tag to refresh the folders list
+    revalidateTag(`folders-${user.id}`)
+
     return { success: true }
   } catch (error) {
     log({
@@ -601,14 +591,8 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
       throw error
     }
     
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/folder/[id]', 'page')
-
-    if (newParentId) {
-      revalidatePath(`/dashboard/folder/${newParentId}`)
-    }
-    
+    // Revalidate the folder tag to refresh the folders list
+    revalidateTag(`folders-${user.id}`)
     return { success: true }
   } catch (error) {
     log({
@@ -628,39 +612,31 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
  * Fetch all data needed for the folder page in parallel
  * This improves performance by fetching folder details, uploads, user profile, and all folders concurrently
  */
-export async function fetchFolderData(folderId: string) {
+export async function fetchFolderData(userId: string, folderId: string) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return {
-        folder: null,
-        uploads: [],
-        userProfile: null,
-        folders: [],
-        error: 'Not authenticated'
-      };
-    }
+    // Create separate clients with appropriate caching settings
+    const profileClient = await createClient();
+    const uploadsClient = await createClientWithCache('uploads', userId);
+    const foldersClient = await createClientWithCache('folders', userId);
     
     // Fetch folder details, uploads in folder, user profile, and all folders in parallel
     const [folderResult, uploadsResult, userProfileResult, foldersResult] = await Promise.all([
       // Get folder details
-      supabase
+      foldersClient
         .from('folders')
         .select('id, user_id, parent_id, name')
         .eq('id', folderId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single(),
       
       // Get uploads in this folder
-      getAllUserUploadsSSR(supabase, user.id, folderId),
+      getAllUserUploadsSSR(uploadsClient, userId, folderId),
       
       // Get user profile
-      getUserProfileSSR(supabase, user.id),
+      getUserProfileSSR(profileClient, userId),
       
       // Get all folders for the sidebar
-      getFolders()
+      getFolders(foldersClient, userId)
     ]);
     
     // Check for errors

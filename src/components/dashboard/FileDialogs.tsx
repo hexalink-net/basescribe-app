@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload, Folder } from '@/types/DashboardInterface';
+import { Uploads, Folder } from '@/types/DashboardInterface';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/AlertDialog';
@@ -22,7 +22,7 @@ interface FileDialogsProps {
   // Rename Upload Dialog
   isRenameUploadModalOpen: boolean;
   setIsRenameUploadModalOpen: (open: boolean) => void;
-  uploadToRename: Upload | null;
+  uploadToRename: Uploads | null;
   newUploadName: string;
   setNewUploadName: (name: string) => void;
   handleRenameUpload: () => void;

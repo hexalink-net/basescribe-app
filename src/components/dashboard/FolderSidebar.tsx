@@ -38,8 +38,6 @@ function formatDuration(seconds: number): string {
   return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-import SkeletonFolderSidebar from './SkeletonFolderSidebar';
-
 export default function FolderSidebar({
   folders,
   currentFolder,

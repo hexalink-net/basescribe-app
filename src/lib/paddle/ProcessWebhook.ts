@@ -121,7 +121,7 @@ export class ProcessWebhook {
         
       if (updateError) {
         throw updateError;
-      }        
+      }  
     } catch (error) {
       log({
         logLevel: 'error',

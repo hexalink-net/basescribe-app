@@ -22,6 +22,15 @@ async function checkReadRateLimit(userId: string) {
   return true;
 }
 
+const createFetch =
+  (options: Pick<RequestInit, "next" | "cache">) =>
+  (url: RequestInfo | URL, init?: RequestInit) => {
+    return fetch(url, {
+      ...init,
+      ...options,
+    });
+  };
+
 export async function createClient() {
     const { cookies } = await import('next/headers')
     const cookieStore = await cookies()
@@ -49,6 +58,43 @@ export async function createClient() {
         }
     )
 }
+
+export async function createClientWithCache(revalidateTag?: string, userId?: string) {
+  const { cookies } = await import('next/headers')
+  const cookieStore = await cookies()
+
+  return createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+          global: {
+            fetch: createFetch({
+              next: {
+                revalidate: false,
+                tags: [`${revalidateTag}-${userId}`]
+              },
+            }),
+          },
+          cookies: {
+              getAll() {
+                  return cookieStore.getAll()
+              },
+              setAll(cookiesToSet) {
+                  try {
+                      cookiesToSet.forEach(({ name, value, options }) =>
+                          cookieStore.set(name, value, options)
+                      )
+                  } catch {
+                      // The `setAll` method was called from a Server Component.
+                      // This can be ignored if you have middleware refreshing
+                      // user sessions.
+                  }
+              },
+          },
+      }
+  )
+}
+
 
 export const getUserProfileSSR = async (supabase: SupabaseClient, userId: string) => {
     await checkReadRateLimit(userId);
@@ -126,7 +172,6 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
           metadata: { userId, folderId, error }
         });
       }
-
       return { data, error };
     } else {
       const { data = [], error } = await supabase

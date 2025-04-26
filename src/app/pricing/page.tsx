@@ -1,6 +1,8 @@
 import { PricingContainer } from '@/components/pricing/PricingContainer';
 import { Header } from '@/components/header';
 
+export const dynamic = 'force-dynamic';
+
 export default function PricingPage() {
   return (
     <div className="flex flex-col min-h-screen">

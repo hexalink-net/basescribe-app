@@ -3,13 +3,13 @@ import { createServerClient } from '@supabase/ssr';
 import { log } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic'; // Default is auto
-
 export async function GET(request: NextRequest) {
   try {
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     const accessToken = authHeader?.split(' ')[1];
+
+    console.log("test2")
 
     if (!accessToken) {
       return NextResponse.json(
@@ -60,12 +60,18 @@ export async function GET(request: NextRequest) {
     );
   
     // Build the query - now RLS will work because auth context is set
-    const { data = [], error } = await supabaseWithAuth
+    let query = supabaseWithAuth
         .from('uploads')
         .select('id, created_at, file_name, duration_seconds, status')
         .eq('user_id', user.id)
-        .eq('folder_id', folderId)
         .order('created_at', { ascending: false });
+    
+    // Only filter by folder_id if it's provided
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    }
+    
+    const { data = [], error } = await query;
     
     if (error) {
       log({
@@ -82,10 +88,10 @@ export async function GET(request: NextRequest) {
     }
     
     // Return the data
-    return NextResponse.json({ data: data }, {
+    return NextResponse.json({ data: data, error: error }, {
       headers: {
-        // Cache for 10 seconds - adjust based on your needs
-        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59'
+        // Cache for a longer period (5 minutes)
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
       }
     });
   } catch (error) {

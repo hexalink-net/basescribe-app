@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/UseToast';
 import { ArrowLeft, Download, Clock, Calendar, FileAudio } from 'lucide-react';
-import { Upload } from '@/types/DashboardInterface';
+import { UploadDetail } from '@/types/DashboardInterface';
 
 interface TranscriptClientProps {
-  upload: Upload | null;
+  upload: UploadDetail | null;
   audioUrl: string;
 }
 

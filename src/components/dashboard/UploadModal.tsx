@@ -41,18 +41,6 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       });
       return;
     }
-    
-    // Check if user can upload based on their plan type
-    const maxFileSize = userProfile?.product_id === 'pro' ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE;
-    
-    if (file.size > maxFileSize) {
-      toast({
-        title: "File too large",
-        description: `Maximum file size is ${maxFileSize / (1024 * 1024)}MB for your plan type.`,
-        variant: "destructive",
-      });
-      return;
-    }
 
     // Create a new upload record
     const fileName = file.name.replace(/\.[^/.]+$/, '');

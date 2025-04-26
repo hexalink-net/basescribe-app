@@ -1,11 +1,11 @@
 'use server'
 
-import { deleteUserUploadSSR, createClient, createUploadSSR, updateUserUsageSSR, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
+import { deleteUserUploadSSR, createClient, createClientWithCache, createUploadSSR, updateUserUsageSSR, getUserProfileSSR, getAllUserUploadsSSR } from '@/lib/supabase/server'
 import { log } from '@/lib/logger'
 import { z } from 'zod'
 import { uploadRateLimiter } from '@/lib/upstash/ratelimit'
 import { getFolders } from './folder/actions'
+import { revalidateTag } from 'next/cache'
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -35,13 +35,15 @@ interface UserWithProductLimit {
  */
 export async function fetchDashboardData(userId: string) {
   try {
-    const supabase = await createClient();
+    const profileClient = await createClient();
+    const uploadsClient = await createClientWithCache('uploads', userId);
+    const foldersClient = await createClientWithCache('folders', userId);
     
     // Fetch user profile, uploads, and folders in parallel
     const [userProfileResult, allUploadsResult, foldersResult] = await Promise.all([
-      getUserProfileSSR(supabase, userId),
-      getAllUserUploadsSSR(supabase, userId),
-      getFolders()
+      getUserProfileSSR(profileClient, userId),
+      getAllUserUploadsSSR(uploadsClient, userId),
+      getFolders(foldersClient, userId)
     ]);
     
     // Ensure allUploads is always an array
@@ -99,9 +101,8 @@ export async function deleteUpload(uploadId: string, userId: string) {
       throw result.error
     }
     
-    // Revalidate the dashboard page to refresh the uploads list
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/folder/[id]', 'page')
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${user.id}`)
     
     return { success: true }
   } catch (error: unknown) {
@@ -159,9 +160,8 @@ export async function bulkDeleteUploads(uploadIds: string[], userId: string) {
       }
     }
     
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    revalidatePath('/dashboard/folder/[id]', 'page')
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${user.id}`)
     
     return { success: true }
   } catch (error: unknown) {
@@ -265,12 +265,8 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
       throw updateError
     }
     
-    // Revalidate paths
-    revalidatePath('/dashboard')
-    if (upload.folder_id) {
-      revalidatePath(`/dashboard/folder/${upload.folder_id}`)
-    }
-    revalidatePath(`/dashboard/transcript/${uploadId}`)
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${user.id}`)
     
     return { success: true }
   } catch (error: unknown) {
@@ -380,6 +376,9 @@ export async function processUploadedFile(
     
     // Create upload record in database
     await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, folderId);
+
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${userId}`)
 
     return;
 

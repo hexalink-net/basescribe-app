@@ -4,7 +4,6 @@ import DashboardClient from '../../DashboardClient';
 import { fetchFolderData } from '../actions';
 import { UserProfile } from '@/types/DashboardInterface';
 import { checkPageRateLimit } from '@/lib/upstash/ratelimit';
-
 type tParams = Promise<{ id: string }>;
 
 export default async function FolderPage({ params }: { params:  tParams })  {
@@ -23,15 +22,15 @@ export default async function FolderPage({ params }: { params:  tParams })  {
   await checkPageRateLimit(user.id, `/dashboard/folder/${id}`);
   
   // Fetch all folder data in parallel using server action
-  const { folder, uploads, userProfile, folders, error } = await fetchFolderData(id);
+  const { folder, uploads, userProfile, folders, error } = await fetchFolderData(user.id, id);
   
   // Handle any errors from data fetching
   if (error) {
-    throw new Error(error);
+    return <div>{error}</div>;
   }
   
   if (!folder) {
-    throw new Error('Folder not found or you do not have permission to view it');
+    return <div>Folder not found or you do not have permission to view it</div>;
   }
   
   return (
