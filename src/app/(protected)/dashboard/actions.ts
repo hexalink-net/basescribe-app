@@ -35,7 +35,7 @@ interface UserWithProductLimit {
  */
 export async function fetchDashboardData(userId: string) {
   try {
-    const profileClient = await createClient();
+    const profileClient = await createClientWithCache('profile', userId);
     const uploadsClient = await createClientWithCache('uploads', userId);
     const foldersClient = await createClientWithCache('folders', userId);
     
@@ -372,6 +372,9 @@ export async function processUploadedFile(
       }
       throw new Error(`Failed to update user usage`);
     }
+
+    // Revalidate the profile tag to refresh the profile
+    revalidateTag(`profile-${userId}`)
     
     // Create upload record in database
     await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, folderId);

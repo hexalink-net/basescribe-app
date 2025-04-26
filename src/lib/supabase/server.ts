@@ -154,8 +154,6 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
 }
 
 export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: string, folderId?: string | null) {
-  const start = performance.now();
-
     await checkReadRateLimit(userId);
 
     if (folderId !== undefined) {
@@ -174,8 +172,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
           metadata: { userId, folderId, error }
         });
       }
-      const end = performance.now();
-      console.log(`getAllUserUploadsSSR took ${end - start}ms`);
+      
       return { data, error };
     } else {
       const { data = [], error } = await supabase
@@ -192,8 +189,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
           metadata: { userId, error }
         });
       }
-      const end = performance.now();
-      console.log(`getAllUserUploadsSSR took ${end - start}ms`);
+
       return { data, error };
     }
   }

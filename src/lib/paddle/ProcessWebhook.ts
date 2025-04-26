@@ -8,6 +8,7 @@ import { createClient, updateUserSubscriptionSSR, renewedSubscriptionStatusSSR }
 import { LinkGetCustomerInfoPaddle } from '@/constants/PaddleUrl';
 import { log } from '@/lib/logger';
 import { z } from 'zod';
+import { revalidateTag } from 'next/cache';
 
 interface PaddleCustomerResponse {
   data: {
@@ -121,7 +122,23 @@ export class ProcessWebhook {
         
       if (updateError) {
         throw updateError;
-      }  
+      }
+
+      const {data: profileData, error: profileError} = await supabase.from('users').select('id').eq('email', customer.data.email).single();
+      
+      if (profileError) {
+        log({
+          logLevel: 'error',
+          action: 'updateSubscriptionData',
+          message: 'Failed to fetch user profile',
+          metadata: { error: profileError }
+        });
+        throw new Error('Failed to fetch user profile');
+      }
+
+      //Revalidate the profile tag to refresh the profile
+      revalidateTag(`profile-${profileData.id}`);
+
     } catch (error) {
       log({
         logLevel: 'error',
@@ -172,6 +189,22 @@ export class ProcessWebhook {
       if (updateError) {
         throw updateError;
       }
+
+      const {data: profileData, error: profileError} = await supabase.from('users').select('id').eq('customer_id', eventData.data.customerId).single();
+      
+      if (profileError) {
+        log({
+          logLevel: 'error',
+          action: 'renewedSubscriptionStatus',
+          message: 'Failed to fetch user profile',
+          metadata: { error: profileError }
+        });
+        throw new Error('Failed to fetch user profile');
+      }
+
+      //Revalidate the profile tag to refresh the profile
+      revalidateTag(`profile-${profileData.id}`);
+
     } catch (error) {
       log({
         logLevel: 'error',

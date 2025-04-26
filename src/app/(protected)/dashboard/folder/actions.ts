@@ -615,7 +615,7 @@ export async function moveFolder(folderId: string, newParentId: string | null) {
 export async function fetchFolderData(userId: string, folderId: string) {
   try {
     // Create separate clients with appropriate caching settings
-    const profileClient = await createClient();
+    const profileClient = await createClientWithCache('profile', userId);
     const uploadsClient = await createClientWithCache('uploads', userId);
     const foldersClient = await createClientWithCache('folders', userId);
     
