@@ -4,8 +4,6 @@ import { UserProfile } from '@/types/DashboardInterface';
 import { fetchDashboardData } from './actions';
 import DashboardClient from './DashboardClient';
 import { checkPageRateLimit } from '@/lib/upstash/ratelimit';
-import DashboardLoading from './loading';
-import { Suspense } from 'react';
 
 // Disable automatic revalidation
 export const revalidate = false;
@@ -33,7 +31,6 @@ export default async function DashboardPage() {
   }
 
   return (
-    <Suspense fallback={<DashboardLoading />}>
       <DashboardClient 
         user={user} 
         userProfile={userProfile?.data as UserProfile} 
@@ -41,6 +38,5 @@ export default async function DashboardPage() {
         folders={folders || []}
       currentFolder={null}
     />
-    </Suspense>
   );
 }

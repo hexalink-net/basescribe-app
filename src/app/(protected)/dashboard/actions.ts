@@ -317,7 +317,6 @@ export async function checkUserTranscriptionLimit(userId: string, fileDurations:
     const limitDuration = product.transcription_limit_seconds_per_month;
     return monthly_usage_seconds + totalDuration <= limitDuration;
   } catch (error: unknown) {
-    console.log(error)
     log({
       logLevel: 'error',
       action: 'checkUserTranscriptionLimit',
