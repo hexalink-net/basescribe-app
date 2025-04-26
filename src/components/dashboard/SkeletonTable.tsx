@@ -1,4 +1,5 @@
 "use client";
+"use static";
 
 import { memo, useMemo } from 'react';
 

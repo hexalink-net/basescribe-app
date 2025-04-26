@@ -1,3 +1,5 @@
+'use static';
+
 import { cn } from '@/lib/StyleUtils';
 
 function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

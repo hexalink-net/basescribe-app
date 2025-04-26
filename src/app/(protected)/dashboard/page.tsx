@@ -5,9 +5,6 @@ import { fetchDashboardData } from './actions';
 import DashboardClient from './DashboardClient';
 import { checkPageRateLimit } from '@/lib/upstash/ratelimit';
 
-// Disable automatic revalidation
-export const revalidate = false;
-
 // Server component for the dashboard page
 export default async function DashboardPage() {
   // Get user data from server-side Supabase client

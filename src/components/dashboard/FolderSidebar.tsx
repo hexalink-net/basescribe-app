@@ -178,7 +178,7 @@ export default function FolderSidebar({
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="h-6 w-6 p-0 text-gray-400 hover:text-white cursor-pointer"
+                              className="h-6 w-6 p-0 text-gray hover:text-white cursor-pointer"
                             >
                               <MoreVertical className="h-3 w-3" />
                             </Button>
@@ -245,7 +245,7 @@ export default function FolderSidebar({
                                       <Button 
                                         variant="ghost" 
                                         size="sm" 
-                                        className="h-6 w-6 p-0 text-gray-400 hover:text-white cursor-pointer"
+                                        className="h-6 w-6 p-0 text-gray hover:text-white cursor-pointer"
                                       >
                                         <MoreVertical className="h-3 w-3" />
                                       </Button>
