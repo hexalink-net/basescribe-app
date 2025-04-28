@@ -301,6 +301,28 @@ export async function renewedSubscriptionStatusSSR(
     return { data, error };
   }
 
+export async function renewedMonthlyUsageSSR(
+    supabase: SupabaseClient,
+    customerIdPaddle: string,
+    subscriptionId: string
+  ) {    
+    const { data, error } = await supabase.rpc('renewed_monthly_usage', {
+      current_subscription_id: subscriptionId,
+      current_customer_id: customerIdPaddle
+    }).select();
+
+    if (error) {
+      log({
+        logLevel: 'error',
+        action: 'renewedMonthlyUsageSSR',
+        message: error.message,
+        metadata: { customerIdPaddle, subscriptionId, error }
+      });
+    }
+
+    return { data, error };
+}
+
 export async function checkUserSubscriptionAndLimitSSR(
     supabase: SupabaseClient,
     userId: string,
