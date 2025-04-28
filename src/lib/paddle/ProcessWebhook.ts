@@ -173,8 +173,8 @@ export class ProcessWebhook {
       }
 
       const supabase = await createClient();
-      let planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
-      let planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;
+      const planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
+      const planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;
         
       const {error: updateError} = await renewedSubscriptionStatusSSR(
             supabase,
