@@ -33,12 +33,10 @@ export const log = ({
 
     const logger = pino(pinoOption);
 
-    const logContext = logger.child({userId: userId, action: action, message: message, metadata: metadata});
-
     if (logger[logLevel]) {
-      logger[logLevel](logContext); // Common pattern: context object first, then message string
+      logger[logLevel]({userId: userId, action: action, message: message, metadata: metadata}); // Common pattern: context object first, then message string
     } else {
       // Fallback if an invalid level string was somehow passed
-      logger.info(logContext, `[Fallback Log Level: ${logLevel}] ${message}`);
+      logger.info({userId: userId, action: action, message: message, metadata: metadata}, `[Fallback Log Level: ${logLevel}] ${message}`);
     }
 }
