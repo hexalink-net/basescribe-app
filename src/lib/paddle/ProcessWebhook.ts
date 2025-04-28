@@ -219,3 +219,7 @@ export class ProcessWebhook {
     }
   }
 }
+
+//add every time transaction complete reset monthly usage and daily usage, last quota updated to 1 month after
+
+//when subscription is cancelled, reset back to free tier (product_id, price_id, subscription_id, status, plan start date, plan end date)

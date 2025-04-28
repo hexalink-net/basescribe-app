@@ -284,14 +284,8 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
   }
 }
 
-export async function checkUserTranscriptionLimit(userId: string, fileDurations: number[]): Promise<boolean> {
+export async function validateBatchUpload(userId: string, fileDurations: number[]): Promise<boolean> {
   try {
-    const exceedLimit = await checkUploadRateLimit(userId);
-
-    if (!exceedLimit) {
-      throw new Error("Too many requests. Please try again in a few minutes.");
-    }
-
     // Calculate total duration of all files
     const totalDuration = fileDurations.reduce((acc, duration) => acc + duration, 0);
     
@@ -333,6 +327,40 @@ export async function checkUploadRateLimit(userId: string) {
   return success;
 }
 
+export async function checkUserSubscriptionLimit(userId: string, usageSeconds: number) {
+  const exceedLimit = await checkUploadRateLimit(userId);
+
+  if (!exceedLimit) {
+    throw new Error("Too many requests. Please try again in a few minutes.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('check_subscriptions_and_limits', {
+    user_id: userId,
+    usage_seconds: usageSeconds,
+  });
+
+  if (error) {
+    log({
+      logLevel: 'error',
+      action: 'checkUserSubscriptionAndLimitSSR',
+      message: error.message,
+      metadata: { userId, usageSeconds, error }
+    });
+
+    if (error.message === 'Monthly usage quota exceeded') {
+      throw new Error(error.message);
+    } else if (error.message.includes('Daily uploads quota exceeded')) {
+      throw new Error(error.message);
+    } else if (error.message.includes('Cancelled or past due')) {
+      throw new Error(error.message);
+    }
+    throw new Error(`Failed to check user subscription limit`);
+  }
+
+  return;
+}
+
 export async function processUploadedFile(
   userId: string,
   fileName: string,
@@ -363,15 +391,9 @@ export async function processUploadedFile(
       log({
         logLevel: 'debug',
         action: 'processUploadedFile',
-        message: 'Failed to update user usage',
+        message: error.message,
         metadata: { userId, error }
       })
-
-      if (error.message === 'Monthly usage quota exceeded') {
-        throw new Error(error.message);
-      } else if (error.message.includes('Daily uploads quota exceeded')) {
-        throw new Error(error.message);
-      }
       throw new Error(`Failed to update user usage`);
     }
 

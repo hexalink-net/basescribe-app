@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { UserProfile } from '@/types/DashboardInterface';
 import { uploadFile } from '@/lib/UploadUtils';
 import { getMediaDuration } from '@/lib/MediaUtils';
-import { processUploadedFile } from '@/app/(protected)/dashboard/actions';
+import { processUploadedFile, checkUserSubscriptionLimit } from '@/app/(protected)/dashboard/actions';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { pro } from '@/constants/PaddleProduct';
 
@@ -57,6 +57,9 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
       }
 
+      // Check user subscription limit
+      await checkUserSubscriptionLimit(userId, durationSeconds);
+      
       // Upload to storage with progress reporting
       await uploadFile(file, filePath, fileSize, BucketNameUpload, onProgress);
 
@@ -93,6 +96,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         <div className="w-full overflow-y-auto flex-grow">
           <FileUpload 
             userId={userId}
+            productId = {userProfile?.product_id}
             onFileSelected={handleFileUpload} 
             maxSizeInBytes={userProfile?.product_id === pro ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
             disabled={loading}

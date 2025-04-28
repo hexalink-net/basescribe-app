@@ -301,6 +301,29 @@ export async function renewedSubscriptionStatusSSR(
     return { data, error };
   }
 
+export async function checkUserSubscriptionAndLimitSSR(
+    supabase: SupabaseClient,
+    userId: string,
+    usageSeconds: number,
+  ) {
+    
+    const { error } = await supabase.rpc('check_subscriptions_and_limits', {
+      user_id: userId,
+      usage_seconds: usageSeconds,
+    });
+
+    if (error) {
+      log({
+        logLevel: 'error',
+        action: 'checkUserSubscriptionAndLimitSSR',
+        message: error.message,
+        metadata: { userId, usageSeconds, error }
+      });
+    }
+
+    return { error };
+  }
+
 export async function updateUserUsageSSR(
     supabase: SupabaseClient,
     userId: string,
