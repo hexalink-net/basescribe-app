@@ -369,6 +369,8 @@ export async function processUploadedFile(
 
       if (error.message === 'Monthly usage quota exceeded') {
         throw new Error(error.message);
+      } else if (error.message.includes('Daily uploads quota exceeded')) {
+        throw new Error(error.message);
       }
       throw new Error(`Failed to update user usage`);
     }
