@@ -81,7 +81,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
       }
       
       toast({
-        title: "Some files couldn't be added",
+        title: "Files couldn't be added",
         description: message,
         variant: "destructive",
       });
@@ -183,10 +183,17 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         delete activeIntervalsRef.current[id];
       }
       
-      updateFileStatus(id, 'error', error instanceof Error ? error.message : 'An error occurred during upload');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during upload';
+      updateFileStatus(id, 'error', errorMessage);
+      
+      // Check if error is related to transcription limits
+      const isLimitError = errorMessage.includes('quota exceeded') || 
+                          errorMessage.includes('Cancelled or past due') || 
+                          errorMessage.includes('Monthly usage quota');
+      
       toast({
-        title: "Upload failed",
-        description: `${file.name}: ${error instanceof Error ? error.message : 'An error occurred during upload'}`,
+        title: isLimitError ? "Transcription Limit Exceeded" : "Upload failed",
+        description: `${file.name}: ${errorMessage}`,
         variant: "destructive",
       });
     }
