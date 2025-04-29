@@ -35,7 +35,7 @@ interface UserWithProductLimit {
  */
 export async function fetchDashboardData(userId: string) {
   try {
-    const profileClient = await createClientWithCache('profile', userId);
+    const profileClient = await createClientWithCache('profile', userId, 86400);
     const uploadsClient = await createClientWithCache('uploads', userId);
     const foldersClient = await createClientWithCache('folders', userId);
     

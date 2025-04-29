@@ -60,7 +60,7 @@ export async function createClient() {
     )
 }
 
-export async function createClientWithCache(revalidateTag?: string, userId?: string) {
+export async function createClientWithCache(revalidateTag?: string, userId?: string, revalidateTime?: false | number | undefined) {
   const { cookies } = await import('next/headers')
   const cookieStore = await cookies()
 
@@ -71,7 +71,7 @@ export async function createClientWithCache(revalidateTag?: string, userId?: str
           global: {
             fetch: createFetch({
               next: {
-                revalidate: false,
+                revalidate: revalidateTime ?? false,
                 tags: [`${revalidateTag}-${userId}`]
               },
             }),

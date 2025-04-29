@@ -353,7 +353,3 @@ export class ProcessWebhook {
     }
   }
 }
-
-//when subscription is cancelled, reset back to free tier (product_id, price_id, subscription_id, status, plan start date, plan end date)
-
-//add cron job to reset monthly usage for pro annual and free tier users
