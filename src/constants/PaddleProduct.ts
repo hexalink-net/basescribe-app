@@ -7,5 +7,5 @@ export const proAnnualPriceId = 'pri_01jragmnqnywa9gxq1kt6rrszb';
 export const proMonthlyPriceId = 'pri_01jragknw1mfnjevbszq7tt089';
 
 //Duration
-export const proDuration = "15";
+export const proDuration = "20";
 export const freeDuration = "01";

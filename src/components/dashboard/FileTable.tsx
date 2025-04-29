@@ -311,7 +311,7 @@ const FileTable = ({
   , [uploads.length, currentFolder]);
 
   return (
-    <div className="bg-[#1a1a1a] rounded-md overflow-hidden flex flex-col">
+    <div className="bg-[#131314] rounded-md overflow-hidden flex flex-col">
       {isLoading ? (
         <SkeletonTable />
       ) : (
@@ -324,7 +324,7 @@ const FileTable = ({
             >
           <table className="w-full table-fixed border-collapse">
             {/* Apply sticky positioning to the thead */}
-            <thead className="sticky top-0 bg-[#1a1a1a] z-10">
+            <thead className="sticky top-0 bg-[#131314] z-10">
               <tr className="border-b border-[#2a2a2a]">
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[50px]">
                   <input 

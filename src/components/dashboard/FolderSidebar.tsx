@@ -310,16 +310,16 @@ export default function FolderSidebar({
               </span>
               <span className="text-gray-400">
                 {userProfile.product_id === pro
-                  ? `${Math.round((userProfile.monthly_usage_seconds / (15 * 60 * 60)) * 100)}%` 
+                  ? `${Math.round((userProfile.monthly_usage_seconds / (20 * 60 * 60)) * 100)}%` 
                   : `${Math.round((userProfile.monthly_usage_seconds / (1 * 60 * 60)) * 100)}%`}
               </span>
             </div>
             <Progress 
               value={userProfile.product_id === pro
-                ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (15 * 60 * 60)) * 100) 
-                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (1 *60 * 60)) * 100)} 
+                ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (20 * 60 * 60)) * 100) 
+                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (1 * 60 * 60)) * 100)} 
               className="h-1 bg-[#2a2a2a]" 
-              indicatorClassName="bg-[#3b82f6]" 
+              indicatorClassName="bg-gradient-to-r from-[#F0F177] to-[#d9e021]" 
             />
           </div>
           <div className="text-xs text-gray-400 mt-1">

@@ -10,6 +10,8 @@ import { deleteUpload, bulkDeleteUploads, renameUpload } from './actions';
 import { createFolder, moveUploadToFolder, deleteFolder, renameFolder, moveFolder } from './folder/actions';
 import { useToast } from '@/components/ui/UseToast';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import Image from 'next/image';
 
 // Import non-modal components directly
 import FolderSidebar from '@/components/dashboard/FolderSidebar';
@@ -573,9 +575,27 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
 
   // Memoize the header component to prevent unnecessary re-renders
   const Header = useCallback(() => (
-    <header className="border-b border-[#2a2a2a] py-4 px-6 flex justify-between items-center">
-      <h1 className="text-xl font-bold">BaseScribe</h1>
-      <UserMenu user={user} userInitials={user.email ? user.email.charAt(0).toUpperCase() : '?'} />
+    <header className="sticky top-0 z-10 backdrop-blur-md bg-[#171717]/95 border-b border-[#2a2a2a] flex items-center justify-between px-6 h-16">
+      <Link href="/dashboard" className="flex items-center">
+        <Image 
+          src="/basescribe-logo.png" 
+          alt="BaseScribe Logo" 
+          width={140} 
+          height={40} 
+          className="h-8 w-auto" 
+          priority
+        />
+      </Link>
+      <div className="flex items-center gap-4">
+        <Button 
+          variant="outline" 
+          className="border-[#2a2a2a] bg-[#1a1a1a]/40 hover:bg-[#2a2a2a] text-gray-300 hover:text-white transition-all rounded-md px-3 py-0 h-7 text-xs"
+          onClick={() => window.open('https://forms.gle/example-feedback-form', '_blank')}
+        >
+          Feedback
+        </Button>
+        <UserMenu user={user} userInitials={user.email ? user.email.charAt(0).toUpperCase() : '?'} />
+      </div>
     </header>
   ), [user]);
 
@@ -595,7 +615,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       )}
 
       <Button 
-        className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 shadow-md transition-all duration-200 ease-in-out hover:shadow-lg flex items-center gap-2" 
+        className="cursor-pointer bg-gradient-to-r from-[#F0F177] to-[#d9e021] hover:from-[#e8e96f] hover:to-[#c7ce1f] text-black font-medium px-4 py-2 shadow-md transition-all duration-200 ease-in-out hover:shadow-lg flex items-center gap-2" 
         onClick={() => setIsUploadModalOpen(true)}
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-mic">
@@ -638,7 +658,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   }, []);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-[#171717]">
       {/* Memoized Header */}
       <Header />
       

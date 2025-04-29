@@ -32,7 +32,7 @@ export function UserMenu({ user, userInitials }: UserMenuProps) {
         <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer hover:bg-[#2a2a2a]">
           <Avatar>
             <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || ''} />
-            <AvatarFallback className="bg-blue-500 text-white">{userInitials}</AvatarFallback>
+            <AvatarFallback className="bg-purple-800 text-white">{userInitials}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
