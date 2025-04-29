@@ -5,14 +5,13 @@ import { log } from '@/lib/logger';
 import { free } from '@/constants/PaddleProduct';
 import { readRateLimiter } from '@/lib/upstash/ratelimit';
 
-// Skip rate limiting for authenticated users since they've already been authenticated
+
+//Rate Limiter
 async function checkReadRateLimit(userId: string) {
-  // For authenticated users with a valid userId, we skip rate limiting on read operations
   if (userId && userId.length > 0) {
     return true;
   }
   
-  // Only apply rate limiting for unauthenticated or suspicious requests
   const { success } = await readRateLimiter.limit(userId || 'anonymous');
   
   if (!success) {
@@ -22,6 +21,8 @@ async function checkReadRateLimit(userId: string) {
   return true;
 }
 
+
+//Define supabase client
 const createFetch =
   (options: Pick<RequestInit, "next" | "cache">) =>
   (url: RequestInfo | URL, init?: RequestInit) => {
@@ -96,6 +97,30 @@ export async function createClientWithCache(revalidateTag?: string, userId?: str
 }
 
 
+//Manage user profile
+export async function createNewUserSSR(supabase: SupabaseClient, userId: string, userEmail: string | undefined) {
+  const { data, error } = await supabase
+  .from('users')
+  .insert([
+    { 
+      id: userId,
+      email: userEmail,
+      product_id: free
+    }
+  ]);
+
+  if (error) {
+    log({
+      logLevel: 'error',
+      action: 'createNewUserSSR',
+      message: 'Error creating user profile in database',
+      metadata: { userId, email: userEmail, error }
+    });
+  }
+  
+  return { data, error };
+}
+
 export const getUserProfileSSR = async (supabase: SupabaseClient, userId: string) => {
     await checkReadRateLimit(userId);
 
@@ -126,7 +151,7 @@ export async function getUserSubscriptionSSR(supabase: SupabaseClient, userId: s
   return { data, error };
 }
 
-
+//Manage upload
 export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number, folderId?: string | null) {
   const { data, error } = await supabase
   .from('uploads')
@@ -215,30 +240,68 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
     return { data, error };
   }
 
-//Add paddle subscription later, plan and subscription id still can be null now
-export async function createNewUserSSR(supabase: SupabaseClient, userId: string, userEmail: string | undefined) {
-    const { data, error } = await supabase
-    .from('users')
-    .insert([
-      { 
-        id: userId,
-        email: userEmail,
-        product_id: free
-      }
-    ]);
-
-    if (error) {
+  export async function deleteUserUploadSSR(
+    supabase: SupabaseClient,
+    userId: string,
+    uploadId: string
+  ) {
+    
+    // First, get the upload to verify it belongs to the user and get file path
+    const { data: upload, error: fetchError } = await supabase
+      .from('uploads')
+      .select('file_path')
+      .eq('id', uploadId)
+      .eq('user_id', userId)
+      .single();
+    
+    if (fetchError) {
       log({
         logLevel: 'error',
-        action: 'createNewUserSSR',
-        message: 'Error creating user profile in database',
-        metadata: { userId, email: userEmail, error }
+        action: 'deleteUserUploadSSR.fetch',
+        message: 'Error fetching upload record before deletion',
+        metadata: { userId, uploadId, error: fetchError }
       });
+      return { error: fetchError };
     }
     
-    return { data, error };
+    // Delete the record from the database
+    const { error: deleteError } = await supabase
+      .from('uploads')
+      .delete()
+      .eq('id', uploadId)
+      .eq('user_id', userId);
+    
+    if (deleteError) {
+      log({
+        logLevel: 'error',
+        action: 'deleteUserUploadSSR.deleteDbRecord',
+        message: 'Error deleting upload record from database',
+        metadata: { userId, uploadId, error: deleteError }
+      });
+      return { error: deleteError };
+    }
+    
+    // Delete the file from storage if it exists
+    if (upload?.file_path) {
+      const { error: storageError } = await supabase
+        .storage
+        .from(BucketNameUpload)
+        .remove([upload.file_path]);
+      
+      if (storageError) {
+        log({
+          logLevel: 'warn', // Corrected from 'warning'
+          action: 'deleteUserUploadSSR.deleteStorageFile',
+          message: 'Error deleting file from storage, but DB record deleted',
+          metadata: { userId, uploadId, storagePath: upload.file_path, error: storageError }
+        });
+      }
+    }
+    
+    return { success: true };
   }
 
+//Manage subscription
 export async function updateUserSubscriptionSSR(
     supabase: SupabaseClient,
     customerEmail: string,
@@ -369,73 +432,25 @@ export async function updateUserUsageSSR(
     return { data, error };
   }
 
-export async function resetMonthlyUserUsageSSR(
+export async function cancelSubscriptionSSR(
     supabase: SupabaseClient,
-    userId: string,
+    customerId: string,
+    cancelledDate: string
   ) {
     
-    await supabase.rpc('reset_monthly_transcription_seconds', {
-      user_id: userId,
-    });
-  }
+    const { data, error } = await supabase.rpc('cancel_subscription', {
+      current_customer_id: customerId,
+      cancelled_date: cancelledDate
+    }).select();
 
-export async function deleteUserUploadSSR(
-    supabase: SupabaseClient,
-    userId: string,
-    uploadId: string
-  ) {
-    
-    // First, get the upload to verify it belongs to the user and get file path
-    const { data: upload, error: fetchError } = await supabase
-      .from('uploads')
-      .select('file_path')
-      .eq('id', uploadId)
-      .eq('user_id', userId)
-      .single();
-    
-    if (fetchError) {
+    if (error) {
       log({
         logLevel: 'error',
-        action: 'deleteUserUploadSSR.fetch',
-        message: 'Error fetching upload record before deletion',
-        metadata: { userId, uploadId, error: fetchError }
+        action: 'cancelSubscriptionSSR',
+        message: error.message,
+        metadata: { customerId, cancelledDate, error }
       });
-      return { error: fetchError };
     }
-    
-    // Delete the record from the database
-    const { error: deleteError } = await supabase
-      .from('uploads')
-      .delete()
-      .eq('id', uploadId)
-      .eq('user_id', userId);
-    
-    if (deleteError) {
-      log({
-        logLevel: 'error',
-        action: 'deleteUserUploadSSR.deleteDbRecord',
-        message: 'Error deleting upload record from database',
-        metadata: { userId, uploadId, error: deleteError }
-      });
-      return { error: deleteError };
-    }
-    
-    // Delete the file from storage if it exists
-    if (upload?.file_path) {
-      const { error: storageError } = await supabase
-        .storage
-        .from(BucketNameUpload)
-        .remove([upload.file_path]);
-      
-      if (storageError) {
-        log({
-          logLevel: 'warn', // Corrected from 'warning'
-          action: 'deleteUserUploadSSR.deleteStorageFile',
-          message: 'Error deleting file from storage, but DB record deleted',
-          metadata: { userId, uploadId, storagePath: upload.file_path, error: storageError }
-        });
-      }
-    }
-    
-    return { success: true };
+
+    return { data, error };
   }

@@ -3,9 +3,10 @@ import {
     EventName,
     SubscriptionCreatedEvent,
     SubscriptionUpdatedEvent,
-    TransactionCompletedEvent
+    TransactionCompletedEvent,
+    SubscriptionCanceledEvent
   } from '@paddle/paddle-node-sdk';
-import { createClient, updateUserSubscriptionSSR, renewedSubscriptionStatusSSR, renewedMonthlyUsageSSR } from '@/lib/supabase/server';
+import { createClient, updateUserSubscriptionSSR, renewedSubscriptionStatusSSR, renewedMonthlyUsageSSR, cancelSubscriptionSSR } from '@/lib/supabase/server';
 import { LinkGetCustomerInfoPaddle } from '@/constants/PaddleUrl';
 import { log } from '@/lib/logger';
 import { z } from 'zod';
@@ -84,6 +85,9 @@ export class ProcessWebhook {
         break;
       case EventName.TransactionCompleted:
         await this.renewedMonthlyUsage(eventData);
+        break;
+      case EventName.SubscriptionCanceled:
+        await this.cancelSubscription(eventData);
         break;
     }
   }
@@ -292,6 +296,60 @@ export class ProcessWebhook {
       });
 
       throw new Error('Failed to renew monthly usage');
+    }
+  }
+
+  private async cancelSubscription(eventData: SubscriptionCanceledEvent) {
+    try {
+      log({
+        logLevel: 'info',
+        action: 'cancelSubscription',
+        message: 'Processing subscription cancellation event'
+      });
+
+      const validateInput = paddleWebhookSubscriptionSchema.safeParse(eventData);
+
+      if (!validateInput.success) {
+        const errorMessage = validateInput.error.issues[0].message;
+        throw new Error(errorMessage);
+      }
+
+      const supabase = await createClient();
+      const {data, error: updateError} = await cancelSubscriptionSSR(
+        supabase,
+        eventData.data.customerId,
+        eventData.occurredAt
+      );
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      if (!data) {
+        throw new Error('Failed to fetch user ID');
+      }
+
+      const userId = typeof data === 'string' ? data : 
+                    Array.isArray(data) && data[0] ? data[0].found_user_id : null;
+
+      if (!userId) {
+        throw new Error('Failed to extract user ID from response');
+      }
+
+      //Revalidate the profile tag to refresh the profile
+      revalidateTag(`profile-${userId}`);
+
+    } catch (error) {
+      log({
+        logLevel: 'error',
+        action: 'cancelSubscription',
+        message: (error as Error).message,
+        metadata: {
+          error: error
+        }
+      });
+
+      throw new Error('Failed to cancel subscription');
     }
   }
 }
