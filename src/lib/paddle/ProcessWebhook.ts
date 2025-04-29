@@ -29,15 +29,15 @@ interface PaddleCustomerResponse {
     };
 }
 
-const paddleWebhookSchema = z.object({
+const paddleWebhookSubscriptionSchema = z.object({
   data: z.object({
-    customer_id: z.string(),
+    customerId: z.string(),
     id: z.string(), // subscription ID
     status: z.string(),
-    current_billing_period: z
+    currentBillingPeriod: z
       .object({
-        starts_at: z.string(),
-        ends_at: z.string(),
+        startsAt: z.string(),
+        endsAt: z.string(),
       })
       .nullable(),
     items: z
@@ -45,7 +45,7 @@ const paddleWebhookSchema = z.object({
         z.object({
           price: z
             .object({
-              product_id: z.string(),
+              productId: z.string(),
               id: z.string(),
             })
         })
@@ -54,6 +54,24 @@ const paddleWebhookSchema = z.object({
   }),
 });
 
+const paddleWebhookTransactionSchema = z.object({
+  eventId: z.string(),
+  notificationId: z.string(),
+  eventType: z.literal('transaction.completed'),
+  occurredAt: z.string(),
+  data: z.object({
+    id: z.string(),
+    status: z.string(),
+    customerId: z.string(),
+    currencyCode: z.string(),
+    subscriptionId: z.string(),
+    billingPeriod: z.object({
+      startsAt: z.string(),
+      endsAt: z.string()
+    }),
+    billedAt: z.string()
+  })
+});
   
 export class ProcessWebhook {
   async processEvent(eventData: EventEntity) {
@@ -78,7 +96,7 @@ export class ProcessWebhook {
         message: 'Processing subscription creation event'
       });
 
-      const validateInput = paddleWebhookSchema.safeParse(eventData);
+      const validateInput = paddleWebhookSubscriptionSchema.safeParse(eventData);
 
       if (!validateInput.success) {
         const errorMessage = validateInput.error.issues[0].message;
@@ -112,7 +130,7 @@ export class ProcessWebhook {
         
       const customer: PaddleCustomerResponse = await res.json();
         
-      const {error: updateError} = await updateUserSubscriptionSSR(
+      const {data, error: updateError} = await updateUserSubscriptionSSR(
             supabase,
             customer.data.email,
             eventData.data.customerId,
@@ -128,26 +146,25 @@ export class ProcessWebhook {
         throw updateError;
       }
 
-      const {data: profileData, error: profileError} = await supabase.from('users').select('id').eq('email', customer.data.email).single();
-      
-      if (profileError) {
-        log({
-          logLevel: 'error',
-          action: 'updateSubscriptionData',
-          message: 'Failed to fetch user profile',
-          metadata: { error: profileError }
-        });
-        throw new Error('Failed to fetch user profile');
+      if (!data) {
+        throw new Error('Failed to fetch user ID');
+      }
+
+      const userId = typeof data === 'string' ? data : 
+                    Array.isArray(data) && data[0] ? data[0].found_user_id : null;
+
+      if (!userId) {
+        throw new Error('Failed to extract user ID from response');
       }
 
       //Revalidate the profile tag to refresh the profile
-      revalidateTag(`profile-${profileData.id}`);
+      revalidateTag(`profile-${userId}`);
 
     } catch (error) {
       log({
         logLevel: 'error',
         action: 'updateSubscriptionData',
-        message: 'Error creating subscription',
+        message: (error as Error).message,
         metadata: {
           error: error
         }
@@ -165,7 +182,7 @@ export class ProcessWebhook {
         message: 'Processing subscription update event'
       });
 
-      const validateInput = paddleWebhookSchema.safeParse(eventData);
+      const validateInput = paddleWebhookSubscriptionSchema.safeParse(eventData);
 
       if (!validateInput.success) {
         const errorMessage = validateInput.error.issues[0].message;
@@ -176,7 +193,7 @@ export class ProcessWebhook {
       const planStartDate: string | null = eventData.data.currentBillingPeriod?.startsAt ?? null;
       const planEndDate: string | null = eventData.data.currentBillingPeriod?.endsAt ?? null;
         
-      const {error: updateError} = await renewedSubscriptionStatusSSR(
+      const {data,error: updateError} = await renewedSubscriptionStatusSSR(
             supabase,
             eventData.data.customerId,
             eventData.data.id,
@@ -189,26 +206,25 @@ export class ProcessWebhook {
         throw updateError;
       }
 
-      const {data: profileData, error: profileError} = await supabase.from('users').select('id').eq('customer_id', eventData.data.customerId).single();
-      
-      if (profileError) {
-        log({
-          logLevel: 'error',
-          action: 'renewedSubscriptionStatus',
-          message: 'Failed to fetch user profile',
-          metadata: { error: profileError }
-        });
-        throw new Error('Failed to fetch user profile');
+      if (!data) {
+        throw new Error('Failed to fetch user ID');
+      }
+
+      const userId = typeof data === 'string' ? data : 
+                    Array.isArray(data) && data[0] ? data[0].found_user_id : null;
+
+      if (!userId) {
+        throw new Error('Failed to extract user ID from response');
       }
 
       //Revalidate the profile tag to refresh the profile
-      revalidateTag(`profile-${profileData.id}`);
+      revalidateTag(`profile-${userId}`);
 
     } catch (error) {
       log({
         logLevel: 'error',
         action: 'renewedSubscriptionStatus',
-        message: 'Error renewing subscription',
+        message: (error as Error).message,
         metadata: {
           error: error
         }
@@ -226,7 +242,7 @@ export class ProcessWebhook {
         message: 'Processing transaction completion event'
       });
 
-      const validateInput = paddleWebhookSchema.safeParse(eventData);
+      const validateInput = paddleWebhookTransactionSchema.safeParse(eventData);
 
       if (!validateInput.success) {
         const errorMessage = validateInput.error.issues[0].message;
@@ -236,34 +252,35 @@ export class ProcessWebhook {
       const supabase = await createClient();
 
       // Ensure customerId is not null before proceeding
-      if (!eventData.data.customerId) {
-        throw new Error('Customer ID is missing in the event data');
+      if (!eventData.data.customerId || !eventData.data.subscriptionId) {
+        throw new Error('Customer ID or Subscription ID is missing in the event data');
       }
 
-      const {error: updateError} = await renewedMonthlyUsageSSR(
+      const {data, error: updateError} = await renewedMonthlyUsageSSR(
         supabase,
         eventData.data.customerId,
-        eventData.data.id
+        eventData.data.subscriptionId
       );
         
       if (updateError) {
         throw updateError;
       }
 
-      const {data: profileData, error: profileError} = await supabase.from('users').select('id').eq('customer_id', eventData.data.customerId).single();
-      
-      if (profileError) {
-        log({
-          logLevel: 'error',
-          action: 'renewedMonthlyUsage',
-          message: 'Failed to fetch user profile',
-          metadata: { error: profileError }
-        });
-        throw new Error('Failed to fetch user profile');
+
+      if (!data) {
+        throw new Error('Failed to fetch user ID');
+      }
+
+      const userId = typeof data === 'string' ? data : 
+                    Array.isArray(data) && data[0] ? data[0].found_user_id : null;
+
+      if (!userId) {
+        throw new Error('Failed to extract user ID from response');
       }
 
       //Revalidate the profile tag to refresh the profile
-      revalidateTag(`profile-${profileData.id}`);
+      revalidateTag(`profile-${userId}`);
+
     } catch (error) {
       log({
         logLevel: 'error',
