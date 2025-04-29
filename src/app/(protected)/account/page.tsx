@@ -30,9 +30,9 @@ export default async function AccountPage() {
   const isPro = userProfile.product_id === pro;
 
   return (
-    <div className="flex flex-col h-screen bg-[#0f0f0f] text-white overflow-hidden">
-      {/* Header */}
-      <header className="h-16 border-b border-[#2a2a2a] flex items-center justify-between px-6">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#111111] to-[#0a0a0a] text-white">
+      {/* Header with subtle blur effect */}
+      <header className="sticky top-0 z-10 backdrop-blur-md bg-[#0f0f0f]/80 border-b border-[#2a2a2a] flex items-center justify-between px-6 h-16">
         <div className="flex items-center gap-3">
           <a href="/dashboard" className="text-gray-400 hover:text-white transition-colors">
             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -42,17 +42,35 @@ export default async function AccountPage() {
         <UserMenu user={user} userInitials={userInitials} />
       </header>
       
-      {/* Main content */}
-      <div className="flex-1 overflow-auto p-6">
-        <Tabs defaultValue="usage" className="w-full max-w-4xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8 bg-[#1a1a1a] p-1 rounded-md">
-            <TabsTrigger value="usage" className="data-[state=active]:bg-[#2a2a2a]">Usage</TabsTrigger>
-            <TabsTrigger value="plan" className="data-[state=active]:bg-[#2a2a2a]">Plan Management</TabsTrigger>
-            <TabsTrigger value="billing" className="data-[state=active]:bg-[#2a2a2a]">Billing</TabsTrigger>
-          </TabsList>
+      {/* Main content with improved spacing */}
+      <div className="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full">
+        <Tabs defaultValue="usage" className="w-full">
+          <div className="mb-8 flex flex-col gap-6">
+            <h2 className="text-2xl font-bold">Account Settings</h2>
+            <TabsList className="flex p-1 bg-[#1a1a1a]/50 backdrop-blur-sm rounded-xl border border-[#2a2a2a]/50 w-fit">
+              <TabsTrigger 
+                value="usage" 
+                className="px-4 py-2 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+              >
+                Usage
+              </TabsTrigger>
+              <TabsTrigger 
+                value="plan" 
+                className="px-4 py-2 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+              >
+                Plan
+              </TabsTrigger>
+              <TabsTrigger 
+                value="billing" 
+                className="px-4 py-2 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all"
+              >
+                Billing
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           {/* Usage Tab */}
-          <TabsContent value="usage" className="space-y-6">
+          <TabsContent value="usage" className="space-y-6 animate-in fade-in-50 duration-300">
             <UsageSection
               monthlyUsageSeconds={userProfile.monthly_usage_seconds || 0}
               totalUsageSeconds={userProfile.total_usage_seconds || 0}
@@ -64,7 +82,7 @@ export default async function AccountPage() {
           </TabsContent>
           
           {/* Plan Management Tab */}
-          <TabsContent value="plan" className="space-y-6">
+          <TabsContent value="plan" className="space-y-6 animate-in fade-in-50 duration-300">
             <PlanManagementSection
               isPro={isPro}
               proDuration={proDuration}
@@ -73,7 +91,7 @@ export default async function AccountPage() {
           </TabsContent>
           
           {/* Billing Tab */}
-          <TabsContent value="billing" className="space-y-6">
+          <TabsContent value="billing" className="space-y-6 animate-in fade-in-50 duration-300">
             <BillingSection isPro={isPro} />
           </TabsContent>
         </Tabs>

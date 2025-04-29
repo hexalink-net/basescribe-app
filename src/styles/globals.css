@@ -3,13 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --glow-blue: rgba(59, 130, 246, 0.5);
+  --glow-red: rgba(239, 68, 68, 0.5);
+  --glow-purple: rgba(147, 51, 234, 0.5);
+  --glow-yellow: rgba(234, 179, 8, 0.5);
+  --glow-amber: rgba(245, 158, 11, 0.5);
 }
 
-@theme inline {
+/* Base theme variables */
+:root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +29,93 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Modern UI effects */
+.shadow-glow-blue {
+  box-shadow: 0 0 15px 1px var(--glow-blue);
+}
+
+.shadow-glow-red {
+  box-shadow: 0 0 15px 1px var(--glow-red);
+}
+
+.shadow-glow-purple {
+  box-shadow: 0 0 15px 1px var(--glow-purple);
+}
+
+/* Glass morphism */
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Smooth animations */
+.animate-in {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+.fade-in-50 {
+  animation-name: fadeIn50;
+}
+
+@keyframes fadeIn50 {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Auth page animations */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 5px 0px rgba(240, 241, 119, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px 5px rgba(240, 241, 119, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 5px 0px rgba(240, 241, 119, 0.3);
+  }
+}
+
+.auth-logo-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+/* Gradient text */
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #F0F177, #d9e021);
+}
+
+.text-gradient-yellow {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #F0F177, #d9e021);
+}
+
+/* Delay utilities for animations */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
 }
 
 /* Custom scrollbar styling for dark theme */
