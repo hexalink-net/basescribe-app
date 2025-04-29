@@ -12,7 +12,7 @@ interface BillingSectionProps {
 
 export function BillingSection({ isPro }: BillingSectionProps) {
   return (
-    <Card className="bg-[#1a1a1a]/50 backdrop-blur-sm border-[#2a2a2a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
+    <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
@@ -25,14 +25,14 @@ export function BillingSection({ isPro }: BillingSectionProps) {
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
         {isPro && (
-          <div className="bg-[#222222]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-5 transition-all duration-300 hover:bg-[#222222] hover:border-[#3a3a3a] hover:shadow-md">
+          <div className="bg-[#171717]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-5 transition-all duration-300 hover:bg-[#171717] hover:border-[#3a3a3a] hover:shadow-md">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-blue-600/20">
                 <CreditCard className="h-5 w-5 text-blue-400" />
               </div>
               <h3 className="font-medium">Payment Method</h3>
             </div>
-            <div className="flex items-center justify-between mb-4 bg-[#1a1a1a]/50 p-3 rounded-lg border border-[#2a2a2a]/50">
+            <div className="flex items-center justify-between mb-4 bg-[#171717]/50 p-3 rounded-lg border border-[#2a2a2a]/50">
               <div className="flex items-center gap-3">
                 <div className="p-1.5 rounded bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-[#3a3a3a]/50">
                   <CreditCard className="h-5 w-5 text-blue-300" />
@@ -63,15 +63,15 @@ export function BillingSection({ isPro }: BillingSectionProps) {
           </div>
           
           {isPro ? (
-            <div className="border border-[#2a2a2a]/70 rounded-xl overflow-hidden backdrop-blur-sm">
-              <div className="grid grid-cols-4 gap-4 p-4 border-b border-[#2a2a2a] bg-[#222222]/70 font-medium text-sm">
+            <div className="border border-[#2a2a2a]/70 rounded-xl overflow-hidden backdrop-blur-sm bg-[#171717]/80">
+              <div className="grid grid-cols-4 gap-4 p-4 border-b border-[#2a2a2a] bg-[#171717]/70 font-medium text-sm">
                 <div>Date</div>
                 <div>Description</div>
                 <div>Amount</div>
                 <div className="text-right">Status</div>
               </div>
               <div className="divide-y divide-[#2a2a2a]/50">
-                <div className="grid grid-cols-4 gap-4 p-4 text-sm items-center hover:bg-[#1a1a1a]/30 transition-colors">
+                <div className="grid grid-cols-4 gap-4 p-4 text-sm items-center hover:bg-[#171717]/70 transition-colors">
                   <div>Apr 23, 2025</div>
                   <div>Pro Plan Subscription</div>
                   <div>$15.00</div>
@@ -84,7 +84,7 @@ export function BillingSection({ isPro }: BillingSectionProps) {
                     </Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-4 p-4 text-sm items-center hover:bg-[#1a1a1a]/30 transition-colors">
+                <div className="grid grid-cols-4 gap-4 p-4 text-sm items-center hover:bg-[#171717]/70 transition-colors">
                   <div>Mar 23, 2025</div>
                   <div>Pro Plan Subscription</div>
                   <div>$15.00</div>

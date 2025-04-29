@@ -14,7 +14,7 @@ interface PlanManagementSectionProps {
 
 export function PlanManagementSection({ isPro, proDuration, freeDuration }: PlanManagementSectionProps) {
   return (
-    <Card className="bg-[#1a1a1a]/50 backdrop-blur-sm border-[#2a2a2a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
+    <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
@@ -26,7 +26,7 @@ export function PlanManagementSection({ isPro, proDuration, freeDuration }: Plan
         </div>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
-        <div className="bg-gradient-to-r from-[#222222]/70 to-[#1e1e1e]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-6 transition-all duration-300 hover:border-[#3a3a3a] relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#171717]/70 to-[#1e1e1e]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-6 transition-all duration-300 hover:border-[#3a3a3a] relative overflow-hidden">
           {/* Background decoration */}
           <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-blue-600/10 blur-2xl"></div>
           
@@ -56,7 +56,7 @@ export function PlanManagementSection({ isPro, proDuration, freeDuration }: Plan
               
               {isPro ? (
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button variant="outline" className="border-[#3a3a3a] bg-[#1a1a1a]/40 hover:bg-[#2a2a2a] hover:text-white transition-all">
+                  <Button variant="outline" className="border-[#3a3a3a] bg-[#171717]/40 hover:bg-[#2a2a2a] hover:text-white transition-all">
                     Cancel Subscription
                   </Button>
                   <Button className="bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-700/20">
@@ -76,7 +76,7 @@ export function PlanManagementSection({ isPro, proDuration, freeDuration }: Plan
         </div>
         
         {isPro && (
-          <div className="bg-[#222222]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-5 transition-all duration-300 hover:bg-[#222222] hover:border-[#3a3a3a] hover:shadow-md">
+          <div className="bg-[#171717]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-5 transition-all duration-300 hover:bg-[#171717] hover:border-[#3a3a3a] hover:shadow-md">
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 rounded-lg bg-purple-600/20">
                 <Calendar className="h-5 w-5 text-purple-400" />

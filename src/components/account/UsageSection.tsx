@@ -49,7 +49,7 @@ export function UsageSection({
   const progressGlow = isHighUsage ? 'shadow-glow-red' : 'shadow-glow-blue';
 
   return (
-    <Card className="bg-[#1a1a1a]/50 backdrop-blur-sm border-[#2a2a2a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
+    <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
@@ -84,35 +84,6 @@ export function UsageSection({
               className={`h-full ${progressColor} rounded-full transition-all duration-500 ease-out ${progressGlow}`}
               style={{ width: `${usagePercentage}%` }}
             />
-          </div>
-        </div>
-        
-        {/* Usage stats cards with hover effects */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-[#222222]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-5 transition-all duration-300 hover:bg-[#222222] hover:border-[#3a3a3a] hover:shadow-md">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-blue-600/20">
-                <Clock className="h-5 w-5 text-blue-400" />
-              </div>
-              <h3 className="font-medium">Monthly Usage</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              {isPro 
-                ? `You've used ${formatDuration(monthlyUsageSeconds)} out of ${proDuration} hours this month.`
-                : `You've used ${formatDuration(monthlyUsageSeconds)} out of ${freeDuration} hour this month.`}
-            </p>
-          </div>
-          
-          <div className="bg-[#222222]/70 backdrop-blur-sm border border-[#2a2a2a]/50 rounded-xl p-5 transition-all duration-300 hover:bg-[#222222] hover:border-[#3a3a3a] hover:shadow-md">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-lg bg-purple-600/20">
-                <Activity className="h-5 w-5 text-purple-400" />
-              </div>
-              <h3 className="font-medium">Total Usage</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              Total usage across all time: {formatDuration(totalUsageSeconds)}
-            </p>
           </div>
         </div>
       </CardContent>
