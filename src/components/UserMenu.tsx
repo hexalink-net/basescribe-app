@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
+import { cn } from '@/lib/StyleUtils';
 
 // Import the SignOutButton component
 // TypeScript may show an error until a full build is done
@@ -23,16 +24,28 @@ interface UserMenuProps {
     };
   };
   userInitials: string;
+  variant?: 'default' | 'transparent';
 }
 
-export function UserMenu({ user, userInitials }: UserMenuProps) {
+export function UserMenu({ user, userInitials, variant = 'default' }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer hover:bg-[#2a2a2a]">
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "relative h-10 w-10 rounded-full cursor-pointer",
+            variant === 'default' ? "hover:bg-[#2a2a2a]" : "hover:bg-[#2a2a2a]/50 text-white"
+          )}
+        >
           <Avatar>
             <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || ''} />
-            <AvatarFallback className="bg-purple-800 text-white">{userInitials}</AvatarFallback>
+            <AvatarFallback className={cn(
+              "text-white",
+              variant === 'default' ? "bg-purple-800" : "bg-[#F0F177]/90 text-black"
+            )}>
+              {userInitials}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

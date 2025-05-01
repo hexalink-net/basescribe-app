@@ -105,7 +105,7 @@ export function BillingSection({ isPro }: BillingSectionProps) {
                 <Receipt className="h-6 w-6 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium mb-2">No billing history</h3>
-              <p className="text-gray-400 mb-6 max-w-xs mx-auto">You don't have any invoices yet. Upgrade to Pro to access premium features.</p>
+              <p className="text-gray-400 mb-6 max-w-xs mx-auto">You don&apos;t have any invoices yet. Upgrade to Pro to access premium features.</p>
               <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-blue-700/20 px-6">
                 <Link href="/pricing" className="flex items-center gap-1">
                   Upgrade to Pro

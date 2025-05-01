@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { CreditCard, Calendar, Crown, ArrowRight } from 'lucide-react';
+import { Calendar, Crown, ArrowRight } from 'lucide-react';
 
 interface PlanManagementSectionProps {
   isPro: boolean;

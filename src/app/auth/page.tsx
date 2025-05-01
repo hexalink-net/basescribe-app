@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/UseToast';
 import { signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword } from './action';
-import Image from 'next/image';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 
 function AuthContent() {

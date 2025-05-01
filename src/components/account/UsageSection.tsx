@@ -3,7 +3,6 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Clock, Activity } from 'lucide-react';
 
 interface UsageSectionProps {
   monthlyUsageSeconds: number;
@@ -24,7 +23,6 @@ function formatDuration(seconds: number): string {
 
 export function UsageSection({ 
   monthlyUsageSeconds = 0, 
-  totalUsageSeconds = 0, 
   isPro, 
   proDuration, 
   freeDuration,
