@@ -139,22 +139,18 @@ export async function signUpWithEmailPassword(formData: FormData) {
         return { error: error.message }
     }
   
-    // Create user record in the database
-    if (data.user) {
-        const { error } = await createNewUserSSR(supabase, data.user.id, email);
-        if (error) {
-            log({
-                logLevel: 'error',
-                action: 'createNewUserSSR',
-                message: error.message,
-                userId: data.user.id,
-            });
+    if (data.user?.user_metadata.email_verified) {
+        return { 
+            success: true,
+            title: "Check your email",
+            message: "We've sent you a confirmation link to complete your signup."
         }
-    }
-  
-    return { 
-        success: true,
-        message: "Check your email for the confirmation link"
+    } else {
+        return { 
+            success: false,
+            title: "User has been registered",
+            message: "Please try to sign in"
+        }
     }
 }
 

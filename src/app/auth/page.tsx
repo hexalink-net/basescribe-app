@@ -40,7 +40,7 @@ function AuthContent() {
         }
         
         toast({
-          title: "Check your email",
+          title: result.title || "Check your email",
           description: result.message || "We've sent you a confirmation link to complete your signup.",
         });
         
