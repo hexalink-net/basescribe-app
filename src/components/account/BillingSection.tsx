@@ -5,12 +5,57 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { CreditCard, Receipt, Download, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { changePaymentMethod } from '@/app/(protected)/account/actions';
+import { useToast } from '@/components/ui/UseToast';
 
 interface BillingSectionProps {
   isPro: boolean;
+  subscriptionId?: string;
 }
 
-export function BillingSection({ isPro }: BillingSectionProps) {
+export function BillingSection({ isPro, subscriptionId }: BillingSectionProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  
+  const handleChangePaymentMethod = async () => {
+    try {
+      setIsLoading(true);
+      
+      if (!subscriptionId) {
+        toast({
+          title: "Error",
+          description: "Subscription information not found",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const result = await changePaymentMethod(subscriptionId);
+      
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (result.cancelUrl) {
+        // Open the payment method update URL in a new tab
+        window.open(result.cancelUrl, '_blank');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process payment method update request",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
       <CardHeader className="pb-2">
@@ -42,11 +87,27 @@ export function BillingSection({ isPro }: BillingSectionProps) {
                   <p className="text-xs text-gray-400">Expires 12/2026</p>
                 </div>
               </div>
-              <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20">
-                <span className="flex items-center gap-1">
-                  Update
-                  <ChevronRight className="h-4 w-4" />
-                </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                onClick={handleChangePaymentMethod}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    Update
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                )}
               </Button>
             </div>
           </div>

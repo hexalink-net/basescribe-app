@@ -105,7 +105,10 @@ export default async function AccountPage() {
           
           {/* Billing Tab */}
           <TabsContent value="billing" className="space-y-6 animate-in fade-in-50 duration-300">
-            <BillingSection isPro={isPro} />
+            <BillingSection 
+              isPro={isPro} 
+              subscriptionId={userProfile.subscription_id}
+            />
           </TabsContent>
         </Tabs>
       </div>

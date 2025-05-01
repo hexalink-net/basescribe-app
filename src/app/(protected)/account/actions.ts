@@ -4,10 +4,15 @@ import { createClient, getUserProfileSSR } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
 import { LinkGetSubscriptionInfoPaddle } from '@/constants/PaddleUrl';
 
-/**
- * Fetch account data for the user
- * This server action encapsulates the data fetching for the account page
- */
+interface PaddleSubscriptionResponse {
+  data: {
+    management_urls: {
+      cancel: string;
+      update_payment_method: string;
+    };
+  };
+}
+
 export async function fetchAccountData() {
   try {
     const supabase = await createClient();
@@ -85,7 +90,7 @@ export async function cancelPlan(subscriptionId: string) {
       return { error: 'Failed to fetch subscription information' };
     }
             
-    const subscription = await res.json();
+    const subscription: PaddleSubscriptionResponse = await res.json();
     const cancelSubscriptionUrl = subscription.data.management_urls.cancel;
     
     // Return the URL so the client can open it in a new tab
@@ -95,6 +100,46 @@ export async function cancelPlan(subscriptionId: string) {
       logLevel: 'error',
       action: 'cancelPlan',
       message: 'Error getting cancel subscription URL',
+      metadata: { error }
+    });
+    return { error: 'An error occurred while processing your request' };
+  }
+}
+
+export async function changePaymentMethod(subscriptionId: string) {
+  try {
+    const getCustomerInfoPaddleUrl = `${LinkGetSubscriptionInfoPaddle}${subscriptionId}`;
+    const res = await fetch(getCustomerInfoPaddleUrl, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+    });
+    
+    if (!res.ok) {
+      log({
+        logLevel: 'error',
+        action: 'getSubscriptionInfo',
+        message: 'Failed to fetch Paddle subscription',
+        metadata: {
+          response: await res.text()
+        }
+      });
+      return { error: 'Failed to fetch subscription information' };
+    }
+            
+    const subscription: PaddleSubscriptionResponse = await res.json();
+    const changePaymentMethodUrl = subscription.data.management_urls.update_payment_method;
+    
+    // Return the URL so the client can open it in a new tab
+    return { cancelUrl: changePaymentMethodUrl };
+  } catch (error) {
+    log({
+      logLevel: 'error',
+      action: 'cancelPlan',
+      message: 'Error getting change payment method URL',
       metadata: { error }
     });
     return { error: 'An error occurred while processing your request' };

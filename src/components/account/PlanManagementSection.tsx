@@ -126,7 +126,7 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
                   </Button>
                   {!isYearly && (
                     <Button className="bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-700/20">
-                      Change Plan to Annual Payment
+                      <b>SAVE 25% - </b>&nbsp;Switch to Annual Plan
                     </Button>
                   )}
                 </div>
