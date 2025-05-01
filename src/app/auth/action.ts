@@ -139,7 +139,7 @@ export async function signUpWithEmailPassword(formData: FormData) {
         return { error: error.message }
     }
   
-    if (data.user?.user_metadata.email_verified) {
+    if (data.user?.user_metadata.email_verified === false) {
         return { 
             success: true,
             title: "Check your email",

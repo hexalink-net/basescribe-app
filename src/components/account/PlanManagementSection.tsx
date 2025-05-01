@@ -5,14 +5,64 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Calendar, Crown, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { cancelPlan } from '@/app/(protected)/account/actions';
+import { useToast } from '@/components/ui/UseToast';
 
 interface PlanManagementSectionProps {
   isPro: boolean;
+  isYearly: boolean;
   proDuration: string;
   freeDuration: string;
+  planEndDate: Date;
+  subscriptionId?: string;
 }
 
-export function PlanManagementSection({ isPro, proDuration, freeDuration }: PlanManagementSectionProps) {
+export function PlanManagementSection({ isPro, isYearly, proDuration, freeDuration, planEndDate, subscriptionId }: PlanManagementSectionProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const resetDate = new Date(planEndDate);
+  const formattedResetDate = resetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
+  const handleCancelSubscription = async () => {
+    try {
+      setIsLoading(true);
+      
+      if (!subscriptionId) {
+        toast({
+          title: "Error",
+          description: "Subscription information not found",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const result = await cancelPlan(subscriptionId);
+      
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (result.cancelUrl) {
+        // Open the cancel URL in a new tab
+        window.open(result.cancelUrl, '_blank');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process cancellation request",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70">
       <CardHeader className="pb-2">
@@ -56,12 +106,29 @@ export function PlanManagementSection({ isPro, proDuration, freeDuration }: Plan
               
               {isPro ? (
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button variant="outline" className="border-[#3a3a3a] bg-[#171717]/40 hover:bg-[#2a2a2a] hover:text-white transition-all">
-                    Cancel Subscription
+                  <Button 
+                    variant="outline" 
+                    className="border-[#3a3a3a] bg-[#171717]/40 hover:bg-[#2a2a2a] hover:text-white transition-all"
+                    onClick={handleCancelSubscription}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                      </span>
+                    ) : (
+                      "Cancel Subscription"
+                    )}
                   </Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-700/20">
-                    Change Plan
-                  </Button>
+                  {!isYearly && (
+                    <Button className="bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-700/20">
+                      Change Plan to Annual Payment
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <Button asChild className="bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-700/20 group">
@@ -84,7 +151,7 @@ export function PlanManagementSection({ isPro, proDuration, freeDuration }: Plan
               <h3 className="font-medium">Renewal Information</h3>
             </div>
             <p className="text-gray-400">
-              Your subscription will automatically renew on <span className="font-medium text-purple-300">May 23, 2025</span>.
+              Your subscription will automatically renew on <span className="font-medium text-purple-300">{formattedResetDate}</span>.
             </p>
           </div>
         )}

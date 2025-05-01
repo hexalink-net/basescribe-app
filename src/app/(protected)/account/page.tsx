@@ -2,7 +2,7 @@ import { fetchAccountData } from './actions';
 import { UserMenu } from '@/components/UserMenu';
 import { redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { pro, proDuration, freeDuration } from '@/constants/PaddleProduct';
+import { pro, proDuration, freeDuration, proAnnualPriceId } from '@/constants/PaddleProduct';
 import { UsageSection } from '@/components/account/UsageSection';
 import { PlanManagementSection } from '@/components/account/PlanManagementSection';
 import { BillingSection } from '@/components/account/BillingSection';
@@ -28,6 +28,8 @@ export default async function AccountPage() {
   }
 
   const isPro = userProfile.product_id === pro;
+  const isYearly = userProfile.price_id === proAnnualPriceId;
+  const planEndDate = userProfile.plan_end_date;
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#171717] to-[#0a0a0a] text-white">
@@ -93,8 +95,11 @@ export default async function AccountPage() {
           <TabsContent value="plan" className="space-y-6 animate-in fade-in-50 duration-300">
             <PlanManagementSection
               isPro={isPro}
+              isYearly={isYearly}
               proDuration={proDuration}
               freeDuration={freeDuration}
+              planEndDate={planEndDate}
+              subscriptionId={userProfile.subscription_id}
             />
           </TabsContent>
           

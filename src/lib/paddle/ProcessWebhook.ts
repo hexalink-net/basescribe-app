@@ -117,7 +117,6 @@ export class ProcessWebhook {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
-          next: { revalidate: 0 }, // disables caching
       });
       
       if (!res.ok) {
