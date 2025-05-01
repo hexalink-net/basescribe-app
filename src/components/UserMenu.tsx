@@ -42,7 +42,7 @@ export function UserMenu({ user, userInitials, variant = 'default' }: UserMenuPr
             <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || ''} />
             <AvatarFallback className={cn(
               "text-white",
-              variant === 'default' ? "bg-purple-800" : "bg-[#F0F177]/90 text-black"
+              "bg-purple-800"
             )}>
               {userInitials}
             </AvatarFallback>

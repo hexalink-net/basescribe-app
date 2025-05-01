@@ -148,7 +148,7 @@ export async function signUpWithEmailPassword(formData: FormData) {
     } else {
         return { 
             success: false,
-            title: "User has been registered",
+            title: "User already registered",
             message: "Please try to sign in"
         }
     }
