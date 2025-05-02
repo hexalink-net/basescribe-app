@@ -228,7 +228,8 @@ export async function getSubscriptionUpgradePreview(subscriptionId: string) {
     const totalAmount = subscriptionUpgradePreview.data.update_summary.charge.amount;
     const totalAmountFormatted = totalAmount.slice(0, -2) + '.' + totalAmount.slice(-2);
 
-    const dueAmount = (parseInt(subscriptionUpgradePreview.data.update_summary.result.amount) - parseInt(subscriptionUpgradePreview.data.recurring_transaction_details.totals.credit)).toString();
+    const calculatedDueAmount = parseInt(subscriptionUpgradePreview.data.update_summary.result.amount) - parseInt(subscriptionUpgradePreview.data.recurring_transaction_details.totals.credit);
+    const dueAmount = calculatedDueAmount < 0 ? "000" : calculatedDueAmount.toString();
     const dueAmountFormatted = dueAmount.slice(0, -2) + '.' + dueAmount.slice(-2);
     
     return { subscriptionUpgradePreview, startBillingPeriod, endBillingPeriod, totalAmountFormatted, dueAmountFormatted };

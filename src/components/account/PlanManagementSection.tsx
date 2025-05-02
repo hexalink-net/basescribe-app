@@ -148,7 +148,7 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
       
       toast({
         title: "Plan Updated",
-        description: "Your subscription has been updated to the annual plan",
+        description: "Your subscription has been updated to the annual plan. Please refresh your page.",
       });
       
       setShowUpgradeModal(false);
