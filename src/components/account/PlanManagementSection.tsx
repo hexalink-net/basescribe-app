@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Calendar, Crown, ArrowRight } from 'lucide-react';
-import { useState } from 'react';
-import { cancelPlan, getSubscriptionUpgradePreview, upgradeSubscription } from '@/app/(protected)/account/actions';
+import { useState, useEffect } from 'react';
+import { cancelPlan, getSubscriptionUpgradePreview, upgradeSubscription, getSubscriptionInfo, renewPlan } from '@/app/(protected)/account/actions';
 import { useToast } from '@/components/ui/UseToast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
@@ -17,12 +17,18 @@ interface PlanManagementSectionProps {
   freeDuration: string;
   planEndDate: Date;
   subscriptionId?: string;
+  customerId?: string;
 }
 
-export function PlanManagementSection({ isPro, isYearly, proDuration, freeDuration, planEndDate, subscriptionId }: PlanManagementSectionProps) {
+export function PlanManagementSection({ isPro, isYearly, proDuration, freeDuration, planEndDate, subscriptionId, customerId }: PlanManagementSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isRenewLoading, setIsRenewLoading] = useState(false);
   const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<{
+    isCancelled: boolean;
+    scheduledChange?: string;
+  }>({ isCancelled: false });
   const [upgradePreview, setUpgradePreview] = useState<{
     startBillingPeriod?: string;
     endBillingPeriod?: string;
@@ -32,6 +38,36 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
   const { toast } = useToast();
   const resetDate = new Date(planEndDate);
   const formattedResetDate = resetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  
+  // Fetch subscription details on component mount
+  useEffect(() => {
+    if (isPro && subscriptionId) {
+      fetchSubscriptionDetails();
+    }
+  }, [isPro, subscriptionId]);
+  
+  const fetchSubscriptionDetails = async () => {
+    try {
+      if (!subscriptionId) return;
+      
+      const result = await getSubscriptionInfo(subscriptionId);
+      
+      if (result.error) {
+        console.error(result.error);
+        return;
+      }
+      
+      if (result.subscription) {
+        const scheduledChange = result.subscription.data.scheduled_change;
+        setSubscriptionDetails({
+          isCancelled: scheduledChange?.action === 'cancel',
+          scheduledChange: scheduledChange?.action
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscription details:', error);
+    }
+  };
   
   const handleCancelSubscription = async () => {
     try {
@@ -122,6 +158,43 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
     }
   };
 
+  const handleRenewSubscription = async () => {
+    try {
+      setIsRenewLoading(true);
+      
+      if (!subscriptionId) {
+        toast({
+          title: "Error",
+          description: "Subscription information not found",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      await renewPlan(subscriptionId);
+      
+      toast({
+        title: "Subscription Renewed",
+        description: "Your subscription has been renewed. Please refresh your page.",
+      });
+      
+      // Update local state to reflect the change
+      setSubscriptionDetails({
+        isCancelled: false,
+        scheduledChange: undefined
+      });
+      
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to renew subscription",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRenewLoading(false);
+    }
+  };
+
   const handleUpdatePlan = async () => {
     try {
       setIsUpgradeLoading(true);
@@ -207,24 +280,45 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
                 
                 {isPro ? (
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button 
-                      variant="outline" 
-                      className="border-[#3a3a3a] bg-[#171717]/40 hover:bg-[#2a2a2a] hover:text-white transition-all"
-                      onClick={handleCancelSubscription}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <span className="flex items-center gap-2">
-                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Processing...
-                        </span>
-                      ) : (
-                        "Cancel Subscription"
-                      )}
-                    </Button>
+                    {subscriptionDetails.isCancelled ? (
+                      <Button 
+                        variant="outline" 
+                        className="border-[#3a3a3a] bg-[#171717]/40 hover:bg-[#2a2a2a] hover:text-white transition-all"
+                        onClick={handleRenewSubscription}
+                        disabled={isRenewLoading}
+                      >
+                        {isRenewLoading ? (
+                          <span className="flex items-center gap-2">
+                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                          </span>
+                        ) : (
+                          "Renew Subscription"
+                        )}
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        className="border-[#3a3a3a] bg-[#171717]/40 hover:bg-[#2a2a2a] hover:text-white transition-all"
+                        onClick={handleCancelSubscription}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <span className="flex items-center gap-2">
+                            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processing...
+                          </span>
+                        ) : (
+                          "Cancel Subscription"
+                        )}
+                      </Button>
+                    )}
                     {!isYearly && (
                       <Button 
                         className="bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-700/20"
@@ -268,7 +362,11 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
                 <h3 className="font-medium">Renewal Information</h3>
               </div>
               <p className="text-gray-400">
-                Your subscription will automatically renew on <span className="font-medium text-purple-300">{formattedResetDate}</span>.
+                {subscriptionDetails.isCancelled ? (
+                  <>Your subscription will end on <span className="font-medium text-purple-300">{formattedResetDate}</span>.</>
+                ) : (
+                  <>Your subscription will automatically renew on <span className="font-medium text-purple-300">{formattedResetDate}</span>.</>
+                )}
               </p>
             </div>
           )}

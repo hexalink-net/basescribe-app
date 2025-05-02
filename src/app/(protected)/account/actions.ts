@@ -66,6 +66,45 @@ export async function fetchAccountData() {
   }
 }
 
+export async function getSubscriptionInfo(subscriptionId: string) {
+  try {
+    const getSubscriptionInfoUrl = `${LinkGetSubscriptionInfoPaddle}${subscriptionId}`;
+    const res = await fetch(getSubscriptionInfoUrl, {
+      method: 'GET',
+      headers: {
+          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+    });
+    
+    if (!res.ok) {
+      log({
+        logLevel: 'error',
+        action: 'getSubscriptionInfo',
+        message: 'Failed to fetch Paddle subscription',
+        metadata: {
+          response: await res.text()
+        }
+      });
+      return { error: 'Failed to fetch subscription information' };
+    }
+            
+    const subscription = await res.json();
+    console.log(subscription.data.scheduled_change)
+    
+    return { subscription };
+  } catch (error) {
+    log({
+      logLevel: 'error',
+      action: 'getSubscriptionInfo',
+      message: 'Error getting subscription information',
+      metadata: { error }
+    });
+    return { error: 'An error occurred while processing your request' };
+  }
+}
+
 export async function cancelPlan(subscriptionId: string) {
   try {
     const getCustomerInfoPaddleUrl = `${LinkGetSubscriptionInfoPaddle}${subscriptionId}`;
@@ -100,6 +139,45 @@ export async function cancelPlan(subscriptionId: string) {
       logLevel: 'error',
       action: 'cancelPlan',
       message: 'Error getting cancel subscription URL',
+      metadata: { error }
+    });
+    return { error: 'An error occurred while processing your request' };
+  }
+}
+
+export async function renewPlan(subscriptionId: string) {
+  try {
+    const patchSubscriptionInfoUrl = `${LinkGetSubscriptionInfoPaddle}${subscriptionId}`;
+    const res = await fetch(patchSubscriptionInfoUrl, {
+      method: 'PATCH',
+      headers: {
+          Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      body: JSON.stringify({
+          scheduled_change: null
+        }),
+    });
+    
+    if (!res.ok) {
+      log({
+        logLevel: 'error',
+        action: 'renewPlan',
+        message: 'Failed to renew Paddle subscription',
+        metadata: {
+          response: await res.text()
+        }
+      });
+      return { error: 'Failed to renew subscription' };
+    }
+    
+    return;
+  } catch (error) {
+    log({
+      logLevel: 'error',
+      action: 'renewPlan',
+      message: 'Error renewing subscription',
       metadata: { error }
     });
     return { error: 'An error occurred while processing your request' };
@@ -159,7 +237,6 @@ export async function getBillingHistory(customerId: string) {
     });
     
     if (!res.ok) {
-      console.log(res)
       log({
         logLevel: 'error',
         action: 'getBillingHistoryUrl',
