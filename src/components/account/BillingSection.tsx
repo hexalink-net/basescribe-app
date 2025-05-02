@@ -47,7 +47,7 @@ export function BillingSection({ isPro, subscriptionId, customerId }: BillingSec
         // Open the billing history URL in a new tab
         window.open(result.billingHistoryUrl, '_blank');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to access billing history",
@@ -86,7 +86,7 @@ export function BillingSection({ isPro, subscriptionId, customerId }: BillingSec
         // Open the payment method update URL in a new tab
         window.open(result.cancelUrl, '_blank');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to process payment method update request",
@@ -119,12 +119,8 @@ export function BillingSection({ isPro, subscriptionId, customerId }: BillingSec
             </div>
             <div className="flex items-center justify-between mb-4 bg-[#171717]/50 p-3 rounded-lg border border-[#2a2a2a]/50">
               <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-[#3a3a3a]/50">
-                  <CreditCard className="h-5 w-5 text-blue-300" />
-                </div>
                 <div>
-                  <p className="font-medium text-white">•••• •••• •••• 4242</p>
-                  <p className="text-xs text-gray-400">Expires 12/2026</p>
+                  <p className="font-medium text-gray-400">Update the payment method and billing address</p>
                 </div>
               </div>
               <Button 
@@ -165,12 +161,8 @@ export function BillingSection({ isPro, subscriptionId, customerId }: BillingSec
             {isPro ? (
               <div className="flex items-center justify-between mb-4 bg-[#171717]/50 p-3 rounded-lg border border-[#2a2a2a]/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-[#3a3a3a]/50">
-                    <Receipt className="h-5 w-5 text-purple-300" />
-                  </div>
                   <div>
-                    <p className="font-medium text-white">Subscription Invoices</p>
-                    <p className="text-xs text-gray-400">View your complete billing history</p>
+                    <p className="font-medium text-gray-400">View your complete billing history</p>
                   </div>
                 </div>
                 <Button 

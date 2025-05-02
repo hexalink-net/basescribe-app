@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Calendar, Crown, ArrowRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cancelPlan, getSubscriptionUpgradePreview, upgradeSubscription, getSubscriptionInfo, renewPlan } from '@/app/(protected)/account/actions';
 import { useToast } from '@/components/ui/UseToast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -17,10 +17,9 @@ interface PlanManagementSectionProps {
   freeDuration: string;
   planEndDate: Date;
   subscriptionId?: string;
-  customerId?: string;
 }
 
-export function PlanManagementSection({ isPro, isYearly, proDuration, freeDuration, planEndDate, subscriptionId, customerId }: PlanManagementSectionProps) {
+export function PlanManagementSection({ isPro, isYearly, proDuration, freeDuration, planEndDate, subscriptionId }: PlanManagementSectionProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isRenewLoading, setIsRenewLoading] = useState(false);
   const [isUpgradeLoading, setIsUpgradeLoading] = useState(false);
@@ -39,22 +38,15 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
   const resetDate = new Date(planEndDate);
   const formattedResetDate = resetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   
-  // Fetch subscription details on component mount
-  useEffect(() => {
-    if (isPro && subscriptionId) {
-      fetchSubscriptionDetails();
-    }
-  }, [isPro, subscriptionId]);
-  
-  const fetchSubscriptionDetails = async () => {
+  // Define fetchSubscriptionDetails with useCallback
+  const fetchSubscriptionDetails = useCallback(async () => {
     try {
       if (!subscriptionId) return;
       
       const result = await getSubscriptionInfo(subscriptionId);
       
       if (result.error) {
-        console.error(result.error);
-        return;
+        throw new Error(result.error);
       }
       
       if (result.subscription) {
@@ -64,10 +56,23 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
           scheduledChange: scheduledChange?.action
         });
       }
-    } catch (error) {
-      console.error('Failed to fetch subscription details:', error);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to fetch subscription details",
+        variant: "destructive"
+      });
     }
-  };
+  }, [subscriptionId, toast]);
+  
+  // Fetch subscription details on component mount
+  useEffect(() => {
+    if (isPro && subscriptionId) {
+      fetchSubscriptionDetails();
+    }
+  }, [isPro, subscriptionId, fetchSubscriptionDetails]);
+  
+
   
   const handleCancelSubscription = async () => {
     try {
@@ -97,7 +102,7 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
         // Open the cancel URL in a new tab
         window.open(result.cancelUrl, '_blank');
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to process cancellation request",
@@ -147,7 +152,7 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
       });
       
       setShowUpgradeModal(true);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to fetch upgrade preview",
@@ -184,7 +189,7 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
         scheduledChange: undefined
       });
       
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to renew subscription",
@@ -225,7 +230,7 @@ export function PlanManagementSection({ isPro, isYearly, proDuration, freeDurati
       });
       
       setShowUpgradeModal(false);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update subscription",

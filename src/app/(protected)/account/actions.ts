@@ -91,7 +91,6 @@ export async function getSubscriptionInfo(subscriptionId: string) {
     }
             
     const subscription = await res.json();
-    console.log(subscription.data.scheduled_change)
     
     return { subscription };
   } catch (error) {
