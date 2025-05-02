@@ -200,6 +200,7 @@ export class ProcessWebhook {
             supabase,
             eventData.data.customerId,
             eventData.data.id,
+            eventData.data.items[0].price?.id ?? '',
             eventData.data.status,
             planStartDate,
             planEndDate,

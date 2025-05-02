@@ -108,6 +108,7 @@ export default async function AccountPage() {
             <BillingSection 
               isPro={isPro} 
               subscriptionId={userProfile.subscription_id}
+              customerId={userProfile.customer_id}
             />
           </TabsContent>
         </Tabs>
