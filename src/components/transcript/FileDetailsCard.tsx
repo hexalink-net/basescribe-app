@@ -5,13 +5,17 @@ import { Button } from '@/components/ui/button';
 import { FileText, FileIcon, Download } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 
-interface FileDetailsCardProps {
-  upload: UploadDetail;
-  formatDate: (dateString: string) => string;
-  formatFileSize: (bytes: number) => string;
+interface TranscriptSegment {
+  start: number;
+  end: number;
+  text: string;
 }
 
-export function FileDetailsCard({ upload, formatDate, formatFileSize }: FileDetailsCardProps) {
+interface FileDetailsCardProps {
+  upload: UploadDetail;
+}
+
+export function FileDetailsCard({ upload }: FileDetailsCardProps) {
   const downloadTranscript = (format: string) => {
     if (!upload || !upload.transcript_text) return;
     
@@ -31,7 +35,7 @@ export function FileDetailsCard({ upload, formatDate, formatFileSize }: FileDeta
     } else if (format === 'srt') {
       // In a real implementation, you would convert to SRT format
       if (upload.transcript_json) {
-        content = upload.transcript_json.map((segment: any, index: number) => {
+        content = upload.transcript_json.map((segment: TranscriptSegment, index: number) => {
           const startTime = formatSrtTime(segment.start);
           const endTime = formatSrtTime(segment.end);
           return `${index + 1}\n${startTime} --> ${endTime}\n${segment.text}\n\n`;

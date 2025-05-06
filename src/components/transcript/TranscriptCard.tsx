@@ -39,7 +39,7 @@ export function TranscriptCard({ upload, formatDate }: TranscriptCardProps) {
             ) : (
               <div>
                 <p className="text-lg mb-2">No transcript available</p>
-                <p className="text-sm">This file hasn't been transcribed yet.</p>
+                <p className="text-sm">This file hasn&apos;t been transcribed yet.</p>
               </div>
             )}
           </div>

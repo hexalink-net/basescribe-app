@@ -48,17 +48,17 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const downloadTranscript = () => {
-    if (!upload || !upload.transcript_text) return;
+  // const downloadTranscript = () => {
+  //   if (!upload || !upload.transcript_text) return;
     
-    const element = document.createElement('a');
-    const file = new Blob([upload.transcript_text], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${upload.file_name.split('.')[0]}_transcript.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
+  //   const element = document.createElement('a');
+  //   const file = new Blob([upload.transcript_text], { type: 'text/plain' });
+  //   element.href = URL.createObjectURL(file);
+  //   element.download = `${upload.file_name.split('.')[0]}_transcript.txt`;
+  //   document.body.appendChild(element);
+  //   element.click();
+  //   document.body.removeChild(element);
+  // };
 
   if (loading || !upload) {
     return (
@@ -79,9 +79,7 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
         <div>
           {/* File Details Card Component */}
           <FileDetailsCard 
-            upload={upload} 
-            formatDate={formatDate} 
-            formatFileSize={formatFileSize} 
+            upload={upload}
           />
         </div>
         <div className="col-span-3">
@@ -95,7 +93,6 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
           {/* File Details Card Component */}
           <EditTranscriptCard 
             upload={upload} 
-            formatDate={formatDate} 
             formatFileSize={formatFileSize} 
           />
         </div>

@@ -7,11 +7,10 @@ import { UploadDetail } from '@/types/DashboardInterface';
 
 interface EditTranscriptCardProps {
   upload: UploadDetail;
-  formatDate: (dateString: string) => string;
   formatFileSize: (bytes: number) => string;
 }
 
-export function EditTranscriptCard({ upload, formatDate, formatFileSize }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, formatFileSize }: EditTranscriptCardProps) {
   const handleDownloadAudio = () => {
     if (upload.file_path) {
       const link = document.createElement('a');
