@@ -39,7 +39,7 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
   return(
     <div className="flex flex-col h-screen bg-[#171717]">
       <DashboardHeader user={user} layout='transcript' showFeedbackButton={false} />
-      <div className="max-w-7xl mx-auto w-full px-6 md:px-8">
+      <div className="max-w-340 mx-auto w-full px-6 md:px-8">
         <TranscriptClient 
           upload={upload} 
           audioUrl={audioUrl} 

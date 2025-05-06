@@ -25,7 +25,7 @@ export function DashboardHeader({
   const containerStyles = {
     dashboard: "flex items-center justify-between px-6 w-full",
     account: "max-w-6xl mx-auto w-full px-6 md:px-8 flex items-center justify-between",
-    transcript: "max-w-7xl mx-auto w-full px-6 md:px-8 flex items-center justify-between"
+    transcript: "max-w-340 mx-auto w-full px-6 md:px-8 flex items-center justify-between"
   };
   
   return (
