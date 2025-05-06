@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { formatFileSize, validateAudioOrVideoFile, getMediaDuration } from '@/lib/MediaUtils';
@@ -13,7 +13,7 @@ import { pro } from '@/constants/PaddleProduct';
 interface FileUploadProps {
   userId: string;
   productId: string | null | undefined;
-  onFileSelected: (file: File, onProgress?: (percentage: number) => void) => Promise<void>;
+  onFileSelected: (file: File, language: string, onProgress?: (percentage: number) => void) => Promise<void>;
   maxSizeInBytes: number;
   disabled?: boolean;
   multiple?: boolean;
@@ -26,6 +26,7 @@ interface FileWithStatus {
   id: string;
   progress: number;
   status: FileStatus;
+  language: string;
   error?: string;
 }
 
@@ -64,7 +65,8 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         file,
         id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         progress: 0,
-        status: 'idle'
+        status: 'idle',
+        language: 'en' // Default to English
       });
     }
     
@@ -132,7 +134,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
   };
 
   const uploadFile = async (fileWithStatus: FileWithStatus) => {
-    const { file, id } = fileWithStatus;
+    const { file, id, language } = fileWithStatus;
     let progressInterval: NodeJS.Timeout | null = null;
     
     try {
@@ -164,7 +166,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
       activeIntervalsRef.current[id] = progressInterval;
       
       // Call the parent component's upload function with our progress callback
-      await onFileSelected(file, handleProgress);
+      await onFileSelected(file, language, handleProgress);
       
       // Clear and remove the interval
       if (progressInterval) {
@@ -334,6 +336,35 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{fileWithStatus.file.name}</p>
                         <p className="text-sm text-gray-400">{formatFileSize(fileWithStatus.file.size)}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Globe className="h-3 w-3 text-gray-400" />
+                          <p className="text-xs text-gray-400">Language</p>
+                          <select 
+                            className="bg-[#2a2a2a] border border-[#3a3a3a] rounded text-xs text-gray-300 py-1 px-2"
+                            value={fileWithStatus.language}
+                            onChange={(e) => {
+                              setFiles(prev => prev.map(f => 
+                                f.id === fileWithStatus.id ? { ...f, language: e.target.value } : f
+                              ));
+                            }}
+                            disabled={uploading || fileWithStatus.status !== 'idle'}
+                          >
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="nl">Dutch</option>
+                            <option value="ja">Japanese</option>
+                            <option value="zh">Chinese</option>
+                            <option value="ko">Korean</option>
+                            <option value="ar">Arabic</option>
+                            <option value="ru">Russian</option>
+                            <option value="hi">Hindi</option>
+                            <option value="id">Indonesian</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                     {(fileWithStatus.status === 'idle' || fileWithStatus.status === 'error') && (

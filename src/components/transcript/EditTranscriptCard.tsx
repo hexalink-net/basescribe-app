@@ -60,16 +60,13 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
         <CardTitle className="text-base">Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 pt-0 px-2">
-        <Button 
-          variant="ghost" 
-          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={() => handleTimestampChange(!showTimestamps)}
-        >
+        <Button variant="ghost" className="cursor-pointer w-full justify-start text-sm font-normal h-auto py-2 px-2">
           <div className="flex items-start gap-2 pl-1 mt-1">
             <div className="flex items-center">
               <Checkbox 
                 id="show-timestamps" 
                 checked={showTimestamps} 
+                onCheckedChange={handleTimestampChange} 
                 className="h-5 w-5"
               />
             </div>

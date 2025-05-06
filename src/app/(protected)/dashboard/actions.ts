@@ -367,6 +367,7 @@ export async function processUploadedFile(
   filePath: string,
   fileSize: number,
   durationSeconds: number,
+  language: string,
   folderId?: string | null
 ) {
   const validateInput = uploadSchema.safeParse({ userId, fileName, filePath, fileSize, durationSeconds, folderId });
@@ -401,7 +402,7 @@ export async function processUploadedFile(
     revalidateTag(`profile-${userId}`)
     
     // Create upload record in database
-    await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, folderId);
+    await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
 
     // Revalidate the upload tag to refresh the uploads list
     revalidateTag(`uploads-${userId}`)

@@ -152,7 +152,7 @@ export async function getUserSubscriptionSSR(supabase: SupabaseClient, userId: s
 }
 
 //Manage upload
-export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number, folderId?: string | null) {
+export async function createUploadSSR(supabase: SupabaseClient, userId: string, fileName: string, filePath: string, fileSize: number, durationSeconds: number, language: string, folderId?: string | null) {
   const { data, error } = await supabase
   .from('uploads')
   .insert({
@@ -162,6 +162,7 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
     file_size: fileSize,
     duration_seconds: durationSeconds,
     folder_id: folderId || null,
+    language: language,
     status: 'completed'
   })
   .select();

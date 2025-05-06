@@ -32,7 +32,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleFileUpload = async (file: File, onProgress?: (percentage: number) => void): Promise<void> => {
+  const handleFileUpload = async (file: File, language: string, onProgress?: (percentage: number) => void): Promise<void> => {
     if (!userId) {
       toast({
         title: "Authentication required",
@@ -64,7 +64,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       await uploadFile(file, filePath, fileSize, BucketNameUpload, onProgress);
 
       // Process the upload
-      await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, folderId);
+      await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
     
       // Show success message
       toast({
