@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import dynamic from 'next/dynamic';
 // Lazy load icons to improve initial load performance
 const CheckCircle2 = dynamic(() => import('lucide-react').then(mod => mod.CheckCircle2), { ssr: false, loading: () => <div className="h-4 w-4 bg-green-500/20 rounded-full animate-pulse" /> });
-const FileAudio = dynamic(() => import('lucide-react').then(mod => mod.FileAudio), { ssr: false, loading: () => <div className="h-5 w-5 bg-blue-400/20 rounded animate-pulse" /> });
 const MoreVertical = dynamic(() => import('lucide-react').then(mod => mod.MoreVertical), { ssr: false });
 const Trash2 = dynamic(() => import('lucide-react').then(mod => mod.Trash2), { ssr: false });
 const FolderUp = dynamic(() => import('lucide-react').then(mod => mod.FolderUp), { ssr: false });
