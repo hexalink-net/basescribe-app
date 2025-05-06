@@ -4,13 +4,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link2, Pencil, Download, FileEdit, FolderUp, Trash2 } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useState } from 'react';
 
 interface EditTranscriptCardProps {
   upload: UploadDetail;
   formatFileSize: (bytes: number) => string;
+  onShowTimestampsChange?: (show: boolean) => void;
+  showTimestamps?: boolean;
 }
 
-export function EditTranscriptCard({ upload, formatFileSize }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false }: EditTranscriptCardProps) {
+  const [showTimestamps, setShowTimestamps] = useState(initialShowTimestamps);
+  
+  const handleTimestampChange = (checked: boolean) => {
+    setShowTimestamps(checked);
+    if (onShowTimestampsChange) {
+      onShowTimestampsChange(checked);
+    }
+  };
   const handleDownloadAudio = () => {
     if (upload.file_path) {
       const link = document.createElement('a');
@@ -48,6 +60,24 @@ export function EditTranscriptCard({ upload, formatFileSize }: EditTranscriptCar
         <CardTitle className="text-base">Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 pt-0 px-2">
+        <Button 
+          variant="ghost" 
+          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
+          onClick={() => handleTimestampChange(!showTimestamps)}
+        >
+          <div className="flex items-start gap-2 pl-1 mt-1">
+            <div className="flex items-center">
+              <Checkbox 
+                id="show-timestamps" 
+                checked={showTimestamps} 
+                className="h-5 w-5"
+              />
+            </div>
+            <div className="flex flex-col items-start">
+              <span>Show Timestamps</span>
+            </div>
+          </div>
+        </Button>
         {/* Share Transcript */}
         <Button 
           variant="ghost" 

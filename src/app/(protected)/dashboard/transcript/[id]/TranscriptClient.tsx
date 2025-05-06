@@ -16,6 +16,7 @@ interface TranscriptClientProps {
 
 export default function TranscriptClient({ upload, audioUrl }: TranscriptClientProps) {
   const [loading, setLoading] = useState(true);
+  const [showTimestamps, setShowTimestamps] = useState(false);
   
   // Set loading to false once component is mounted and data is available
   useEffect(() => {
@@ -86,14 +87,16 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
           {/* Transcript Card Component */}
           <TranscriptCard 
             upload={upload} 
-            formatDate={formatDate} 
+            formatDate={formatDate}
           />
         </div>
         <div>
           {/* File Details Card Component */}
           <EditTranscriptCard 
             upload={upload} 
-            formatFileSize={formatFileSize} 
+            formatFileSize={formatFileSize}
+            showTimestamps={showTimestamps}
+            onShowTimestampsChange={setShowTimestamps}
           />
         </div>
       </div>

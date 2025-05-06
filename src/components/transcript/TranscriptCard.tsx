@@ -6,9 +6,18 @@ import { UploadDetail } from '@/types/DashboardInterface';
 interface TranscriptCardProps {
   upload: UploadDetail;
   formatDate: (dateString: string) => string;
+  showTimestamps?: boolean;
 }
 
-export function TranscriptCard({ upload, formatDate }: TranscriptCardProps) {
+export function TranscriptCard({ upload, formatDate, showTimestamps = false }: TranscriptCardProps) {
+  // Format time from seconds to MM:SS format
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  console.log(upload);
   return (
     <Card className="mb-6 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50">
       <CardHeader>
@@ -21,8 +30,21 @@ export function TranscriptCard({ upload, formatDate }: TranscriptCardProps) {
       </CardHeader>
       <CardContent>
         {upload.transcript_text ? (
-          <div className="whitespace-pre-wrap bg-muted p-4 rounded-md max-h-[500px] overflow-y-auto">
-            {upload.transcript_text}
+          <div className="whitespace-pre-line leading-relaxed bg-muted p-4 rounded-md max-h-[500px] overflow-y-auto pb-18">
+            {showTimestamps && upload.transcript_json ? (
+              <div>
+                {upload.transcript_json.map((segment, index) => (
+                  <div key={index} className="mb-2">
+                    <span className="text-xs text-gray-400 mr-2">
+                      [{formatTime(segment.start)} - {formatTime(segment.end)}]
+                    </span>
+                    <span>{segment.text}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              upload.transcript_text
+            )}
           </div>
         ) : (
           <div className="text-center py-8 text-gray-400">
