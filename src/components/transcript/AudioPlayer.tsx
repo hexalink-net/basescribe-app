@@ -99,7 +99,7 @@ export function AudioPlayer({ audioUrl, fileName }: AudioPlayerProps) {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#171717] border-t border-[#2a2a2a] p-3 py-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 border-t border-[#2a2a2a] p-3 py-4">
       <div className="max-w-3xl mx-auto flex flex-col gap-2">
         <div className="text-sm text-center font-medium text-gray-300 mb-1">
           {fileName}

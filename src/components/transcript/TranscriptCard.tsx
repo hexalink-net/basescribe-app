@@ -1,28 +1,22 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 
 interface TranscriptCardProps {
   upload: UploadDetail;
-  downloadTranscript: () => void;
+  formatDate: (dateString: string) => string;
 }
 
-export function TranscriptCard({ upload, downloadTranscript }: TranscriptCardProps) {
+export function TranscriptCard({ upload, formatDate }: TranscriptCardProps) {
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>Transcript</span>
-          <Button size="sm" variant="outline" onClick={downloadTranscript}>
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
+          <span>{upload.file_name}</span>
         </CardTitle>
         <CardDescription>
-          {upload.file_name}
+          {formatDate(upload.created_at)}
         </CardDescription>
       </CardHeader>
       <CardContent>

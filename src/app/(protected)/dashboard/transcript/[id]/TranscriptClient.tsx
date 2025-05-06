@@ -7,6 +7,7 @@ import { UploadDetail } from '@/types/DashboardInterface';
 import { FileDetailsCard } from '@/components/transcript/FileDetailsCard';
 import { TranscriptCard } from '@/components/transcript/TranscriptCard';
 import { AudioPlayer } from '@/components/transcript/AudioPlayer';
+import { EditTranscriptCard } from '@/components/transcript/EditTranscriptCard';
 
 interface TranscriptClientProps {
   upload: UploadDetail | null;
@@ -25,11 +26,18 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
   
   // Helper functions that we'll pass to child components
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    const dateStr = date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
+      day: 'numeric'
     });
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    return `${dateStr}, ${timeStr}`;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -80,12 +88,12 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
           {/* Transcript Card Component */}
           <TranscriptCard 
             upload={upload} 
-            downloadTranscript={downloadTranscript} 
+            formatDate={formatDate} 
           />
         </div>
         <div>
           {/* File Details Card Component */}
-          <FileDetailsCard 
+          <EditTranscriptCard 
             upload={upload} 
             formatDate={formatDate} 
             formatFileSize={formatFileSize} 
