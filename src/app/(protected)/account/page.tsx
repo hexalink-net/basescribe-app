@@ -1,13 +1,11 @@
 import { fetchAccountData } from './actions';
-import { UserMenu } from '@/components/UserMenu';
 import { redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { pro, proDuration, freeDuration, proAnnualPriceId } from '@/constants/PaddleProduct';
 import { UsageSection } from '@/components/account/UsageSection';
 import { PlanManagementSection } from '@/components/account/PlanManagementSection';
 import { BillingSection } from '@/components/account/BillingSection';
-import Link from 'next/link';
-import Image from 'next/image';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 export default async function AccountPage() {
   // Fetch all account data using the server action
@@ -33,24 +31,13 @@ export default async function AccountPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-[#171717] to-[#0a0a0a] text-white">
-      {/* Header with subtle blur effect */}
-      <header className="sticky top-0 z-10 backdrop-blur-md bg-[#171717]/80 border-b border-[#2a2a2a] h-16">
-        <div className="max-w-6xl mx-auto w-full px-6 md:px-8 h-full flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="flex items-center">
-            <Image 
-              src="/basescribe-logo.png" 
-              alt="BaseScribe Logo" 
-              width={120} 
-              height={20} 
-              className="h-8 w-auto" 
-              priority
-            />
-        </Link>
-        </div>
-        <UserMenu user={user} userInitials={userInitials} />
-        </div>
-      </header>
+      {/* Using DashboardHeader with account layout */}
+      <DashboardHeader 
+        user={user} 
+        userInitials={userInitials} 
+        layout="account" 
+        showFeedbackButton={false}
+      />
       
       {/* Main content with improved spacing */}
       <div className="flex-1 p-6 md:p-8 max-w-6xl mx-auto w-full">

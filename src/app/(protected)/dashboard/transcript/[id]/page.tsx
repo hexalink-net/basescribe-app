@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import TranscriptClient from './TranscriptClient';
 import { redirect } from 'next/navigation';
 import { fetchTranscriptData } from '../actions';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 type tParams = Promise<{ id: string }>;
 
@@ -28,9 +29,22 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
   }
   
   if (!upload) {
-    return <TranscriptClient upload={null} audioUrl={''} />;
+    return <TranscriptClient 
+      upload={null} 
+      audioUrl={''} 
+    />;
   }
 
   // Return the client component with the data
-  return <TranscriptClient upload={upload} audioUrl={audioUrl} />;
+  return(
+    <div className="flex flex-col h-screen bg-[#171717]">
+      <DashboardHeader user={user} layout='transcript' showFeedbackButton={false} />
+      <div className="max-w-7xl mx-auto w-full px-6 md:px-8">
+        <TranscriptClient 
+          upload={upload} 
+          audioUrl={audioUrl} 
+        />
+      </div>
+    </div>
+  );
 }

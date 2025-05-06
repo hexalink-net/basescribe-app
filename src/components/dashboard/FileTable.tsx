@@ -338,7 +338,7 @@ const FileTable = ({
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[30%]">Name</th>
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[20%]">Uploaded</th>
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[10%]">Duration</th>
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Mode</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Language</th>
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Status</th>
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[60px]"></th>
               </tr>
