@@ -22,6 +22,7 @@ export interface Uploads {
   file_name: string;
   duration_seconds: number;
   status: 'pending' | 'processing' | 'completed'| 'error';
+  language: string;
 }
 
 export interface UploadDetail {

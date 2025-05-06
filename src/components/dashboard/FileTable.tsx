@@ -161,12 +161,8 @@ export const FileRow = memo(({
       <td className="px-4 py-3 text-gray-400 text-sm">
         {duration}
       </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center">
-          <div className="h-5 w-5 text-blue-400 mr-2 flex items-center justify-center">
-            <FileAudio className="h-4 w-4" />
-          </div>
-        </div>
+      <td className="px-4 py-3 text-gray-400 text-sm">
+        {upload.language}
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center">

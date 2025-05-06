@@ -185,7 +185,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
     if (folderId !== undefined) {
       const { data = [], error } = await supabase
         .from('uploads')
-        .select('id, created_at, file_name, duration_seconds, status')
+        .select('id, created_at, file_name, duration_seconds, status, language')
         .eq('user_id', userId)
         .eq('folder_id', folderId)
         .order('created_at', { ascending: false }); 
@@ -203,7 +203,7 @@ export async function getAllUserUploadsSSR(supabase: SupabaseClient, userId: str
     } else {
       const { data = [], error } = await supabase
         .from('uploads')
-        .select('id, created_at, file_name, duration_seconds, status')
+        .select('id, created_at, file_name, duration_seconds, status, language')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 

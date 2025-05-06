@@ -60,21 +60,22 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
         <CardTitle className="text-base">Actions</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 pt-0 px-2">
-        <Button variant="ghost" className="cursor-pointer w-full justify-start text-sm font-normal h-auto py-2 px-2">
-          <div className="flex items-start gap-2 pl-1 mt-1">
-            <div className="flex items-center">
-              <Checkbox 
-                id="show-timestamps" 
-                checked={showTimestamps} 
-                onCheckedChange={handleTimestampChange} 
-                className="h-5 w-5"
-              />
-            </div>
-            <div className="flex flex-col items-start">
-              <span>Show Timestamps</span>
-            </div>
-          </div>
-        </Button>
+        <div 
+          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-[#3a3a3a]/50 rounded-md w-full"
+          onClick={() => handleTimestampChange(!showTimestamps)}
+        >
+          <Checkbox 
+            id="show-timestamps" 
+            checked={showTimestamps} 
+            className="h-5 w-5"
+          />
+          <label 
+            htmlFor="show-timestamps"
+            className="text-sm cursor-pointer flex-grow"
+          >
+            Show Timestamps
+          </label>
+        </div>
         {/* Share Transcript */}
         <Button 
           variant="ghost" 
