@@ -208,3 +208,5 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
     </div>
   );
 });
+
+AudioPlayer.displayName = 'AudioPlayer';
