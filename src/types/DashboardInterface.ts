@@ -11,8 +11,7 @@ export interface UserProfile {
 }
 
 interface TranscriptSegment {
-  start: number;
-  end: number;
+  timestamp: [number, number];
   text: string;
 }
 

@@ -7,9 +7,10 @@ interface TranscriptCardProps {
   upload: UploadDetail;
   formatDate: (dateString: string) => string;
   showTimestamps?: boolean;
+  onSeek?: (time: number) => void;
 }
 
-export function TranscriptCard({ upload, formatDate, showTimestamps = false }: TranscriptCardProps) {
+export function TranscriptCard({ upload, formatDate, showTimestamps = true, onSeek }: TranscriptCardProps) {
   // Format time from seconds to MM:SS format
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -17,7 +18,24 @@ export function TranscriptCard({ upload, formatDate, showTimestamps = false }: T
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  console.log(upload);
+  // Group segments into paragraphs (2-3 sentences per paragraph)
+  const groupIntoParagraphs = (segments: { text: string; timestamp: [number, number] }[]) => {
+    const paragraphs: Array<Array<{ text: string; timestamp: [number, number] }>> = [];
+    let currentParagraph: Array<{ text: string; timestamp: [number, number] }> = [];
+
+    segments.forEach((segment, index) => {
+      currentParagraph.push(segment);
+
+      // Create a new paragraph after 2-3 sentences or at the end
+      if (currentParagraph.length >= 2 || index === segments.length - 1) {
+        paragraphs.push([...currentParagraph]);
+        currentParagraph = [];
+      }
+    });
+
+    return paragraphs;
+  };
+
   return (
     <Card className="mb-6 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50">
       <CardHeader>
@@ -29,22 +47,34 @@ export function TranscriptCard({ upload, formatDate, showTimestamps = false }: T
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {upload.transcript_text ? (
-          <div className="whitespace-pre-line leading-relaxed bg-muted p-4 rounded-md max-h-[500px] overflow-y-auto pb-18">
-            {showTimestamps && upload.transcript_json ? (
-              <div>
-                {upload.transcript_json.map((segment, index) => (
-                  <div key={index} className="mb-2">
-                    <span className="text-xs text-gray-400 mr-2">
-                      [{formatTime(segment.start)} - {formatTime(segment.end)}]
+        {upload.transcript_json ? (
+          <div className="leading-relaxed bg-muted pr-4 rounded-md max-h-[500px] overflow-y-auto pb-18">
+            <div>
+              {groupIntoParagraphs(upload.transcript_json).map((paragraph, pIndex) => (
+                <p key={pIndex} className="mb-6">
+                  {paragraph.map((segment, sIndex) => (
+                    <span key={`${pIndex}-${sIndex}`}>
+                      {showTimestamps && sIndex === 0 && (
+                        <span className="text-gray-400 text-xs">
+                          ({formatTime(segment.timestamp[0])})
+                        </span> 
+                      )}{' '}
+                      <span 
+                        className="text-gray-100 cursor-pointer hover:text-blue-400 transition-colors"
+                        onClick={() => onSeek?.(segment.timestamp[0])}
+                      >
+                        {segment.text.trim()}
+                      </span>{' '}
+                      {showTimestamps && (
+                        <span className="text-gray-400 text-xs">
+                          ({formatTime(segment.timestamp[1])})
+                        </span>
+                      )}
                     </span>
-                    <span>{segment.text}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              upload.transcript_text
-            )}
+                  ))}
+                </p>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="text-center py-8 text-gray-400">

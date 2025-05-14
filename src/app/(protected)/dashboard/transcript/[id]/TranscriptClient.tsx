@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UploadDetail } from '@/types/DashboardInterface';
 
 // Import our new components
@@ -17,6 +17,7 @@ interface TranscriptClientProps {
 export default function TranscriptClient({ upload, audioUrl }: TranscriptClientProps) {
   const [loading, setLoading] = useState(true);
   const [showTimestamps, setShowTimestamps] = useState(false);
+  const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
   
   // Set loading to false once component is mounted and data is available
   useEffect(() => {
@@ -88,6 +89,8 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
           <TranscriptCard 
             upload={upload} 
             formatDate={formatDate}
+            showTimestamps={showTimestamps}
+            onSeek={(time) => audioPlayerRef.current?.seekTo(time)}
           />
         </div>
         <div>
@@ -104,6 +107,7 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
       {/* Audio Player Component */}
       {audioUrl && upload && (
         <AudioPlayer 
+          ref={audioPlayerRef}
           audioUrl={audioUrl} 
           fileName={upload.file_name} 
         />

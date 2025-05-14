@@ -6,8 +6,7 @@ import { FileText, FileIcon, Download } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 
 interface TranscriptSegment {
-  start: number;
-  end: number;
+  timestamp: [number, number];
   text: string;
 }
 
@@ -36,8 +35,8 @@ export function FileDetailsCard({ upload }: FileDetailsCardProps) {
       // In a real implementation, you would convert to SRT format
       if (upload.transcript_json) {
         content = upload.transcript_json.map((segment: TranscriptSegment, index: number) => {
-          const startTime = formatSrtTime(segment.start);
-          const endTime = formatSrtTime(segment.end);
+          const startTime = formatSrtTime(segment.timestamp[0]);
+          const endTime = formatSrtTime(segment.timestamp[1]);
           return `${index + 1}\n${startTime} --> ${endTime}\n${segment.text}\n\n`;
         }).join('');
       }

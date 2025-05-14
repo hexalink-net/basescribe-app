@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, SyntheticEvent } from 'react';
+import { useState, useEffect, useRef, SyntheticEvent, forwardRef } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/components/ui/UseToast';
 import { Play, Pause, Volume2 } from 'lucide-react';
@@ -10,7 +10,8 @@ interface AudioPlayerProps {
   fileName: string;
 }
 
-export function AudioPlayer({ audioUrl, fileName }: AudioPlayerProps) {
+export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioPlayerProps>(
+  ({ audioUrl, fileName }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -97,6 +98,20 @@ export function AudioPlayer({ audioUrl, fileName }: AudioPlayerProps) {
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
+
+  // Expose seekTo function through ref
+  useEffect(() => {
+    if (ref && typeof ref === 'object') {
+      ref.current = {
+        seekTo: (time: number) => {
+          if (audioRef.current) {
+            audioRef.current.currentTime = time;
+            setCurrentTime(time);
+          }
+        }
+      };
+    }
+  }, [ref]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 border-t border-[#2a2a2a] p-3 py-4">
@@ -186,10 +201,10 @@ export function AudioPlayer({ audioUrl, fileName }: AudioPlayerProps) {
             title: "Audio playback error",
             description: "There was an error playing the audio file. Try downloading it instead.",
             variant: "destructive"
-          });
+          })
         }}
         className="hidden"
       />
     </div>
   );
-}
+});
