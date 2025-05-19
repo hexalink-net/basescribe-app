@@ -18,20 +18,30 @@ export function TranscriptCard({ upload, formatDate, showTimestamps = true, onSe
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Group segments into paragraphs (2-3 sentences per paragraph)
+  // Group segments into paragraphs (max 300 characters per paragraph)
   const groupIntoParagraphs = (segments: { text: string; timestamp: [number, number] }[]) => {
     const paragraphs: Array<Array<{ text: string; timestamp: [number, number] }>> = [];
     let currentParagraph: Array<{ text: string; timestamp: [number, number] }> = [];
+    let currentCharCount = 0;
 
     segments.forEach((segment, index) => {
-      currentParagraph.push(segment);
-
-      // Create a new paragraph after 2-3 sentences or at the end
-      if (currentParagraph.length >= 2 || index === segments.length - 1) {
-        paragraphs.push([...currentParagraph]);
-        currentParagraph = [];
+      const nextCharCount = currentCharCount + segment.text.length;
+      
+      if (nextCharCount > 200 || index === segments.length - 1) {
+        if (currentParagraph.length > 0) {
+          paragraphs.push([...currentParagraph]);
+        }
+        currentParagraph = [segment];
+        currentCharCount = segment.text.length;
+      } else {
+        currentParagraph.push(segment);
+        currentCharCount = nextCharCount;
       }
     });
+
+    if (currentParagraph.length > 0) {
+      paragraphs.push([...currentParagraph]);
+    }
 
     return paragraphs;
   };
