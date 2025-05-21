@@ -430,7 +430,7 @@ export async function processUploadedFile(
             }
           ]
         },
-        "webhook": "https://basescribe.vercel.app/api/webhook-runpod"
+        "webhook": "https://basescribe-app.vercel.app/api/webhook-runpod"
       })
     });
 

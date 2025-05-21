@@ -66,7 +66,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         progress: 0,
         status: 'idle',
-        language: 'en' // Default to English
+        language: 'english' // Default to English
       });
     }
     
