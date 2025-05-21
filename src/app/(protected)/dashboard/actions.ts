@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { uploadRateLimiter } from '@/lib/upstash/ratelimit'
 import { getFolders } from './folder/actions'
 import { revalidateTag } from 'next/cache'
+import { BucketNameUpload } from '@/constants/SupabaseBucket';
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -402,10 +403,36 @@ export async function processUploadedFile(
     revalidateTag(`profile-${userId}`)
     
     // Create upload record in database
-    await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
+    const result = await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
 
     // Revalidate the upload tag to refresh the uploads list
     revalidateTag(`uploads-${userId}`)
+
+    // Fetch transcript data using server action
+    const { data } = await supabase.storage
+            .from(BucketNameUpload)
+            .createSignedUrl(filePath, 1800); // 30 minute expiry
+
+    const res = await fetch("https://api.runpod.ai/v2/a172qjruhj3d2j/run", {
+      method: 'POST',
+      headers: {
+          Authorization: `Bearer ${process.env.RUNPOD_API_SECRET}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      body: JSON.stringify({
+        "input": {
+          "audioFiles": [
+            {
+              "uploadId": result?.data?.[0].id,
+              "s3fileurl": data?.signedUrl,
+              "language": language
+            }
+          ]
+        },
+        "webhook": "https://basescribe.vercel.app/api/webhook-runpod"
+      })
+    });
 
     return;
 

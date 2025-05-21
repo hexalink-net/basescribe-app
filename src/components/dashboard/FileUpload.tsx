@@ -349,20 +349,20 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
                             }}
                             disabled={uploading || fileWithStatus.status !== 'idle'}
                           >
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
-                            <option value="it">Italian</option>
-                            <option value="pt">Portuguese</option>
-                            <option value="nl">Dutch</option>
-                            <option value="ja">Japanese</option>
-                            <option value="zh">Chinese</option>
-                            <option value="ko">Korean</option>
-                            <option value="ar">Arabic</option>
-                            <option value="ru">Russian</option>
-                            <option value="hi">Hindi</option>
-                            <option value="id">Indonesian</option>
+                            <option value="english">English</option>
+                            <option value="spanish">Spanish</option>
+                            <option value="french">French</option>
+                            <option value="german">German</option>
+                            <option value="italian">Italian</option>
+                            <option value="portuguese">Portuguese</option>
+                            <option value="dutch">Dutch</option>
+                            <option value="japanese">Japanese</option>
+                            <option value="chinese">Chinese</option>
+                            <option value="korean">Korean</option>
+                            <option value="arabic">Arabic</option>
+                            <option value="russian">Russian</option>
+                            <option value="hindi">Hindi</option>
+                            <option value="indonesian">Indonesian</option>
                           </select>
                         </div>
                       </div>

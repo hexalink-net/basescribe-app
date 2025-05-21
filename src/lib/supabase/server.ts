@@ -163,7 +163,7 @@ export async function createUploadSSR(supabase: SupabaseClient, userId: string, 
     duration_seconds: durationSeconds,
     folder_id: folderId || null,
     language: language,
-    status: 'completed'
+    status: 'processing'
   })
   .select();
   

@@ -3,6 +3,7 @@
 import { useState, memo, useMemo, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 // Lazy load icons to improve initial load performance
 const CheckCircle2 = dynamic(() => import('lucide-react').then(mod => mod.CheckCircle2), { ssr: false, loading: () => <div className="h-4 w-4 bg-green-500/20 rounded-full animate-pulse" /> });
@@ -165,10 +166,21 @@ export const FileRow = memo(({
       </td>
       <td className="px-4 py-3">
         <div className="flex items-center">
-          <div className="h-4 w-4 text-green-500 mr-1 flex items-center justify-center">
-            <CheckCircle2 className="h-3 w-3" />
-          </div>
-          <span className="text-green-500 text-sm">Completed</span>
+          {upload.status === 'processing' ? (
+            <>
+              <div className="h-4 w-4 text-blue-500 mr-1 flex items-center justify-center">
+                <Loader2 className="h-3 w-3 animate-spin" />
+              </div>
+              <span className="text-blue-500 text-sm">Transcribing...</span>
+            </>
+          ) : (
+            <>
+              <div className="h-4 w-4 text-green-500 mr-1 flex items-center justify-center">
+                <CheckCircle2 className="h-3 w-3" />
+              </div>
+              <span className="text-green-500 text-sm">Completed</span>
+            </>
+          )}
         </div>
       </td>
       <td className="px-4 py-3">
