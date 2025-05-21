@@ -413,7 +413,7 @@ export async function processUploadedFile(
             .from(BucketNameUpload)
             .createSignedUrl(filePath, 1800); // 30 minute expiry
 
-    const res = await fetch("https://api.runpod.ai/v2/a172qjruhj3d2j/run", {
+    await fetch("https://api.runpod.ai/v2/a172qjruhj3d2j/run", {
       method: 'POST',
       headers: {
           Authorization: `Bearer ${process.env.RUNPOD_API_SECRET}`,

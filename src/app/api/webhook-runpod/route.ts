@@ -10,8 +10,6 @@ import { log } from '@/lib/logger';
 export async function POST(request: NextRequest) {
   const rawRequestBody = await request.text();
 
-  let eventName: string | null = null;
-
   if (!rawRequestBody) {
     log({
       logLevel: 'error',
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     revalidatePath(`/dashboard`)
 
-    return new Response(JSON.stringify({ event: eventName }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
     });
   } catch (error: unknown) {
