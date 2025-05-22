@@ -88,6 +88,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           event: 'UPDATE',
           schema: 'public',
           table: 'uploads',
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           console.log('Change received!', payload.new.user_id, user.id);
