@@ -322,6 +322,22 @@ export async function validateBatchUpload(userId: string, fileDurations: number[
   }
 }
 
+export async function revalidateUploadsTag(userId: string) {
+  try {
+    revalidateTag(`uploads-${userId}`);
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'revalidateUploadsTag',
+      message: 'Error revalidating uploads tag',
+      metadata: { userId, error: errorMessage }
+    });
+    return { success: false, error: 'Failed to revalidate uploads' };
+  }
+}
+
 export async function checkUploadRateLimit(userId: string) {
   const { success } = await uploadRateLimiter.limit(userId);
   

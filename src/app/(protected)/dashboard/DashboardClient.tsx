@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Uploads, UserProfile, Folder } from '@/types/DashboardInterface';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-import { deleteUpload, bulkDeleteUploads, renameUpload } from './actions';
+import { deleteUpload, bulkDeleteUploads, renameUpload, revalidateUploadsTag } from './actions';
 import { createFolder, moveUploadToFolder, deleteFolder, renameFolder, moveFolder } from './folder/actions';
 import { useToast } from '@/components/ui/UseToast';
 import dynamic from 'next/dynamic';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase/client';
 
 // Import the DashboardHeader component
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -75,6 +77,34 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder }: DashboardClientProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('table_db_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'uploads',
+        },
+        (payload) => {
+          console.log('Change received!', payload.new.user_id, user.id);
+          if (payload.new.user_id === user.id) {
+            revalidateUploadsTag(user.id);
+            router.refresh();
+          }
+        }
+      )
+      .subscribe();
+
+    // Cleanup on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.id]);
+
   // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
@@ -106,7 +136,6 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
   const [newUploadName, setNewUploadName] = useState('');
   
   const { toast } = useToast();
-  const router = useRouter();
 
   // Utility functions - memoized to prevent unnecessary re-renders
   const formatDate = useCallback((dateString: string) => {
