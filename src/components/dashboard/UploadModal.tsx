@@ -46,7 +46,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
     const fileName = file.name.replace(/\.[^/.]+$/, '');
     const fileSize = file.size;
     const timestamp = new Date().toISOString();
-    const filePath = `${userId}/${timestamp}-${file.name}`;
+    const filePath = `${userId}/temp/${timestamp}-${file.name}`;
     
     try {
       setLoading(true);
