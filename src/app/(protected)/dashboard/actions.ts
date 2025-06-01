@@ -450,6 +450,27 @@ export async function processUploadedFile(
       })
     });
 
+    await fetch("https://api.runpod.ai/v2/oszlzxu06fx9wa/run", {
+      method: 'POST',
+      headers: {
+          Authorization: `Bearer ${process.env.RUNPOD_API_SECRET}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      body: JSON.stringify({
+        "input": {
+          "audioFiles": [
+            {
+              "uploadId": result?.data?.[0].id,
+              "s3fileurl": data?.signedUrl,
+              "userId": userId
+            }
+          ]
+        },
+        "webhook": "https://basescribe-app.vercel.app/api/webhook-runpod"
+      })
+    });
+
     return;
 
   } catch (error: unknown) {
