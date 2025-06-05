@@ -27,6 +27,22 @@ interface UploadModalProps {
   multiple?: boolean;
 }
 
+function sanitizeFilePath(filePath: string): string {
+  // Split the path into directory and filename
+  const lastSlashIndex = filePath.lastIndexOf('/');
+  const directory = filePath.substring(0, lastSlashIndex + 1);
+  const fileName = filePath.substring(lastSlashIndex + 1);
+
+  // Sanitize the filename: convert spaces to hyphens and remove special characters
+  const sanitizedName = fileName
+    .replace(/ /g, '-')
+    .replace(/[^a-zA-Z0-9._-]/g, '')
+    .toLowerCase();
+
+  // Combine directory and sanitized filename
+  return directory + sanitizedName;
+}
+
 export default function UploadModal({ userId, userProfile, isOpen, onClose, folderId, multiple = true }: UploadModalProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -61,10 +77,10 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       await checkUserSubscriptionLimit(userId, durationSeconds);
       
       // Upload to storage with progress reporting
-      await uploadFile(file, filePath, fileSize, BucketNameUpload, onProgress);
+      await uploadFile(file, sanitizeFilePath(filePath), fileSize, BucketNameUpload, onProgress);
 
       // Process the upload
-      await processUploadedFile(userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
+      await processUploadedFile(userId, fileName, sanitizeFilePath(filePath), fileSize, durationSeconds, language, folderId);
     
       // Show success message
       toast({

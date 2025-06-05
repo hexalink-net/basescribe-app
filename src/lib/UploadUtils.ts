@@ -10,6 +10,7 @@ type ProgressCallback = (percentage: number) => void;
 /**
  * Standard file upload to Supabase storage with progress reporting
  */
+
 export async function uploadFile(
     file: File,
     filePath: string,
@@ -17,10 +18,12 @@ export async function uploadFile(
     bucketName: string = BucketNameUpload,
     onProgress?: ProgressCallback // Add optional onProgress callback
   ) {
+    // Sanitize the file path before upload
+    const sanitizedFilePath = filePath;
     if (fileSize <= 6000 * 1000) {
       const { error } = await supabase.storage
         .from(bucketName)
-        .upload(filePath, file, {
+        .upload(sanitizedFilePath, file, {
           cacheControl: '3600',
           upsert: false,
           // Add progress reporting for standard uploads
@@ -61,7 +64,7 @@ export async function uploadFile(
         },
         uploadDataDuringCreation: true, // Send metadata with file chunks
         removeFingerprintOnSuccess: true, // Remove fingerprint after successful upload
-        chunkSize: 6 * 1024 * 1024, // Chunk size for TUS uploads (6MB)
+        chunkSize: 2 * 1024 * 1024, // Chunk size for TUS uploads (2MB)
         allowedMetaFields: [
             "bucketName",
             "objectName",
@@ -95,7 +98,7 @@ export async function uploadFile(
       }
 
       uppy.addFile({
-          name: filePath, // Use the consistent filePath
+          name: filePath, // Use the sanitized file path
           type: file.type,
           data: file
       });
