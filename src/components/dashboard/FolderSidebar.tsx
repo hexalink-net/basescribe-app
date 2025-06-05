@@ -100,14 +100,14 @@ export default function FolderSidebar({
       {/* Fixed Header Section */}
       <div className="flex-shrink-0">
         <div className="p-4">
-          <Link href="/dashboard" className={`flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${!currentFolder ? 'bg-[#2a2a2a]' : ''}`}>
+          <Link href="/dashboard" className={`text-white flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${!currentFolder ? 'bg-[#2a2a2a]' : ''}`}>
             <FolderIcon className="h-4 w-4" />
-            <span>All Files</span>
+            <span >All Files</span>
           </Link>
         </div>
         
         {/* Folder Header */}
-        <div className="px-4 pt-4 pb-1 border-t border-[#2a2a2a]">
+        <div className="px-4 pt-4 pb-1 border-t border-[#2a2a2a] text-white">
           <div className="flex justify-between items-center">
             <h2 className="text-sm font-semibold text-gray-400">Folders</h2>
               <Button 
@@ -127,7 +127,7 @@ export default function FolderSidebar({
       </div>
       
       {/* Scrollable Folder List - with max height to ensure scrolling */}
-      <div className="overflow-y-auto flex-grow px-4 pt-2 max-h-[calc(100vh-270px)]">
+      <div className="overflow-y-auto flex-grow px-4 pt-2 max-h-[calc(100vh-270px)] text-white">
         <div className="space-y-1">
           
           {/* Root folders */}
@@ -295,7 +295,7 @@ export default function FolderSidebar({
         <div className="space-y-2">
         {userProfile.product_id !== pro && (
             <div className="mb-5">
-              <Button asChild variant="outline" size="sm" className="w-full text-xs">
+              <Button asChild variant="outline" size="sm" className="w-full text-xs text-white">
                 <Link href="/pricing">Upgrade to Pro</Link>
               </Button>
             </div>

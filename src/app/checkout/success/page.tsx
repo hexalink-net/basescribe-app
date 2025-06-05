@@ -11,7 +11,7 @@ export default async function SuccessPage() {
     <main>
       <div className={'relative h-screen overflow-hidden'}>
         <div className={'absolute inset-0 px-6 flex items-center justify-center'}>
-          <div className={'flex flex-col items-center text-white text-center'}>
+          <div className={'flex flex-col items-center text-zinc-900 dark:text-white text-center'}>
             <Image
               className={'pb-12'}
               src={'/assets/icons/logo/aeroedit-success-icon.svg'}

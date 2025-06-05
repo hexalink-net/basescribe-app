@@ -613,7 +613,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
       {(!currentFolder || (currentFolder && currentFolder.parent_id === null)) && (
         <Button 
           variant="outline" 
-          className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer"
+          className="border-[#3a3a3a] hover:bg-[#2a2a2a] cursor-pointer text-white"
           onClick={() => setIsNewFolderModalOpen(true)}
         >
           Create Folder
