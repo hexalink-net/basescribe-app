@@ -37,6 +37,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
   const [selectedUploadId, setSelectedUploadId] = useState<string | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [localFolders, setLocalFolders] = useState<Folder[]>(folders);
+  const [currentTime, setCurrentTime] = useState(0);
   const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
   
   
@@ -220,6 +221,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
             formatDate={formatDate}
             showTimestamps={showTimestamps}
             onSeek={(time) => audioPlayerRef.current?.seekTo(time)}
+            currentTime={currentTime}
           />
         </div>
         <div>
@@ -241,6 +243,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
           ref={audioPlayerRef}
           audioUrl={audioUrl} 
           fileName={upload.file_name} 
+          onTimeChange={setCurrentTime}
         />
       )}
 

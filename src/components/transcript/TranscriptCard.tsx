@@ -8,9 +8,10 @@ interface TranscriptCardProps {
   formatDate: (dateString: string) => string;
   showTimestamps?: boolean;
   onSeek?: (time: number) => void;
+  currentTime?: number;
 }
 
-export function TranscriptCard({ upload, formatDate, showTimestamps = true, onSeek }: TranscriptCardProps) {
+export function TranscriptCard({ upload, formatDate, showTimestamps = true, onSeek, currentTime = 0 }: TranscriptCardProps) {
   // Format time from seconds to MM:SS format
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -70,7 +71,7 @@ export function TranscriptCard({ upload, formatDate, showTimestamps = true, onSe
                         </span> 
                       )}{' '}
                       <span 
-                        className="text-gray-100 cursor-pointer hover:text-blue-400 transition-colors"
+                        className={`cursor-pointer transition-colors ${currentTime >= segment.timestamp[0] && currentTime < segment.timestamp[1] ? 'text-blue-400' : 'text-gray-100 hover:text-blue-400'}`}
                         onClick={() => onSeek?.(segment.timestamp[0])}
                       >
                         {segment.text.trim()}

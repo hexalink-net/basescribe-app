@@ -8,10 +8,11 @@ import { Play, Pause, Volume2 } from 'lucide-react';
 interface AudioPlayerProps {
   audioUrl: string;
   fileName: string;
+  onTimeChange?: (time: number) => void;
 }
 
 export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioPlayerProps>(
-  ({ audioUrl, fileName }, ref) => {
+  ({ audioUrl, fileName, onTimeChange }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -66,7 +67,9 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      const time = audioRef.current.currentTime;
+      setCurrentTime(time);
+      onTimeChange?.(time);
     }
   };
 
