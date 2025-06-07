@@ -1,22 +1,36 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { UploadDetail } from '@/types/DashboardInterface';
+import { Uploads } from '@/types/DashboardInterface';
 
 // Import our new components
 import { FileDetailsCard } from '@/components/transcript/FileDetailsCard';
 import { TranscriptCard } from '@/components/transcript/TranscriptCard';
 import { AudioPlayer } from '@/components/transcript/AudioPlayer';
 import { EditTranscriptCard } from '@/components/transcript/EditTranscriptCard';
+import RenameDialog from '@/components/transcript/RenameDialog';
+import { renameUpload } from '@/app/(protected)/dashboard/transcript/actions';
+
+import { useToast } from '@/components/ui/UseToast';
+import { useRouter } from 'next/navigation';
+import { User } from '@supabase/supabase-js';
 
 interface TranscriptClientProps {
   upload: UploadDetail | null;
   audioUrl: string;
+  user: User;
 }
 
-export default function TranscriptClient({ upload, audioUrl }: TranscriptClientProps) {
+export default function TranscriptClient({ upload, audioUrl, user }: TranscriptClientProps) {
+  const router = useRouter();
+  const { toast } = useToast();
+
   const [loading, setLoading] = useState(true);
   const [showTimestamps, setShowTimestamps] = useState(false);
+  const [uploadToRename, setUploadToRename] = useState<UploadDetail | null>(null);
+  const [isRenameUploadModalOpen, setIsRenameUploadModalOpen] = useState(false);
+  const [newUploadName, setNewUploadName] = useState('');
   const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
   
   // Set loading to false once component is mounted and data is available
@@ -62,6 +76,56 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
   //   document.body.removeChild(element);
   // };
 
+  // Handle rename upload
+    const handleRenameUpload = async () => {
+      if (!uploadToRename) return;
+      
+      if (!newUploadName.trim()) {
+        toast({
+          title: "Error",
+          description: "File name cannot be empty.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      try {
+        const result = await renameUpload(uploadToRename.id, newUploadName, user.id);
+        
+        if (result.success) {
+          toast({
+            title: "File renamed",
+            description: "The file has been successfully renamed.",
+          });
+          
+          setIsRenameUploadModalOpen(false);
+          setUploadToRename(null);
+          setNewUploadName('');
+          router.refresh();
+        } else {
+          toast({
+            title: "Error",
+            description: result.error || "Failed to rename file.",
+            variant: "destructive",
+          });
+        }
+      } catch {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred while renaming the file.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    // Memoize upload UI interaction handlers
+    const handleUploadRenameClick = useCallback((upload: UploadDetail) => {
+      setUploadToRename(upload);
+      setNewUploadName(upload.file_name);
+      setIsRenameUploadModalOpen(true);
+    }, []);
+  
+
   if (loading || !upload) {
     return (
       <div className="container py-6">
@@ -100,6 +164,7 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
             formatFileSize={formatFileSize}
             showTimestamps={showTimestamps}
             onShowTimestampsChange={setShowTimestamps}
+            onRenameUpload={handleUploadRenameClick}
           />
         </div>
       </div>
@@ -112,6 +177,15 @@ export default function TranscriptClient({ upload, audioUrl }: TranscriptClientP
           fileName={upload.file_name} 
         />
       )}
+
+      <RenameDialog
+        isRenameUploadModalOpen={isRenameUploadModalOpen}
+        setIsRenameUploadModalOpen={setIsRenameUploadModalOpen}
+        uploadToRename={uploadToRename}
+        newUploadName={newUploadName}
+        setNewUploadName={setNewUploadName}
+        handleRenameUpload={handleRenameUpload}
+      />
     </div>
   );
 }

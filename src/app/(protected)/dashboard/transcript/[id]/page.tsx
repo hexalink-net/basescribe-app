@@ -32,6 +32,7 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
     return <TranscriptClient 
       upload={null} 
       audioUrl={''} 
+      user={user}
     />;
   }
 
@@ -43,6 +44,7 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
         <TranscriptClient 
           upload={upload} 
           audioUrl={audioUrl} 
+          user={user}
         />
       </div>
     </div>

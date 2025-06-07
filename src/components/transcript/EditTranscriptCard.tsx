@@ -2,19 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link2, Pencil, Download, FileEdit, FolderUp, Trash2 } from 'lucide-react';
+import { Pencil, Download, FileEdit, FolderUp, Trash2 } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
+import RenameDialog from './RenameDialog';
 
 interface EditTranscriptCardProps {
   upload: UploadDetail;
   formatFileSize: (bytes: number) => string;
   onShowTimestampsChange?: (show: boolean) => void;
   showTimestamps?: boolean;
+  onRenameUpload?: (upload: UploadDetail) => void;
 }
 
-export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload }: EditTranscriptCardProps) {
   const [showTimestamps, setShowTimestamps] = useState(initialShowTimestamps);
   
   const handleTimestampChange = (checked: boolean) => {
@@ -34,24 +36,26 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
     }
   };
 
-  const handleShareTranscript = () => {
-    alert('Share transcript functionality would be implemented here');
-  };
-
   const handleEditTranscript = () => {
     alert('Edit transcript functionality would be implemented here');
+    //create an independent edit dialog component in transcript folder
   };
 
   const handleRenameFile = () => {
-    alert('Rename file functionality would be implemented here');
+    if (onRenameUpload) {
+      onRenameUpload(upload);
+    }
   };
 
   const handleMoveFile = () => {
     alert('Move file functionality would be implemented here');
+    //create an independent move dialog component in transcript folder
   };
 
   const handleDeleteFile = () => {
     alert('Delete file functionality would be implemented here');
+    //create an independent delete dialog component in transcript folder
+    //reroute to dashboard page
   };
 
   return (
@@ -76,21 +80,6 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
             Show Timestamps
           </label>
         </div>
-        {/* Share Transcript */}
-        <Button 
-          variant="ghost" 
-          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={handleShareTranscript}
-        >
-          <div className="flex items-start gap-2 pl-1 mt-1">
-            <div className="flex items-center">
-              <Link2 className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span>Share Transcript</span>
-            </div>
-          </div>
-        </Button>
         
         {/* Edit Transcript */}
         <Button 
@@ -174,5 +163,9 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
         </Button>
       </CardContent>
     </Card>
+
+
   );
 }
+
+export default EditTranscriptCard;
