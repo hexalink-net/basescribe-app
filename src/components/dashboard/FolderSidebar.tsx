@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { FolderIcon, FolderPlus, ChevronRight, Pencil, Trash2, ArrowRight, MoreVertical } from 'lucide-react';
+import { FolderIcon, FolderPlus, ChevronRight, Pencil, Trash2, ArrowRight, MoreVertical, Menu, X } from 'lucide-react';
 import { Folder, UserProfile } from '@/types/DashboardInterface';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
@@ -49,6 +49,7 @@ export default function FolderSidebar({
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [isNewFolderModalOpen, setIsNewFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -96,7 +97,25 @@ export default function FolderSidebar({
   };
 
   return (
-    <div className="w-64 border-r border-[#2a2a2a] flex flex-col h-full">
+    <div>
+      {/* Mobile Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden fixed top-4 left-4 z-50"
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+      >
+        {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </Button>
+
+      {/* Sidebar */}
+      <div 
+        className={`
+          fixed md:relative top-0 left-0 h-full w-64 bg-[#171717] border-r border-[#2a2a2a] flex flex-col 
+          transition-transform duration-300 ease-in-out z-40
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
       {/* Fixed Header Section */}
       <div className="flex-shrink-0">
         <div className="p-4">
@@ -377,6 +396,15 @@ export default function FolderSidebar({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+    </div>
+
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
       )}
     </div>
   );

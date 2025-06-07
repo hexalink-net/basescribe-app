@@ -142,7 +142,7 @@ export const FileRow = memo(({
   // Create the row element
   const rowElement = (
     <tr className={`border-b border-[#2a2a2a] hover:bg-[#2a2a2a] ${isSelected ? 'bg-[#2a2a2a]' : ''}`}>
-      <td className="px-4 py-3">
+      <td className="hidden md:table-cell px-4 py-3">
         <input 
           type="checkbox" 
           className="rounded bg-[#2a2a2a] border-none" 
@@ -150,21 +150,21 @@ export const FileRow = memo(({
           onChange={() => onSelectUpload(upload.id)}
         />
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 md:w-[30%]">
         <Link href={`/dashboard/transcript/${upload.id}`} className="text-white hover:underline">
           {upload.file_name}
         </Link>
       </td>
-      <td className="px-4 py-3 text-gray-400 text-sm">
+      <td className="hidden md:table-cell px-4 py-3 md:w-[20%]">
         {formattedDateTime}
       </td>
-      <td className="px-4 py-3 text-gray-400 text-sm">
+      <td className="hidden md:table-cell px-4 py-3 md:w-[10%]">
         {duration}
       </td>
-      <td className="px-4 py-3 text-gray-400 text-sm">
+      <td className="px-4 py-3 text-gray-400 text-sm md:w-[15%]">
         {upload.language}
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 md:w-[15%]">
         <div className="flex items-center">
           {upload.status === 'processing' ? (
             <>
@@ -333,7 +333,7 @@ const FileTable = ({
             {/* Apply sticky positioning to the thead */}
             <thead className="sticky top-0 bg-[#131314] z-10">
               <tr className="border-b border-[#2a2a2a]">
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[50px]">
+                <th className="hidden md:table-cell px-4 py-3 text-left font-medium text-sm text-gray-400 w-[50px]">
                   <input 
                     type="checkbox" 
                     className="rounded bg-[#2a2a2a] border-none" 
@@ -342,11 +342,11 @@ const FileTable = ({
                     data-testid="select-all-checkbox"
                   />
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[30%]">Name</th>
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[20%]">Uploaded</th>
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[10%]">Duration</th>
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Language</th>
-                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[15%]">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[50%] md:w-[30%]">Name</th>
+                <th className="hidden md:table-cell px-4 py-3 text-left font-medium text-sm text-gray-400 w-[20%]">Uploaded</th>
+                <th className="hidden md:table-cell px-4 py-3 text-left font-medium text-sm text-gray-400 w-[10%]">Duration</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[25%] md:w-[15%]">Language</th>
+                <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[25%] md:w-[15%]">Status</th>
                 <th className="px-4 py-3 text-left font-medium text-sm text-gray-400 w-[60px]"></th>
               </tr>
             </thead>
