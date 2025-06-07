@@ -302,25 +302,37 @@ export default function FolderSidebar({
           )}
           <h3 className="text-sm font-semibold text-gray-400">Usage</h3>
           <div>
-            <div className="flex justify-between text-xs mb-1">
-              <span className="text-gray-400">
-                {userProfile.product_id === pro
-                  ? `${formatDuration(userProfile.monthly_usage_seconds || 0)} / ${proDuration}:00:00` 
-                  : `${formatDuration(userProfile.monthly_usage_seconds || 0)} / ${freeDuration}:00:00`}
-              </span>
-              <span className="text-gray-400">
-                {userProfile.product_id === pro
-                  ? `${Math.round((userProfile.monthly_usage_seconds / (20 * 60 * 60)) * 100)}%` 
-                  : `${Math.round((userProfile.monthly_usage_seconds / (1 * 60 * 60)) * 100)}%`}
-              </span>
-            </div>
-            <Progress 
-              value={userProfile.product_id === pro
-                ? Math.min(100, ((userProfile.total_usage_seconds || 0) / (20 * 60 * 60)) * 100) 
-                : Math.min(100, ((userProfile.monthly_usage_seconds || 0) / (1 * 60 * 60)) * 100)} 
-              className="h-1 bg-[#2a2a2a]" 
-              indicatorClassName="bg-gradient-to-r from-[#F0F177] to-[#d9e021]" 
-            />
+            {/* Calculate usage percentage */}
+            {(() => {
+              const usagePercentage = Math.min(
+                100,
+                ((userProfile.monthly_usage_seconds || 0) / 
+                (userProfile.product_id === pro ? (20 * 60 * 60) : (1 * 60 * 60))) * 100
+              );
+              const isHighUsage = usagePercentage > 80;
+              const progressColor = 'bg-gradient-to-r from-[#F0F177] to-[#d9e021]';
+              const progressGlow = 'shadow-glow-yellow';
+              
+              return (
+                <>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-medium">
+                      {formatDuration(userProfile.monthly_usage_seconds || 0)} / 
+                      {userProfile.product_id === pro ? ` ${proDuration}:00:00` : ` ${freeDuration}:00:00`}
+                    </span>
+                    <span className="font-bold text-[#d9e021]">
+                      {Math.round(usagePercentage)}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-[#2a2a2a] rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${progressColor} rounded-full transition-all duration-500 ease-out ${progressGlow}`}
+                      style={{ width: `${usagePercentage}%` }}
+                    />
+                  </div>
+                </>
+              );
+            })()} 
           </div>
           <div className="text-xs text-gray-400 mt-1">
             {userProfile.product_id === pro
