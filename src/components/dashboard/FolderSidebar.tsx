@@ -3,10 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { FolderIcon, FolderPlus, ChevronRight, Pencil, Trash2, ArrowRight, MoreVertical, Menu, X } from 'lucide-react';
+import { FolderIcon, FolderPlus, ChevronRight, Pencil, Trash2, ArrowRight, MoreVertical, Menu } from 'lucide-react';
 import { Folder, UserProfile } from '@/types/DashboardInterface';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { createFolder } from '@/app/(protected)/dashboard/folder/actions';
 import { useToast } from '@/components/ui/UseToast';
@@ -330,7 +329,6 @@ export default function FolderSidebar({
                 ((userProfile.monthly_usage_seconds || 0) / 
                 (userProfile.product_id === pro ? (20 * 60 * 60) : (1 * 60 * 60))) * 100
               );
-              const isHighUsage = usagePercentage > 80;
               const progressColor = 'bg-gradient-to-r from-[#F0F177] to-[#d9e021]';
               const progressGlow = 'shadow-glow-yellow';
               

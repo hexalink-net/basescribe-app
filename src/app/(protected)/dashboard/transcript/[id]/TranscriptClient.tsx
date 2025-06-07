@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { UploadDetail } from '@/types/DashboardInterface';
-import { Uploads } from '@/types/DashboardInterface';
 
 // Import our new components
 import { FileDetailsCard } from '@/components/transcript/FileDetailsCard';

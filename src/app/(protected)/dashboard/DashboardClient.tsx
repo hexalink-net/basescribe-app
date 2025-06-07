@@ -104,7 +104,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user.id]);
+  }, [user.id, router]);
 
   // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
