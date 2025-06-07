@@ -21,7 +21,7 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
   }
   
   // Fetch transcript data using server action
-  const { upload, audioUrl, error } = await fetchTranscriptData(id);
+  const { upload, audioUrl, error, folders } = await fetchTranscriptData(id);
   
   // Handle any errors
   if (error) {
@@ -33,6 +33,7 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
       upload={null} 
       audioUrl={''} 
       user={user}
+      folders={folders}
     />;
   }
 
@@ -45,6 +46,7 @@ export default async function TranscriptPage({ params }: { params: tParams }) {
           upload={upload} 
           audioUrl={audioUrl} 
           user={user}
+          folders={folders}
         />
       </div>
     </div>

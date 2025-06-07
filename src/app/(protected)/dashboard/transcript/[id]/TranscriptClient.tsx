@@ -10,19 +10,22 @@ import { TranscriptCard } from '@/components/transcript/TranscriptCard';
 import { AudioPlayer } from '@/components/transcript/AudioPlayer';
 import { EditTranscriptCard } from '@/components/transcript/EditTranscriptCard';
 import RenameDialog from '@/components/transcript/RenameDialog';
-import { renameUpload } from '@/app/(protected)/dashboard/transcript/actions';
+import MoveDialog from '@/components/transcript/MoveDialog';
+import { renameUpload, moveUploadToFolder } from '@/app/(protected)/dashboard/transcript/actions';
 
 import { useToast } from '@/components/ui/UseToast';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
+import { Folder } from '@/types/DashboardInterface';
 
 interface TranscriptClientProps {
   upload: UploadDetail | null;
   audioUrl: string;
   user: User;
+  folders: Folder[];
 }
 
-export default function TranscriptClient({ upload, audioUrl, user }: TranscriptClientProps) {
+export default function TranscriptClient({ upload, audioUrl, user, folders }: TranscriptClientProps) {
   const router = useRouter();
   const { toast } = useToast();
 
@@ -31,8 +34,18 @@ export default function TranscriptClient({ upload, audioUrl, user }: TranscriptC
   const [uploadToRename, setUploadToRename] = useState<UploadDetail | null>(null);
   const [isRenameUploadModalOpen, setIsRenameUploadModalOpen] = useState(false);
   const [newUploadName, setNewUploadName] = useState('');
+  const [isMoving, setIsMoving] = useState<Record<string, boolean>>({});
+  const [selectedUploadId, setSelectedUploadId] = useState<string | null>(null);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [localFolders, setLocalFolders] = useState<Folder[]>(folders);
   const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
   
+  
+  // Update localFolders when folders prop changes
+  useEffect(() => {
+    setLocalFolders(folders);
+  }, [folders]);
+
   // Set loading to false once component is mounted and data is available
   useEffect(() => {
     if (upload) {
@@ -77,54 +90,107 @@ export default function TranscriptClient({ upload, audioUrl, user }: TranscriptC
   // };
 
   // Handle rename upload
-    const handleRenameUpload = async () => {
-      if (!uploadToRename) return;
+  const handleRenameUpload = async () => {
+    if (!uploadToRename) return;
       
-      if (!newUploadName.trim()) {
+    if (!newUploadName.trim()) {
+      toast({
+        title: "Error",
+        description: "File name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const result = await renameUpload(uploadToRename.id, newUploadName, user.id);
+      
+      if (result.success) {
         toast({
-          title: "Error",
-          description: "File name cannot be empty.",
-          variant: "destructive",
+          title: "File renamed",
+          description: "The file has been successfully renamed.",
         });
-        return;
-      }
-      
-      try {
-        const result = await renameUpload(uploadToRename.id, newUploadName, user.id);
-        
-        if (result.success) {
-          toast({
-            title: "File renamed",
-            description: "The file has been successfully renamed.",
-          });
           
-          setIsRenameUploadModalOpen(false);
-          setUploadToRename(null);
-          setNewUploadName('');
-          router.refresh();
-        } else {
-          toast({
-            title: "Error",
-            description: result.error || "Failed to rename file.",
-            variant: "destructive",
-          });
-        }
-      } catch {
+        setIsRenameUploadModalOpen(false);
+        setUploadToRename(null);
+        setNewUploadName('');
+        router.refresh();
+      } else {
         toast({
           title: "Error",
-          description: "An unexpected error occurred while renaming the file.",
+          description: result.error || "Failed to rename file.",
           variant: "destructive",
         });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while renaming the file.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle move upload
+  const handleMoveUpload = async (uploadId: string, folderId: string | null) => {
+    try {
+      // Show loading state
+      setIsMoving(prev => ({ ...prev, [uploadId]: true }));
+      
+      // Close dialog and clear selection
+      setShowMoveDialog(false);
+      setSelectedUploadId(null);
+        
+      // Show immediate feedback
+      toast({
+        title: "Moving file...",
+        description: "Your file is being moved.",
+      });
+        
+      // Perform the actual operation in the background
+      const result = await moveUploadToFolder(uploadId, folderId);
+        
+      if (result.success) {
+          // Show success toast
+        toast({
+          title: "File moved",
+          description: "The file has been successfully moved.",
+        });
+          
+        // Refresh the data
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to move file.",
+          variant: "destructive",
+        });
+        router.refresh();
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while moving the file.",
+        variant: "destructive",
+      });
+        router.refresh();
+      } finally {
+        setIsMoving(prev => ({ ...prev, [uploadId]: false }));
       }
     };
 
-    // Memoize upload UI interaction handlers
-    const handleUploadRenameClick = useCallback((upload: UploadDetail) => {
-      setUploadToRename(upload);
-      setNewUploadName(upload.file_name);
-      setIsRenameUploadModalOpen(true);
-    }, []);
-  
+  // Memoize upload UI interaction handlers
+  const handleUploadRenameClick = useCallback((upload: UploadDetail) => {
+    setUploadToRename(upload);
+    setNewUploadName(upload.file_name);
+    setIsRenameUploadModalOpen(true);
+  }, []);
+
+  // Memoize upload UI interaction handlers
+  const handleUploadMoveClick = useCallback((uploadId: string) => {
+    setSelectedUploadId(uploadId);
+    setShowMoveDialog(true);
+  }, []);
 
   if (loading || !upload) {
     return (
@@ -165,6 +231,7 @@ export default function TranscriptClient({ upload, audioUrl, user }: TranscriptC
             showTimestamps={showTimestamps}
             onShowTimestampsChange={setShowTimestamps}
             onRenameUpload={handleUploadRenameClick}
+            onMoveUpload={handleUploadMoveClick}
           />
         </div>
       </div>
@@ -185,6 +252,15 @@ export default function TranscriptClient({ upload, audioUrl, user }: TranscriptC
         newUploadName={newUploadName}
         setNewUploadName={setNewUploadName}
         handleRenameUpload={handleRenameUpload}
+      />
+
+      <MoveDialog
+        showMoveDialog={showMoveDialog}
+        setShowMoveDialog={setShowMoveDialog}
+        selectedUploadId={selectedUploadId}
+        isMoving={isMoving} 
+        handleMoveUpload={handleMoveUpload}
+        folders={localFolders}
       />
     </div>
   );

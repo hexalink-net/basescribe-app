@@ -6,7 +6,6 @@ import { Pencil, Download, FileEdit, FolderUp, Trash2 } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
-import RenameDialog from './RenameDialog';
 
 interface EditTranscriptCardProps {
   upload: UploadDetail;
@@ -14,9 +13,10 @@ interface EditTranscriptCardProps {
   onShowTimestampsChange?: (show: boolean) => void;
   showTimestamps?: boolean;
   onRenameUpload?: (upload: UploadDetail) => void;
+  onMoveUpload?: (uploadId: string) => void;
 }
 
-export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload }: EditTranscriptCardProps) {
   const [showTimestamps, setShowTimestamps] = useState(initialShowTimestamps);
   
   const handleTimestampChange = (checked: boolean) => {
@@ -48,8 +48,9 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
   };
 
   const handleMoveFile = () => {
-    alert('Move file functionality would be implemented here');
-    //create an independent move dialog component in transcript folder
+    if (onMoveUpload) {
+      onMoveUpload(upload.id);
+    }
   };
 
   const handleDeleteFile = () => {
