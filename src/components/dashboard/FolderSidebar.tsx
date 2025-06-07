@@ -99,14 +99,16 @@ export default function FolderSidebar({
   return (
     <div>
       {/* Mobile Toggle Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden fixed top-4 left-4 z-50"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-      >
-        {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
+      {!isMobileOpen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden fixed top-4 left-4 z-50"
+          onClick={() => setIsMobileOpen(true)}
+        >
+          <Menu className="h-5 w-5 border-1 border-white mb-2 cursor-pointer" />
+        </Button>
+      )}
 
       {/* Sidebar */}
       <div 

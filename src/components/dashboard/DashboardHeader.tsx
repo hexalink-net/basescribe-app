@@ -31,7 +31,7 @@ export function DashboardHeader({
   return (
     <header className="sticky py-3 z-10 backdrop-blur-md bg-[#171717]/95 border-b border-[#2a2a2a] h-16">
       <div className={containerStyles[layout]}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-12 md:ml-0">
           <Link href="/dashboard" className="flex items-center">
             <Image 
               src="/basescribe-logo.png" 
