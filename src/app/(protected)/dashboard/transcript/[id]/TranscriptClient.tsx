@@ -81,17 +81,37 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // const downloadTranscript = () => {
-  //   if (!upload || !upload.transcript_text) return;
-    
-  //   const element = document.createElement('a');
-  //   const file = new Blob([upload.transcript_text], { type: 'text/plain' });
-  //   element.href = URL.createObjectURL(file);
-  //   element.download = `${upload.file_name.split('.')[0]}_transcript.txt`;
-  //   document.body.appendChild(element);
-  //   element.click();
-  //   document.body.removeChild(element);
-  // };
+  const downloadAudioFile = async () => {
+    if (upload?.file_path) {
+      try {
+        const res = await fetch(audioUrl);
+        if (!res.ok) throw new Error(`Failed to fetch file: ${res.statusText}`);
+
+        const blob = await res.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = upload.file_name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(downloadUrl);
+      } catch (error) {
+        console.error('Error downloading file:', error);
+        toast({
+          title: "Error",
+          description: "Failed to download audio file.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Audio file not available for download.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Handle rename upload
   const handleRenameUpload = async () => {
@@ -280,6 +300,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
             onRenameUpload={handleUploadRenameClick}
             onMoveUpload={handleUploadMoveClick}
             onDeleteUpload={handleUploadDeleteClick}
+            onDownloadAudioFile={downloadAudioFile}
           />
         </div>
       </div>

@@ -15,9 +15,10 @@ interface EditTranscriptCardProps {
   onRenameUpload?: (upload: UploadDetail) => void;
   onMoveUpload?: (uploadId: string) => void;
   onDeleteUpload?: (upload: UploadDetail) => void;
+  onDownloadAudioFile?: () => void;
 }
 
-export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload, onDeleteUpload }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload, onDeleteUpload, onDownloadAudioFile }: EditTranscriptCardProps) {
   const [showTimestamps, setShowTimestamps] = useState(initialShowTimestamps);
   
   const handleTimestampChange = (checked: boolean) => {
@@ -26,14 +27,10 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
       onShowTimestampsChange(checked);
     }
   };
-  const handleDownloadAudio = () => {
-    if (upload.file_path) {
-      const link = document.createElement('a');
-      link.href = upload.file_path;
-      link.download = upload.file_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+  const handleDownloadAudio = async () => {
+    if (onDownloadAudioFile) {
+      onDownloadAudioFile();
     }
   };
 
