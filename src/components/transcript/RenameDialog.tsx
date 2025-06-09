@@ -47,7 +47,7 @@ export default function RenameDialog({
             >
               Cancel
             </Button>
-            <Button onClick={handleRenameUpload} className="cursor-pointer bg-blue-500 hover:bg-blue-600">
+            <Button onClick={handleRenameUpload} className="cursor-pointer">
               Rename File
             </Button>
           </DialogFooter>

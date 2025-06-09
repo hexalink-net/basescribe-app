@@ -35,7 +35,7 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
   };
 
   const handleEditTranscript = () => {
-    alert('Edit transcript functionality would be implemented here');
+    alert('Edit transcript functionality will be coming soon!');
     //create an independent edit dialog component in transcript folder
   };
 
@@ -92,6 +92,7 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
             </div>
             <div className="flex flex-col items-start">
               <span>Edit Transcript</span>
+              <span className="text-xs text-gray-400">Coming Soon</span>
             </div>
           </div>
         </Button>
