@@ -2,22 +2,19 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, FileIcon, Download } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 
 interface TranscriptSegment {
   timestamp: [number, number];
   text: string;
 }
-import { useToast } from '@/components/ui/UseToast';
 
 type FileDetailsCardProps = {
   upload: UploadDetail;
 };
 
 export function FileDetailsCard({ upload }: FileDetailsCardProps) {
-  const { toast } = useToast();
-
   const downloadTranscript = (format: string) => {
     if (!upload || !upload.transcript_json) return;
     
