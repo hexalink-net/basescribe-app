@@ -7,7 +7,8 @@ import { revalidateTag } from 'next/cache';
 import { z } from 'zod'
 import { uploadRateLimiter, folderRateLimiter, readRateLimiter } from '@/lib/upstash/ratelimit';
 import { Folder } from '@/types/DashboardInterface';
-import { SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient } from '@supabase/supabase-js';
+import { deleteUserUploadSSR } from '@/lib/supabase/server';
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -314,5 +315,52 @@ export async function moveUploadToFolder(uploadId: string, folderId: string | nu
       success: false, 
       error: 'Unable to move file to folder' 
     }
+  }
+}
+
+export async function deleteUpload(uploadId: string, userId: string) {
+  try {
+    const supabase = await createClient()
+    
+    // Check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user || user.id !== userId) {
+      log({
+        logLevel: 'error',
+        action: 'deleteUpload',
+        message: 'Not authenticated',
+        metadata: { userId, uploadId }
+      })
+      return { success: false, error: 'Not authenticated' }
+    }
+    const result = await deleteUserUploadSSR(supabase, userId, uploadId)
+    
+    if (result.error) {
+      log({
+        logLevel: 'error',
+        action: 'deleteUpload.deleteUserUploadSSR',
+        message: 'Error from deleteUserUploadSSR',
+        metadata: { userId, uploadId, error: result.error }
+      })
+      throw result.error
+    }
+    
+    // Revalidate the upload tag to refresh the uploads list
+    revalidateTag(`uploads-${user.id}`)
+    
+    return { success: true }
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'deleteUpload',
+      message: 'Error deleting upload',
+      metadata: { userId, uploadId, error: errorMessage }
+    })
+    return { 
+      success: false, 
+      error: `Unable to delete file`
+    } 
   }
 }

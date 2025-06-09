@@ -14,9 +14,10 @@ interface EditTranscriptCardProps {
   showTimestamps?: boolean;
   onRenameUpload?: (upload: UploadDetail) => void;
   onMoveUpload?: (uploadId: string) => void;
+  onDeleteUpload?: (upload: UploadDetail) => void;
 }
 
-export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload, onDeleteUpload }: EditTranscriptCardProps) {
   const [showTimestamps, setShowTimestamps] = useState(initialShowTimestamps);
   
   const handleTimestampChange = (checked: boolean) => {
@@ -54,9 +55,9 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
   };
 
   const handleDeleteFile = () => {
-    alert('Delete file functionality would be implemented here');
-    //create an independent delete dialog component in transcript folder
-    //reroute to dashboard page
+    if (onDeleteUpload) {
+      onDeleteUpload(upload);
+    }
   };
 
   return (

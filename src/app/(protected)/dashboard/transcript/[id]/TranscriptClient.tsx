@@ -10,7 +10,8 @@ import { AudioPlayer } from '@/components/transcript/AudioPlayer';
 import { EditTranscriptCard } from '@/components/transcript/EditTranscriptCard';
 import RenameDialog from '@/components/transcript/RenameDialog';
 import MoveDialog from '@/components/transcript/MoveDialog';
-import { renameUpload, moveUploadToFolder } from '@/app/(protected)/dashboard/transcript/actions';
+import DeleteDialog from '@/components/transcript/DeleteDialog';
+import { renameUpload, moveUploadToFolder, deleteUpload } from '@/app/(protected)/dashboard/transcript/actions';
 
 import { useToast } from '@/components/ui/UseToast';
 import { useRouter } from 'next/navigation';
@@ -37,6 +38,9 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
   const [selectedUploadId, setSelectedUploadId] = useState<string | null>(null);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [localFolders, setLocalFolders] = useState<Folder[]>(folders);
+  const [isDeleting, setIsDeleting] = useState<Record<string, boolean>>({});
+  const [uploadToDelete, setUploadToDelete] = useState<UploadDetail | null>(null);
+  const [isDeleteUploadModalOpen, setIsDeleteUploadModalOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
   
@@ -178,6 +182,44 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
         setIsMoving(prev => ({ ...prev, [uploadId]: false }));
       }
     };
+  
+  // Handle delete upload - memoized to prevent unnecessary re-renders
+  const handleDeleteUpload = useCallback(async (upload: UploadDetail) => {
+    if (!upload) return;
+
+    try {
+      setIsDeleting(prev => ({ ...prev, [upload.id]: true }));
+        
+      const result = await deleteUpload(upload.id, user.id);
+        
+      if (result.success) {
+        toast({
+          title: "Upload deleted",
+          description: "The upload has been successfully deleted.",
+        });
+
+        setUploadToDelete(null);
+          
+        // Refresh the page to show updated data
+        router.refresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to delete upload.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while deleting the upload.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(prev => ({ ...prev, [upload.id]: false }));
+      router.push('/dashboard');
+    }
+  }, [user.id, toast, router]);
 
   // Memoize upload UI interaction handlers
   const handleUploadRenameClick = useCallback((upload: UploadDetail) => {
@@ -186,10 +228,14 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
     setIsRenameUploadModalOpen(true);
   }, []);
 
-  // Memoize upload UI interaction handlers
   const handleUploadMoveClick = useCallback((uploadId: string) => {
     setSelectedUploadId(uploadId);
     setShowMoveDialog(true);
+  }, []);
+
+  const handleUploadDeleteClick = useCallback((upload: UploadDetail) => {
+    setUploadToDelete(upload);
+    setTimeout(() => setIsDeleteUploadModalOpen(true), 0);
   }, []);
 
   if (loading || !upload) {
@@ -233,6 +279,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
             onShowTimestampsChange={setShowTimestamps}
             onRenameUpload={handleUploadRenameClick}
             onMoveUpload={handleUploadMoveClick}
+            onDeleteUpload={handleUploadDeleteClick}
           />
         </div>
       </div>
@@ -263,6 +310,14 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
         isMoving={isMoving} 
         handleMoveUpload={handleMoveUpload}
         folders={localFolders}
+      />
+
+      <DeleteDialog
+        isDeleteUploadModalOpen={isDeleteUploadModalOpen}
+        setIsDeleteUploadModalOpen={setIsDeleteUploadModalOpen}
+        uploadToDelete={uploadToDelete}
+        isDeleting={!!(uploadToDelete && isDeleting[uploadToDelete.id])}
+        handleDeleteUpload={handleDeleteUpload}
       />
     </div>
   );
