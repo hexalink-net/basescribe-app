@@ -9,48 +9,81 @@ interface TranscriptSegment {
   timestamp: [number, number];
   text: string;
 }
+import { useToast } from '@/components/ui/UseToast';
 
-interface FileDetailsCardProps {
+type FileDetailsCardProps = {
   upload: UploadDetail;
-}
+};
 
 export function FileDetailsCard({ upload }: FileDetailsCardProps) {
+  const { toast } = useToast();
+
   const downloadTranscript = (format: string) => {
-    if (!upload || !upload.transcript_text) return;
+    if (!upload || !upload.transcript_json) return;
     
-    let content = upload.transcript_text;
+    let content = '';
     let mimeType = 'text/plain';
     let extension = 'txt';
-    
-    // Handle different formats
-    if (format === 'docx') {
-      // In a real implementation, you would convert to DOCX format
-      mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-      extension = 'docx';
-    } else if (format === 'pdf') {
-      // In a real implementation, you would convert to PDF format
-      mimeType = 'application/pdf';
-      extension = 'pdf';
+
+    if (format === 'txt') {
+      const json = upload.transcript_json;
+      if (!Array.isArray(json)) return;
+
+      // Group segments into chunks of 5
+      const chunks: string[] = [];
+      let currentChunk: string[] = [];
+
+      json.forEach((segment, index) => {
+        currentChunk.push(segment.text.trim());
+        
+        // When we have 5 segments or it's the last segment
+        if (currentChunk.length === 5 || index === json.length - 1) {
+          chunks.push(currentChunk.join(' '));
+          currentChunk = [];
+        }
+      });
+
+      // Join chunks with newlines
+      content = chunks.join('\r\n\n');
+    } else if (format === 'txt-timestamps') {
+      const json = upload.transcript_json;
+      if (!Array.isArray(json)) return;
+
+      // Format each segment with its timestamp
+      content = json.map((segment) => {
+        const startTime = formatSrtTime(segment.timestamp[0]).split(',')[0]; // Remove milliseconds
+        const endTime = formatSrtTime(segment.timestamp[1]).split(',')[0]; // Remove milliseconds
+        return `[${startTime} - ${endTime}] ${segment.text.trim()}`;
+      }).join('\r\n');
+
+      extension = 'txt'; // Keep extension as txt
     } else if (format === 'srt') {
-      // In a real implementation, you would convert to SRT format
+      // Convert to standard SRT format with sequential numbering and timestamps
       if (upload.transcript_json) {
         content = upload.transcript_json.map((segment: TranscriptSegment, index: number) => {
           const startTime = formatSrtTime(segment.timestamp[0]);
           const endTime = formatSrtTime(segment.timestamp[1]);
-          return `${index + 1}\n${startTime} --> ${endTime}\n${segment.text}\n\n`;
+          // Format: Number + Timestamp range + Text + Double newline
+          return `${index + 1}
+              ${startTime} --> ${endTime}
+              ${segment.text}
+
+          `;
         }).join('');
       }
       mimeType = 'text/plain';
       extension = 'srt';
     }
     
-    const element = document.createElement('a');
     const file = new Blob([content], { type: mimeType });
-    element.href = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    const element = document.createElement('a');
+    element.href = url;
     element.download = `${upload.file_name.split('.')[0]}_transcript.${extension}`;
     document.body.appendChild(element);
     element.click();
-    document.body.removeChild(element);
+    element.remove();
+    URL.revokeObjectURL(url); // Clean up the URL to prevent memory leaks
   };
   
   const formatSrtTime = (seconds: number) => {
@@ -68,38 +101,6 @@ export function FileDetailsCard({ upload }: FileDetailsCardProps) {
         <CardTitle className="text-base">Export</CardTitle>
       </CardHeader>
       <CardContent className="space-y-1 pt-0 px-2">
-        {/* PDF Download */}
-        <Button 
-          variant="ghost" 
-          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={() => downloadTranscript('pdf')}
-        >
-          <div className="flex items-start gap-2 pl-1 mt-1">
-            <div className="flex items-center">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span>Download PDF</span>
-            </div>
-          </div>
-        </Button>
-        
-        {/* DOCX Download */}
-        <Button 
-          variant="ghost" 
-          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={() => downloadTranscript('docx')}
-        >
-          <div className="flex items-start gap-2 pl-1 mt-1">
-            <div className="flex items-center">
-              <FileIcon className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span>Download DOCX</span>
-            </div>
-          </div>
-        </Button>
-        
         {/* TXT Download */}
         <Button 
           variant="ghost" 
@@ -136,7 +137,7 @@ export function FileDetailsCard({ upload }: FileDetailsCardProps) {
         <Button 
           variant="ghost" 
           className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={() => alert('Advanced export options would open here')}
+          onClick={() => downloadTranscript('txt-timestamps')}
         >
           <div className="flex items-start gap-2 pl-1 mt-1">
             <div className="flex items-center">
@@ -144,7 +145,7 @@ export function FileDetailsCard({ upload }: FileDetailsCardProps) {
             </div>
             <div className="flex flex-col items-start">
               <span>Advanced Export</span>
-              <span className="text-xs text-gray-400 leading-tight text-wrap text-left">Export with timestamps and in more formats</span>
+              <span className="text-xs text-gray-400 leading-tight text-wrap text-left">Download TXT with timestamps</span>
             </div>
           </div>
         </Button>
