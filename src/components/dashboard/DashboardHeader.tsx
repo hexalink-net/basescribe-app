@@ -41,6 +41,7 @@ export function DashboardHeader({
               className="h-8 w-auto" 
               priority
             />
+            <span className="mt-2 ml-2 text-[#F0F177] text-xs font-bold border border-[#2a2a2a] px-1 py-0 rounded-sm border-[#F0F177] opacity-80">BETA</span>
           </Link>
         </div>
         <div className="flex items-center gap-4">
