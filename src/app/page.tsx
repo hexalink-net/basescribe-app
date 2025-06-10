@@ -117,7 +117,7 @@ export default function Home() {
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">Simple, Transparent Pricing</h2>
-          <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-12">Choose the plan that's right for you</p>
+          <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-12">Choose the plan that&apos;s right for you</p>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
