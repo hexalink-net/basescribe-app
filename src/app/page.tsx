@@ -4,25 +4,72 @@ import { Button } from '@/components/ui/button';
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-black">
       <Header />
       
       {/* Hero Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-background to-muted/30">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Transform Audio & Video into Text
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-10">
-            Automatically transcribe your audio and video files with accurate timestamps using our powerful ASR technology.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-base">
-              <Link href="/auth?mode=signup">Get Started for Free</Link>
+      <section className="container mx-auto px-4 py-16 lg:py-20">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <h1 className="text-5xl lg:text-6xl font-bold mb-6">
+              AI Transcription.<br />
+              <span className="text-gray-300">Reinvented for Privacy</span>
+            </h1>
+            
+            <p className="text-gray-400 text-lg mb-4">
+              Fast. Accurate. Secure. Your files, your control.<br />
+              Transcribe Securely with <span className="text-[#F0F177]">Zero-Trust Encryption</span> 🔒
+            </p>
+
+            <p className="text-gray-400 mb-8">
+              <span className="font-semibold">Free 30 minutes</span> transcription. No credit card required.
+            </p>
+
+            <Button asChild size="lg" className="bg-[#F0F177] text-black hover:bg-[#F0F177]/90 rounded-full px-8">
+              <Link href="/auth?mode=signup">Start transcribing for free</Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="text-base">
-              <Link href="/pricing">View Pricing</Link>
-            </Button>
+
+            {/* Pricing Cards */}
+            <div className="grid grid-cols-2 gap-4 mt-12 max-w-lg">
+              <div className="bg-zinc-900 rounded-lg p-4 relative overflow-hidden">
+                <div className="bg-[#F0F177] text-black text-xs font-bold px-2 py-0.5 rounded absolute -right-8 top-3 rotate-45">
+                  SAVE 33%
+                </div>
+                <div className="text-xl font-bold mb-1">$5 / Month</div>
+                <div className="text-sm text-gray-400">$60 billed yearly</div>
+              </div>
+              
+              <div className="flex items-center justify-center text-xl font-bold text-gray-500">OR</div>
+
+              <div className="bg-zinc-900 rounded-lg p-4">
+                <div className="text-xl font-bold mb-1">$7.5 / Month</div>
+                <div className="text-sm text-gray-400">$7.5 billed monthly</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-zinc-800 rounded-2xl p-8 aspect-square flex items-center justify-center">
+            <div className="text-gray-400">Gif video demo</div>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-20">
+          <div className="flex items-center gap-3">
+            <div className="text-[#F0F177] text-2xl">⚡</div>
+            <div className="text-gray-300">Lightning Fast</div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-[#F0F177] text-2xl">🌐</div>
+            <div className="text-gray-300">98+ Languages</div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-[#F0F177] text-2xl">⏱️</div>
+            <div className="text-gray-300">15 Hours of Transcription</div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-[#F0F177] text-2xl">🔒</div>
+            <div className="text-gray-300">Private & Secure</div>
           </div>
         </div>
       </section>
@@ -66,66 +113,92 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Preview Section */}
+      {/* Pricing Section */}
       <section className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Simple, Transparent Pricing</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Choose the plan that works for you. No hidden fees or complicated tiers.  
-          </p>
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">Simple, Transparent Pricing</h2>
+          <p className="text-xl text-muted-foreground text-center max-w-2xl mx-auto mb-12">Choose the plan that's right for you</p>
           
-          <div className="flex flex-col sm:flex-row gap-8 justify-center max-w-4xl mx-auto">
-            <div className="flex-1 bg-background rounded-lg border p-8 shadow-sm">
-              <h3 className="text-2xl font-bold mb-2">Free</h3>
-              <p className="text-3xl font-bold mb-6">$0</p>
-              <ul className="text-left space-y-3 mb-8">
-                <li className="flex items-start">
-                  <svg className="h-5 w-5 text-green-500 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-background p-6 hover:shadow-md transition-all duration-200">
+              <div className="mb-5">
+                <h3 className="text-2xl font-bold">Free</h3>
+                <div className="mt-4 flex items-baseline text-3xl font-bold">
+                  $0
+                  <span className="ml-1 text-base font-medium text-muted-foreground">/month</span>
+                </div>
+              </div>
+              <ul className="mb-8 space-y-4 text-sm">
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>30 minutes total lifetime limit</span>
+                  <span>15 minutes per month</span>
                 </li>
-                <li className="flex items-start">
-                  <svg className="h-5 w-5 text-green-500 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Basic transcription quality</span>
                 </li>
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>TXT and SRT exports</span>
+                </li>
               </ul>
-              <Button asChild className="w-full">
-                <Link href="/auth?mode=signup">Get Started</Link>
-              </Button>
+              <div className="mt-auto">
+                <Button asChild className="w-full" variant="outline">
+                  <Link href="/auth?mode=signup">Get Started</Link>
+                </Button>
+              </div>
             </div>
             
-            <div className="flex-1 bg-background rounded-lg border border-primary p-8 shadow-sm relative">
-              <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3 py-1 text-xs font-medium rounded-bl-lg rounded-tr-lg">
+            {/* Pro Plan */}
+            <div className="group relative flex flex-col overflow-hidden rounded-lg border bg-background p-6 hover:shadow-md transition-all duration-200 border-primary/50">
+              <div className="absolute -right-20 top-8 rotate-45 bg-primary px-24 py-1 text-center text-sm font-semibold text-primary-foreground">
                 Popular
               </div>
-              <h3 className="text-2xl font-bold mb-2">Pro</h3>
-              <p className="text-3xl font-bold mb-6">$9.99<span className="text-base font-normal text-muted-foreground">/month</span></p>
-              <ul className="text-left space-y-3 mb-8">
-                <li className="flex items-start">
-                  <svg className="h-5 w-5 text-green-500 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mb-5">
+                <h3 className="text-2xl font-bold">Pro</h3>
+                <div className="mt-4 flex items-baseline text-3xl font-bold">
+                  $9.99
+                  <span className="ml-1 text-base font-medium text-muted-foreground">/month</span>
+                </div>
+              </div>
+              <ul className="mb-8 space-y-4 text-sm">
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>60 minutes per month</span>
                 </li>
-                <li className="flex items-start">
-                  <svg className="h-5 w-5 text-green-500 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>High-quality transcription</span>
                 </li>
-                <li className="flex items-start">
-                  <svg className="h-5 w-5 text-green-500 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Multiple export formats</span>
+                  <span>All export formats</span>
+                </li>
+                <li className="flex items-center">
+                  <svg className="mr-3 h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Priority support</span>
                 </li>
               </ul>
-              <Button asChild className="w-full">
-                <Link href="/auth?mode=signup">Upgrade to Pro</Link>
-              </Button>
+              <div className="mt-auto">
+                <Button asChild className="w-full bg-primary/90 hover:bg-primary">
+                  <Link href="/auth?mode=signup">Upgrade to Pro</Link>
+                </Button>
+              </div>
             </div>
           </div>
           

@@ -64,7 +64,7 @@ export function CheckoutContents({ priceId, userEmail, quantity = 1 }: Props) {
 
   if (errorMessage) {
     return (
-      <div className="bg-red-50 text-red-700 p-4 rounded-md border border-red-200">
+      <div className="bg-red-900/20 text-red-400 p-4 rounded-md border border-red-800">
         {errorMessage}
       </div>
     );
@@ -73,7 +73,7 @@ export function CheckoutContents({ priceId, userEmail, quantity = 1 }: Props) {
   return (
     <div
       className={
-        'rounded-lg md:bg-background/80 md:backdrop-blur-[24px] md:p-10 md:pl-16 md:pt-16 md:min-h-[400px] flex flex-col justify-between relative'
+        'text-white rounded-lg md:bg-muted/80 md:backdrop-blur-[24px] md:p-10 md:pl-16 md:pt-16 md:min-h-[400px] flex flex-col justify-between relative'
       }
     >
       <CheckoutFormGradients />

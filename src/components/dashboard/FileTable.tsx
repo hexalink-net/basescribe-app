@@ -155,13 +155,13 @@ export const FileRow = memo(({
           {upload.file_name}
         </Link>
       </td>
-      <td className="hidden md:table-cell px-4 py-3 md:w-[20%]">
+      <td className="hidden md:table-cell px-4 py-3 md:w-[20%] text-white">
         {formattedDateTime}
       </td>
-      <td className="hidden md:table-cell px-4 py-3 md:w-[10%]">
+      <td className="hidden md:table-cell px-4 py-3 md:w-[10%] text-white">
         {duration}
       </td>
-      <td className="px-4 py-3 text-gray-400 text-sm md:w-[15%]">
+      <td className="px-4 py-3 text-gray-400 text-sm md:w-[15%] text-white">
         {upload.language}
       </td>
       <td className="px-4 py-3 md:w-[15%]">

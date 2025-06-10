@@ -7,11 +7,11 @@ export function CheckoutHeader() {
   return (
     <div className={'flex gap-4'}>
       <Link href={'/pricing'}>
-        <Button variant={'secondary'} className={'h-[32px] bg-[#182222] border-border w-[32px] p-0 rounded-[4px]'}>
+        <Button variant={'secondary'} className={'h-[32px] bg-muted bg-[#182222] border-border w-[32px] p-0 rounded-[4px] text-white'}>
           <ChevronLeft />
         </Button>
       </Link>
-      <Image src={'/logo.svg'} alt={'AeroEdit'} width={131} height={28} />
+      <Image src={'/basescribe-logo.png'} alt={'BaseScribe'} width={200} height={28} />
     </div>
   );
 }
