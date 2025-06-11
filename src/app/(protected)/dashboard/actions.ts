@@ -419,7 +419,7 @@ export async function processUploadedFile(
     revalidateTag(`profile-${userId}`)
     
     // Create upload record in database
-    const result = await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
+    const resultUpload = await createUploadSSR(supabase, userId, fileName, filePath, fileSize, durationSeconds, language, folderId);
 
     // Revalidate the upload tag to refresh the uploads list
     revalidateTag(`uploads-${userId}`)
@@ -429,48 +429,21 @@ export async function processUploadedFile(
             .from(BucketNameUpload)
             .createSignedUrl(filePath, 1800); // 30 minute expiry
 
-    await fetch("https://api.runpod.ai/v2/a172qjruhj3d2j/run", {
-      method: 'POST',
-      headers: {
-          Authorization: `Bearer ${process.env.RUNPOD_API_SECRET}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      body: JSON.stringify({
-        "input": {
-          "audioFiles": [
-            {
-              "uploadId": result?.data?.[0].id,
-              "s3fileurl": data?.signedUrl,
-              "language": language
-            }
-          ]
-        },
-        "webhook": "https://basescribe-app.vercel.app/api/webhook-runpod"
-      })
-    });
+    const { error: queueError } = await supabase.schema('pgmq_public').rpc('send', {
+      queue_name: 'transcribe_queue',
+      message: { userId: userId, uploadId: resultUpload?.data?.[0].id, s3fileurl: data?.signedUrl, language: language }
+    })
 
-    await fetch("https://api.runpod.ai/v2/oszlzxu06fx9wa/run", {
-      method: 'POST',
-      headers: {
-          Authorization: `Bearer ${process.env.RUNPOD_API_SECRET}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      body: JSON.stringify({
-        "input": {
-          "audioFiles": [
-            {
-              "uploadId": result?.data?.[0].id,
-              "s3fileurl": data?.signedUrl,
-              "userId": userId
-            }
-          ]
-        },
-        "webhook": "https://basescribe-app.vercel.app/api/webhook-runpod"
+    if (queueError) {
+      log({
+        logLevel: 'error',
+        action: 'processUploadedFile',
+        message: 'Error sending message to queue',
+        metadata: { error: queueError }
       })
-    });
-
+      throw new Error(`Failed to send message to queue`);
+    }
+    
     return;
 
   } catch (error: unknown) {
