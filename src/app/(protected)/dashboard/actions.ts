@@ -7,6 +7,7 @@ import { uploadRateLimiter } from '@/lib/upstash/ratelimit'
 import { getFolders } from './folder/actions'
 import { revalidateTag } from 'next/cache'
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
+import { getUserEncryptionData } from '@/app/(protected)/encryption/actions';
 
 const renameUploadSchema = z.object({
   uploadId: z.string().uuid(),
@@ -39,6 +40,8 @@ export async function fetchDashboardData(userId: string) {
     const profileClient = await createClientWithCache('profile', userId, 86400);
     const uploadsClient = await createClientWithCache('uploads', userId);
     const foldersClient = await createClientWithCache('folders', userId);
+
+    const { data: encryptionDataResult } = await getUserEncryptionData(userId);
     
     // Fetch user profile, uploads, and folders in parallel
     const [userProfileResult, allUploadsResult, foldersResult] = await Promise.all([
@@ -54,7 +57,8 @@ export async function fetchDashboardData(userId: string) {
       userProfile: userProfileResult,
       uploads,
       folders: foldersResult.data || [],
-      error: null
+      error: null,
+      encryptionData: encryptionDataResult
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -96,7 +96,6 @@ export async function createClientWithCache(revalidateTag?: string, userId?: str
   )
 }
 
-
 //Manage user profile
 export async function createNewUserSSR(supabase: SupabaseClient, userId: string, userEmail: string | undefined) {
   const { data, error } = await supabase

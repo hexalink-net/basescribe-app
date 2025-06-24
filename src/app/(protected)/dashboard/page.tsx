@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   await checkPageRateLimit(user.id, '/dashboard');
   
   // Fetch all dashboard data in parallel using server action
-  const { userProfile, uploads, folders, error } = await fetchDashboardData(user.id);
+  const { userProfile, uploads, folders, error, encryptionData } = await fetchDashboardData(user.id);
   
   // Handle any errors from data fetching
   if (error) {
@@ -33,7 +33,8 @@ export default async function DashboardPage() {
         userProfile={userProfile?.data as UserProfile} 
         uploads={uploads} 
         folders={folders || []}
-      currentFolder={null}
-    />
+        currentFolder={null}
+        encryptionData={encryptionData}
+      />
   );
 }

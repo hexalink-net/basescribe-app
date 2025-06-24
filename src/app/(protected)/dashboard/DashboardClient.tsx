@@ -68,16 +68,25 @@ const FileDialogs = dynamic(() => {
   loading: () => null
 });
 
+const EncryptionPasswordDialog = dynamic(() => import('@/components/encryption/EncryptionPasswordDialog'), {
+  ssr: false,
+  loading: () => null
+});
+
 interface DashboardClientProps {
   user: User;
   userProfile: UserProfile;
   uploads: Uploads[];
   folders: Folder[];
   currentFolder: Folder | null;
+  encryptionData: any;
 }
 
-export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder }: DashboardClientProps) {
+export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder, encryptionData }: DashboardClientProps) {
   const router = useRouter();
+
+  // Check if user has set encryption password
+  const [showEncryptionDialog, setShowEncryptionDialog] = useState(!encryptionData?.id);
 
   useEffect(() => {
     const channel = supabase
@@ -796,6 +805,15 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         handleBulkDelete={handleBulkDelete}
         selectedUploadsCount={selectedUploads.length}
       />
+      
+      {/* Encryption Password Dialog */}
+      {showEncryptionDialog && (
+        <EncryptionPasswordDialog 
+          isOpen={showEncryptionDialog} 
+          onClose={() => setShowEncryptionDialog(false)} 
+          userId={user.id}
+        />
+      )}
     </div>
   );
 }
