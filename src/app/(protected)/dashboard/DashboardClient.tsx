@@ -2,7 +2,7 @@
 
 import { useState, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Uploads, UserProfile, Folder } from '@/types/DashboardInterface';
+import { Uploads, UserProfile, Folder, EncryptionData } from '@/types/DashboardInterface';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { deleteUpload, bulkDeleteUploads, renameUpload, revalidateUploadsTag } from './actions';
@@ -79,7 +79,7 @@ interface DashboardClientProps {
   uploads: Uploads[];
   folders: Folder[];
   currentFolder: Folder | null;
-  encryptionData: any;
+  encryptionData?: EncryptionData;
 }
 
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder, encryptionData }: DashboardClientProps) {

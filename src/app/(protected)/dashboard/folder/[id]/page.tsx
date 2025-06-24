@@ -22,7 +22,7 @@ export default async function FolderPage({ params }: { params:  tParams })  {
   await checkPageRateLimit(user.id, `/dashboard/folder/${id}`);
   
   // Fetch all folder data in parallel using server action
-  const { folder, uploads, userProfile, folders, error } = await fetchFolderData(user.id, id);
+  const { folder, uploads, userProfile, folders, error, encryptionData } = await fetchFolderData(user.id, id);
   
   // Handle any errors from data fetching
   if (error) {
@@ -40,6 +40,7 @@ export default async function FolderPage({ params }: { params:  tParams })  {
       uploads={uploads || []}
       folders={folders || []}
       currentFolder={folder}
+      encryptionData={encryptionData}
     />
   );
 }

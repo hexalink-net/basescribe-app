@@ -11,7 +11,6 @@ import {
   BlockingDialog, 
   BlockingDialogContent, 
   BlockingDialogFooter, 
-  BlockingDialogHeader, 
   BlockingDialogTitle 
 } from './BlockingDialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -85,12 +84,13 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
           onClose();
         }, 2000);
       }
-    } catch (err) {
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to set encryption password. Please try again.",
         variant: "destructive",
       });
+      console.log(error)
     } finally {
       setIsSubmitting(false);
     }
@@ -183,10 +183,10 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
                   <Lock className="h-12 w-12 text-white" />
                 </div>
                 <h2 className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Welcome to BaseScribe</h2>
-                <p className="text-gray-300 mb-3 text-lg">We're glad to have you on board!</p>
-                <p className="text-gray-400 mb-3">At BaseScribe, your privacy comes first. To ensure your files stay secure, we use cryptographic encryption — and that means you're the only one who can access your files.</p>
+                <p className="text-gray-300 mb-3 text-lg">We&apos;re glad to have you on board!</p>
+                <p className="text-gray-400 mb-3">At BaseScribe, your privacy comes first. To ensure your files stay secure, we use cryptographic encryption — and that means you&apos;re the only one who can access your files.</p>
                 <p className="text-gray-300 font-medium text-lg mt-4">For this reason, we require you to set an encryption password to protect your files.</p>
-                <p className="text-gray-400 mt-4">To get started, please click "Next".</p>
+                <p className="text-gray-400 mt-4">To get started, please click &quot;Next&quot;.</p>
               </div>
             </div>
           ) : currentStep === 1 ? (

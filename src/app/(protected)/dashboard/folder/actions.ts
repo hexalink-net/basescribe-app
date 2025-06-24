@@ -7,6 +7,7 @@ import { log } from '@/lib/logger'
 import { z } from 'zod'
 import { folderRateLimiter, readRateLimiter } from '@/lib/upstash/ratelimit'
 import { revalidateTag } from 'next/cache'
+import { getUserEncryptionData } from '../../encryption/actions'
 
 const folderSchema = z.object({
     name: z.string().min(1, 'Folder name must be between 1 and 50 characters').max(50, 'Folder name must be between 1 and 50 characters'),
@@ -618,6 +619,8 @@ export async function fetchFolderData(userId: string, folderId: string) {
     const profileClient = await createClientWithCache('profile', userId, 86400);
     const uploadsClient = await createClientWithCache('uploads', userId);
     const foldersClient = await createClientWithCache('folders', userId);
+
+    const { data: encryptionDataResult } = await getUserEncryptionData(userId);
     
     // Fetch folder details, uploads in folder, user profile, and all folders in parallel
     const [folderResult, uploadsResult, userProfileResult, foldersResult] = await Promise.all([
@@ -646,7 +649,8 @@ export async function fetchFolderData(userId: string, folderId: string) {
         uploads: [],
         userProfile: null,
         folders: [],
-        error: 'Folder not found or you do not have permission to view it'
+        error: 'Folder not found or you do not have permission to view it',
+        encryptionData: encryptionDataResult
       };
     }
     
@@ -665,7 +669,8 @@ export async function fetchFolderData(userId: string, folderId: string) {
       uploads: uploadsResult.data || [],
       userProfile: userProfileResult?.data as UserProfile,
       folders: foldersResult.data || [],
-      error: null
+      error: null,
+      encryptionData: encryptionDataResult
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
