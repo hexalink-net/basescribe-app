@@ -20,7 +20,7 @@ export interface Uploads {
   created_at: string;
   file_name: string;
   duration_seconds: number;
-  status: 'pending' | 'processing' | 'completed'| 'error';
+  status: 'pending' | 'processing' | 'completed'| 'failed';
   language: string;
 }
 

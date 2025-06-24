@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 // Lazy load icons to improve initial load performance
 const CheckCircle2 = dynamic(() => import('lucide-react').then(mod => mod.CheckCircle2), { ssr: false, loading: () => <div className="h-4 w-4 bg-green-500/20 rounded-full animate-pulse" /> });
+const XCircle = dynamic(() => import('lucide-react').then(mod => mod.XCircle), { ssr: false, loading: () => <div className="h-4 w-4 bg-red-500/20 rounded-full animate-pulse" /> });
 const MoreVertical = dynamic(() => import('lucide-react').then(mod => mod.MoreVertical), { ssr: false });
 const Trash2 = dynamic(() => import('lucide-react').then(mod => mod.Trash2), { ssr: false });
 const FolderUp = dynamic(() => import('lucide-react').then(mod => mod.FolderUp), { ssr: false });
@@ -172,6 +173,13 @@ export const FileRow = memo(({
                 <Loader2 className="h-3 w-3 animate-spin" />
               </div>
               <span className="text-blue-500 text-sm">Transcribing...</span>
+            </>
+          ) : upload.status === 'failed' ? (
+            <>
+              <div className="h-4 w-4 text-red-500 mr-1 flex items-center justify-center">
+                <XCircle className="h-3 w-3" />
+              </div>
+              <span className="text-red-500 text-sm">Failed</span>
             </>
           ) : (
             <>

@@ -445,6 +445,17 @@ export async function processUploadedFile(
         message: 'Error sending message to queue',
         metadata: { error: queueError }
       })
+      const { error: updateStatusError } = await supabase.from('uploads').update({ status: 'failed' }).eq('id', resultUpload?.data?.[0].id);
+      revalidateTag(`uploads-${userId}`)
+
+      if (updateStatusError) {
+        log({
+          logLevel: 'error',
+          action: 'processUploadedFile',
+          message: 'Error updating upload status',
+          metadata: { error: updateStatusError }
+        })
+      }
       throw new Error(`Failed to send message to queue`);
     }
     

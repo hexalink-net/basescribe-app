@@ -100,7 +100,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Change received!', payload.new.user_id, user.id);
+          console.log('Change received!', payload.new.user_id);
           if (payload.new.user_id === user.id) {
             revalidateUploadsTag(user.id);
             router.refresh();
