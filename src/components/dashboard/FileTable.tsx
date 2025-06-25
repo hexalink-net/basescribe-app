@@ -30,9 +30,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
+import PrivateKeyDecryptionDialog from '@/components/encryption/PrivateKeyDecryptionDialog';
+import { EncryptionData } from '@/types/DashboardInterface';
 
 interface FileTableProps {
   uploads: Uploads[];
+  encryptionData?: EncryptionData;
   currentFolder: Folder | null;
   selectedUploads: string[];
   isDeleting: Record<string, boolean>;
@@ -106,7 +109,8 @@ EmptyState.displayName = 'EmptyState';
 
 // Memoized file row component to prevent unnecessary re-renders
 export const FileRow = memo(({ 
-  upload, 
+  upload,
+  encryptionData,
   isSelected, 
   isDeleting,
   formatDate,
@@ -117,6 +121,7 @@ export const FileRow = memo(({
   onRenameUpload
 }: { 
   upload: Uploads, 
+  encryptionData?: EncryptionData,
   isSelected: boolean,
   isDeleting: boolean,
   formatDate: (dateString: string) => string,
@@ -128,6 +133,8 @@ export const FileRow = memo(({
 }) => {
   // State for delete confirmation dialog
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEncryptionDialog, setShowEncryptionDialog] = useState(false);
+
   // Memoize the duration calculation to avoid recalculating on every render
   const duration = useMemo(() => {
     const minutes = Math.floor(upload.duration_seconds / 60);
@@ -157,10 +164,11 @@ export const FileRow = memo(({
           className="text-white hover:underline"
           onClick={(e) => {
             // Check if private key exists in session storage
+            sessionStorage.removeItem("privateKey");
             const privateKeyItem = sessionStorage.getItem("privateKey");
             if (!privateKeyItem) {
               e.preventDefault();
-              console.log("Private key not found in session storage")
+              setShowEncryptionDialog(true);
               return;
             }
             
@@ -170,12 +178,12 @@ export const FileRow = memo(({
               if (Date.now() > parsed.expiresAt) {
                 e.preventDefault();
                 sessionStorage.removeItem("privateKey");
-                console.log("Private key has expired")
+                setShowEncryptionDialog(true);
               }
             } catch (error) {
               e.preventDefault();
               sessionStorage.removeItem("privateKey");
-              console.log(error)
+              setShowEncryptionDialog(true);
             }
           }}
         >
@@ -269,6 +277,23 @@ export const FileRow = memo(({
           setShowDeleteDialog(false);
         }}
       />
+
+      {/* Encryption Password Dialog */}
+      <PrivateKeyDecryptionDialog
+        isOpen={showEncryptionDialog}
+        onClose={() => setShowEncryptionDialog(false)}
+        encryptionData={encryptionData}
+        onSuccess={(decryptedKey) => {
+          // Store the decrypted key in session storage for 1 hour
+          sessionStorage.setItem("privateKey", JSON.stringify({
+            privateKey: decryptedKey,
+            expiresAt: Date.now() + 60 * 60 * 1000 // 1 hour
+          }));
+          
+          // Navigate to the transcript page
+          window.location.href = `/dashboard/transcript/${upload.id}`;
+        }}
+      />
     </>
   );
 });
@@ -281,6 +306,7 @@ import SkeletonTable from './SkeletonTable';
 // Main FileTable component with memoization
 const FileTable = ({
   uploads,
+  encryptionData,
   currentFolder,
   selectedUploads,
   isDeleting,
@@ -390,6 +416,7 @@ const FileTable = ({
                   <FileRow 
                     key={upload.id}
                     upload={upload}
+                    encryptionData={encryptionData}
                     isSelected={selectedUploads.includes(upload.id)}
                     isDeleting={!!isDeleting[upload.id]}
                     formatDate={formatDate}

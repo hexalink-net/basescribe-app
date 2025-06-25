@@ -704,6 +704,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
             <Suspense fallback={<SkeletonTable />}>
               <FileTable 
                 uploads={uploads}
+                encryptionData={encryptionData}
                 currentFolder={currentFolder}
                 selectedUploads={selectedUploads}
                 isDeleting={isDeleting}

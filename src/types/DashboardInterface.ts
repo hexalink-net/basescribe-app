@@ -48,9 +48,9 @@ export interface EncryptionData {
   id: string;
   user_id: string;
   user_public_key_b64: string;
-  encrypted_user_private_key_b64: string;
+  encrypted_private_key_b64: string;
   salt_b64: string;
-  pkbdf2_iterations: number;
-  pkbdf2_hash_algorithm: string;
+  pbkdf2_iterations: number;
+  pbkdf2_hash_algorithm: string;
   iv_b64: string;
 }

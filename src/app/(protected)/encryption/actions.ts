@@ -5,6 +5,7 @@ import { log } from "@/lib/logger";
 import { iterations, hashAlgorithm } from "@/constants/encryption";
 import { z } from "zod";
 import { encryptionRateLimiter } from "@/lib/upstash/ratelimit";
+import { EncryptionData } from "@/types/DashboardInterface";
 
 /**
  * Sets the encryption password for a user
@@ -60,6 +61,17 @@ function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array) {
       binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64: string) {
+  const base64Fixed = base64.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base64.length / 4) * 4, '=');
+  const binary_string = atob(base64Fixed);
+  const len = binary_string.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+  }
+  return bytes.buffer;
 }
 
 export async function getPrivateKeyIfValid() {
@@ -200,8 +212,6 @@ export async function generateUserKeysAndEncryptPrivateKey(
 }
 
 export const getUserEncryptionData = async (userIdParam: string) => {
-    // await checkReadRateLimit(userId);
-
     // Create server client
     const supabase = await createClient();
 
@@ -219,4 +229,83 @@ export const getUserEncryptionData = async (userIdParam: string) => {
     }
 
     return { data, error };
+}
+
+export const decryptUserPrivateKey = async (password: string, encryptionData: EncryptionData) => {
+    // Validate encryptionData and all required properties
+    if (!encryptionData) {
+      throw new Error("Encryption data not found");
+    }
+    
+    // Validate all required properties are present
+    const requiredProps = [
+      'salt_b64', 
+      'iv_b64', 
+      'encrypted_private_key_b64', 
+      'pbkdf2_iterations',
+      'pbkdf2_hash_algorithm'
+    ];
+    
+    for (const prop of requiredProps) {
+      if (!(prop in encryptionData) || !encryptionData[prop as keyof EncryptionData]) {
+        throw new Error(`Missing encryption data property: ${prop}`);
+      }
+    }
+    
+    // Validate that values are of expected types
+    if (typeof encryptionData.pbkdf2_iterations !== 'number' || encryptionData.pbkdf2_iterations <= 0) {
+      throw new Error('Invalid pbkdf2_iterations value');
+    }
+    const salt = base64ToArrayBuffer(encryptionData.salt_b64);
+    const iv = base64ToArrayBuffer(encryptionData.iv_b64);
+    const encryptedPrivateKey = base64ToArrayBuffer(encryptionData.encrypted_private_key_b64);
+
+    const iterations = encryptionData.pbkdf2_iterations;
+    const hashAlgorithm = encryptionData.pbkdf2_hash_algorithm;
+
+    const passwordKey = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(password),
+      { name: 'PBKDF2' },
+      false, // Not extractable
+      ['deriveKey']
+    );
+
+    const reDerivedSymmetricKey = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: iterations,
+        hash: hashAlgorithm,
+      },
+      passwordKey,
+      { name: 'AES-GCM', length: 256 }, // Must match encryption
+      false, // Not extractable, as it's derived from password
+      ['encrypt', 'decrypt']
+    );
+
+    // --- Decrypt the user's private key (PEM bytes) with the re-derived symmetric key ---
+    const decryptedPrivateKeyPem = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: iv,
+      },
+      reDerivedSymmetricKey,
+      encryptedPrivateKey
+    );
+
+    // --- Import the decrypted private key as a CryptoKey ---
+    const cryptoKey = await crypto.subtle.importKey(
+      "pkcs8", // this is the format used when exporting/importing RSA private keys
+      decryptedPrivateKeyPem,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256",
+      },
+      true, 
+      ["decrypt"]
+    );
+
+    const exportedKey = await crypto.subtle.exportKey("jwk", cryptoKey);
+    return exportedKey;
 }
