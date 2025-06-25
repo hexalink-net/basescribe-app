@@ -49,12 +49,49 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
     setLocalFolders(folders);
   }, [folders]);
 
-  // Set loading to false once component is mounted and data is available
+  // Check for private key and redirect if not available
   useEffect(() => {
+    // Check if private key exists in session storage
+    const privateKeyItem = sessionStorage.getItem("privateKey");
+    if (!privateKeyItem) {
+      toast({
+        title: "Access Denied",
+        description: "You need to unlock your encrypted files first.",
+        variant: "destructive",
+      });
+      router.push('/dashboard');
+      return;
+    }
+    
+    // Check if the key has expired
+    try {
+      const parsed = JSON.parse(privateKeyItem);
+      if (Date.now() > parsed.expiresAt) {
+        sessionStorage.removeItem("privateKey");
+        toast({
+          title: "Session Expired",
+          description: "Your encryption session has expired. Please unlock your files again.",
+          variant: "destructive",
+        });
+        router.push('/dashboard');
+        return;
+      }
+    } catch (error) {
+      sessionStorage.removeItem("privateKey");
+      toast({
+        title: "Error",
+        description: "Invalid encryption session. Please unlock your files again.",
+        variant: "destructive",
+      });
+      router.push('/dashboard');
+      return;
+    }
+    
+    // If we have a valid key and upload data, set loading to false
     if (upload) {
       setLoading(false);
     }
-  }, [upload]);
+  }, [upload, router, toast]);
   
   // Helper functions that we'll pass to child components
   const formatDate = (dateString: string) => {
