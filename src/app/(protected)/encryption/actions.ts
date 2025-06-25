@@ -62,10 +62,23 @@ function arrayBufferToBase64(buffer: ArrayBuffer | Uint8Array) {
   return btoa(binary);
 }
 
+export async function getPrivateKeyIfValid() {
+  const item = sessionStorage.getItem("privateKey");
+  if (!item) return null;
+
+  const parsed = JSON.parse(item);
+  if (Date.now() > parsed.expiresAt) {
+    sessionStorage.removeItem("privateKey");
+    return null;
+  }
+
+  return parsed.encryptedPrivateKey;
+}
+
 export async function generateUserKeysAndEncryptPrivateKey(
   userId: string,
   password: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; exportedPrivateKey?: JsonWebKey; error?: string }> {
   try {
     // Check rate limit first
     const canProceed = await checkEncryptionRateLimit(userId);
@@ -149,7 +162,7 @@ export async function generateUserKeysAndEncryptPrivateKey(
     const userPublicKeyPem = await crypto.subtle.exportKey("spki", userKeyPair.publicKey);
 
     // Update user profile with encryption key hash
-    const { data: encryptionData, error } = await supabase.functions.invoke('set-encryption-data', {
+    const { error } = await supabase.functions.invoke('set-encryption-data', {
       body: JSON.stringify({ 
         userId: userId,
         userPublicKey: arrayBufferToBase64(userPublicKeyPem),
@@ -161,8 +174,6 @@ export async function generateUserKeysAndEncryptPrivateKey(
       })
     })
 
-    console.log(encryptionData)
-
     if (error) {
       log({
         logLevel: 'error',
@@ -173,7 +184,10 @@ export async function generateUserKeysAndEncryptPrivateKey(
       return { success: false, error: "Failed to set encryption password." };
     }
 
-    return { success: true };
+    // Export for storage
+    const exportedKey = await crypto.subtle.exportKey("jwk", userKeyPair.privateKey);
+
+    return { success: true, exportedPrivateKey: exportedKey };
   } catch (error) {
     log({
       logLevel: 'error',

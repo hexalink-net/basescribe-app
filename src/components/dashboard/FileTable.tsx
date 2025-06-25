@@ -152,7 +152,33 @@ export const FileRow = memo(({
         />
       </td>
       <td className="px-4 py-3 md:w-[30%]">
-        <Link href={`/dashboard/transcript/${upload.id}`} className="text-white hover:underline">
+        <Link 
+          href={`/dashboard/transcript/${upload.id}`} 
+          className="text-white hover:underline"
+          onClick={(e) => {
+            // Check if private key exists in session storage
+            const privateKeyItem = sessionStorage.getItem("privateKey");
+            if (!privateKeyItem) {
+              e.preventDefault();
+              console.log("Private key not found in session storage")
+              return;
+            }
+            
+            // Check if the key has expired
+            try {
+              const parsed = JSON.parse(privateKeyItem);
+              if (Date.now() > parsed.expiresAt) {
+                e.preventDefault();
+                sessionStorage.removeItem("privateKey");
+                console.log("Private key has expired")
+              }
+            } catch (error) {
+              e.preventDefault();
+              sessionStorage.removeItem("privateKey");
+              console.log(error)
+            }
+          }}
+        >
           {upload.file_name}
         </Link>
       </td>

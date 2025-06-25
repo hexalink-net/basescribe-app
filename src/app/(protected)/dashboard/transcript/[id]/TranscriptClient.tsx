@@ -44,7 +44,6 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
   const [currentTime, setCurrentTime] = useState(0);
   const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
   
-  
   // Update localFolders when folders prop changes
   useEffect(() => {
     setLocalFolders(folders);

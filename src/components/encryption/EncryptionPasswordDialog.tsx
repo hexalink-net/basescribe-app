@@ -74,6 +74,11 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
           variant: "destructive",
         });
       } else {
+        sessionStorage.setItem("privateKey", JSON.stringify({
+          privateKey: result.exportedPrivateKey,
+          expiresAt: Date.now() + 60 * 60 * 1000 // 1 hour
+        }));
+        
         toast({
           title: "Success",
           description: "Encryption password set successfully!",
