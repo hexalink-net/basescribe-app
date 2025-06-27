@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { UploadDetail } from '@/types/DashboardInterface';
+import { UploadDetail, TranscriptSegment } from '@/types/DashboardInterface';
 
 // Import our new components
 import { FileDetailsCard } from '@/components/transcript/FileDetailsCard';
@@ -30,6 +30,9 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
+  const [decryptedTranscript, setDecryptedTranscript] = useState<Array<TranscriptSegment> | null>(null);
+  const [isDecrypting, setIsDecrypting] = useState(true);
+  const [decryptionError, setDecryptionError] = useState<string | null>(null);
   const [showTimestamps, setShowTimestamps] = useState(false);
   const [uploadToRename, setUploadToRename] = useState<UploadDetail | null>(null);
   const [isRenameUploadModalOpen, setIsRenameUploadModalOpen] = useState(false);
@@ -48,6 +51,92 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
   useEffect(() => {
     setLocalFolders(folders);
   }, [folders]);
+
+  // Base64 to ArrayBuffer conversion helper
+  const base64ToArrayBuffer = useCallback((base64: string) => {
+    const base64Fixed = base64.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const binary_string = atob(base64Fixed);
+    const len = binary_string.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }, []);
+
+  // Decrypt transcript function
+  const decryptTranscript = useCallback(async (encryptedTranscriptPayload: string) => {
+    try {
+      setIsDecrypting(true);
+      setDecryptionError(null);
+      const privateKeyStr = sessionStorage.getItem("privateKey");
+      if (!privateKeyStr) {
+        throw new Error("Private key not found in session storage.");
+      }
+
+      // The string from session storage is a key pair object.
+      const keyPair = JSON.parse(privateKeyStr);
+      const privateKeyJwk = keyPair.privateKey; // This is the raw JWK for the private key.
+
+      // The JWK must be imported into a CryptoKey object before it can be used.
+      const privateKey = await crypto.subtle.importKey(
+        "jwk",
+        privateKeyJwk,
+        { name: "RSA-OAEP", hash: "SHA-256" },
+        true,
+        ["decrypt"]
+      );
+
+      const encryptedTranscriptPayloadJson = JSON.parse(encryptedTranscriptPayload);
+
+      const encryptedAESKeyArrayBuffer = base64ToArrayBuffer(encryptedTranscriptPayloadJson.encrypted_aes_key_transcription);
+
+      const nonceAESKeyArrayBuffer = base64ToArrayBuffer(encryptedTranscriptPayloadJson.nonce_transcription);
+
+      // Decrypt the AES key using the imported RSA private CryptoKey.
+      const decryptedAESKeyBuffer = await crypto.subtle.decrypt(
+        { name: "RSA-OAEP" },
+        privateKey,
+        encryptedAESKeyArrayBuffer
+      );
+
+      // Import the decrypted raw AES key into a CryptoKey.
+      const decryptedAESKey = await crypto.subtle.importKey(
+        "raw",
+        decryptedAESKeyBuffer,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+
+      // Decrypt the main content using the AES CryptoKey.
+      const decryptedTranscriptionBuffer = await crypto.subtle.decrypt(
+        {
+          name: "AES-GCM",
+          iv: nonceAESKeyArrayBuffer,
+        },
+        decryptedAESKey,
+        base64ToArrayBuffer(encryptedTranscriptPayloadJson.ciphertext_transcription)
+      );
+
+      const decryptedContent = new TextDecoder().decode(decryptedTranscriptionBuffer);
+      setDecryptedTranscript(JSON.parse(decryptedContent));
+    } catch (error) {
+      console.error("Decryption failed:", error);
+      setDecryptionError("Failed to decrypt transcript. Please check your key.");
+    } finally {
+      setIsDecrypting(false);
+    }
+  }, [base64ToArrayBuffer, setDecryptedTranscript, setDecryptionError, setIsDecrypting]);
+
+  // Effect to decrypt transcript when upload changes
+  useEffect(() => {
+    if (upload?.transcript_json) {
+      decryptTranscript(upload.transcript_json);
+    } else {
+      setIsDecrypting(false);
+    }
+  }, [upload?.transcript_json, decryptTranscript]);
 
   // Check for private key and redirect if not available
   useEffect(() => {
@@ -84,6 +173,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
         variant: "destructive",
       });
       router.push('/dashboard');
+      console.log(error);
       return;
     }
     
@@ -314,6 +404,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
           {/* File Details Card Component */}
           <FileDetailsCard 
             upload={upload}
+            decryptedTranscript={decryptedTranscript}
           />
         </div>
         <div className="col-span-3">
@@ -324,6 +415,9 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
             showTimestamps={showTimestamps}
             onSeek={(time) => audioPlayerRef.current?.seekTo(time)}
             currentTime={currentTime}
+            decryptedTranscript={decryptedTranscript}
+            isDecrypting={isDecrypting}
+            decryptionError={decryptionError}
           />
         </div>
         <div>

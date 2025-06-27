@@ -164,7 +164,6 @@ export const FileRow = memo(({
           className="text-white hover:underline"
           onClick={(e) => {
             // Check if private key exists in session storage
-            sessionStorage.removeItem("privateKey");
             const privateKeyItem = sessionStorage.getItem("privateKey");
             if (!privateKeyItem) {
               e.preventDefault();
@@ -184,6 +183,7 @@ export const FileRow = memo(({
               e.preventDefault();
               sessionStorage.removeItem("privateKey");
               setShowEncryptionDialog(true);
+              console.error(error);
             }
           }}
         >

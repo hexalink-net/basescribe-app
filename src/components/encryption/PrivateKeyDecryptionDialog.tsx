@@ -3,9 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Unlock } from 'lucide-react';
-import { decryptUserPrivateKey } from '@/app/(protected)/encryption/actions';
+import { decryptUserPrivateKey } from '@/lib/encryption/client';
 import { useToast } from '@/components/ui/UseToast';
 import { 
   Dialog,

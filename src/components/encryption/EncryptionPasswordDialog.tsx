@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { generateUserKeysAndEncryptPrivateKey } from '@/app/(protected)/encryption/actions';
+import { generateUserKeysAndEncryptPrivateKey } from '@/lib/encryption/client';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Shield, FileKey } from 'lucide-react';
 import { useToast } from '@/components/ui/UseToast';
 import { 
@@ -183,15 +183,12 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
           {currentStep === 0 ? (
             /* Introduction Step */
             <div className="space-y-6 flex flex-col items-center justify-center h-full">
-              <div className="flex flex-col items-center text-center max-w-sm">
-                <div className="h-24 w-24 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center mb-8 shadow-lg shadow-blue-500/20">
-                  <Lock className="h-12 w-12 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">Welcome to BaseScribe</h2>
-                <p className="text-gray-300 mb-3 text-lg">We&apos;re glad to have you on board!</p>
-                <p className="text-gray-400 mb-3">At BaseScribe, your privacy comes first. To ensure your files stay secure, we use cryptographic encryption — and that means you&apos;re the only one who can access your files.</p>
-                <p className="text-gray-300 font-medium text-lg mt-4">For this reason, we require you to set an encryption password to protect your files.</p>
-                <p className="text-gray-400 mt-4">To get started, please click &quot;Next&quot;.</p>
+              <div className="flex flex-col items-center text-center max-w-sm mt-30">
+                <h2 className="text-3xl mb-6 text-white font-sans">Welcome to BaseScribe 👋</h2>
+                <p className="text-gray-400 mb-3">We&apos;re glad to have you on board!</p>
+                <div className="text-gray-400 mb-3">Unlike any other AI transcription service, BaseScribe encrypts your files before they are stored in the cloud with <span className="font-bold text-[#F0F177]">YOUR</span> key.</div>
+                <p className="text-gray-400 mb-3">This means that only you can access your files, and no one else can.</p>
+                <p className="text-gray-400 mb-3">To get started, please click &quot;Next&quot;.</p>
               </div>
             </div>
           ) : currentStep === 1 ? (
@@ -202,7 +199,7 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
                 </div>
                 <h3 className="text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-emerald-600">File Encryption Password</h3>
                 <p className="text-gray-300 text-lg max-w-sm">
-                  Your files will be protected with end-to-end encryption for maximum security.
+                  Your files will be protected with encryption for maximum security.
                 </p>
               </div>
               
@@ -329,7 +326,7 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
               type="button" 
               variant="outline" 
               onClick={prevStep}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
@@ -341,7 +338,7 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
             <Button 
               type="button" 
               onClick={nextStep}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 cursor-pointer hover:bg-[#2a2a2a]"
             >
               Next <ArrowRight className="h-4 w-4" />
             </Button>

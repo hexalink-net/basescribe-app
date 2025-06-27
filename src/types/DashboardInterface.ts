@@ -10,7 +10,7 @@ export interface UserProfile {
   monthly_usage_seconds: number;
 }
 
-interface TranscriptSegment {
+export interface TranscriptSegment {
   timestamp: [number, number];
   text: string;
 }
@@ -35,7 +35,7 @@ export interface UploadDetail {
   duration_seconds: number;
   status: 'pending' | 'processing' | 'completed'| 'error';
   transcript_text?: string | null;
-  transcript_json?: TranscriptSegment[] | null;
+  transcript_json?: string | null;
 }
 
 export interface Folder {

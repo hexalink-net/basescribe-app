@@ -3,38 +3,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download } from 'lucide-react';
-import { UploadDetail } from '@/types/DashboardInterface';
-
-interface TranscriptSegment {
-  timestamp: [number, number];
-  text: string;
-}
+import { UploadDetail, TranscriptSegment } from '@/types/DashboardInterface';
 
 type FileDetailsCardProps = {
   upload: UploadDetail;
+  decryptedTranscript: Array<TranscriptSegment> | null;
 };
 
-export function FileDetailsCard({ upload }: FileDetailsCardProps) {
+export function FileDetailsCard({ upload, decryptedTranscript }: FileDetailsCardProps) {
   const downloadTranscript = (format: string) => {
-    if (!upload || !upload.transcript_json) return;
+    if (!upload || !upload.transcript_json || !decryptedTranscript) return;
     
     let content = '';
     let mimeType = 'text/plain';
     let extension = 'txt';
 
     if (format === 'txt') {
-      const json = upload.transcript_json;
-      if (!Array.isArray(json)) return;
-
       // Group segments into chunks of 5
       const chunks: string[] = [];
       let currentChunk: string[] = [];
 
-      json.forEach((segment, index) => {
+      decryptedTranscript.forEach((segment, index) => {
         currentChunk.push(segment.text.trim());
         
         // When we have 5 segments or it's the last segment
-        if (currentChunk.length === 5 || index === json.length - 1) {
+        if (currentChunk.length === 5 || index === decryptedTranscript.length - 1) {
           chunks.push(currentChunk.join(' '));
           currentChunk = [];
         }
@@ -43,11 +36,8 @@ export function FileDetailsCard({ upload }: FileDetailsCardProps) {
       // Join chunks with newlines
       content = chunks.join('\r\n\n');
     } else if (format === 'txt-timestamps') {
-      const json = upload.transcript_json;
-      if (!Array.isArray(json)) return;
-
       // Format each segment with its timestamp
-      content = json.map((segment) => {
+      content = decryptedTranscript.map((segment) => {
         const startTime = formatSrtTime(segment.timestamp[0]).split(',')[0]; // Remove milliseconds
         const endTime = formatSrtTime(segment.timestamp[1]).split(',')[0]; // Remove milliseconds
         return `[${startTime} - ${endTime}] ${segment.text.trim()}`;
@@ -56,18 +46,16 @@ export function FileDetailsCard({ upload }: FileDetailsCardProps) {
       extension = 'txt'; // Keep extension as txt
     } else if (format === 'srt') {
       // Convert to standard SRT format with sequential numbering and timestamps
-      if (upload.transcript_json) {
-        content = upload.transcript_json.map((segment: TranscriptSegment, index: number) => {
-          const startTime = formatSrtTime(segment.timestamp[0]);
-          const endTime = formatSrtTime(segment.timestamp[1]);
-          // Format: Number + Timestamp range + Text + Double newline
-          return `${index + 1}
+      content = decryptedTranscript.map((segment, index) => {
+        const startTime = formatSrtTime(segment.timestamp[0]);
+        const endTime = formatSrtTime(segment.timestamp[1]);
+        // Format: Number + Timestamp range + Text + Double newline
+        return `${index + 1}
               ${startTime} --> ${endTime}
               ${segment.text}
 
           `;
-        }).join('');
-      }
+      }).join('');
       mimeType = 'text/plain';
       extension = 'srt';
     }
