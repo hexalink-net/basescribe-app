@@ -46,7 +46,7 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
   const [isDeleteUploadModalOpen, setIsDeleteUploadModalOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const audioPlayerRef = useRef<{ seekTo: (time: number) => void }>(null);
-  
+
   // Update localFolders when folders prop changes
   useEffect(() => {
     setLocalFolders(folders);
@@ -69,19 +69,20 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
     try {
       setIsDecrypting(true);
       setDecryptionError(null);
-      const privateKeyStr = sessionStorage.getItem("privateKey");
-      if (!privateKeyStr) {
-        throw new Error("Private key not found in session storage.");
+
+      const privateKeyJwk = sessionStorage.getItem("privateKey");
+
+      if (!privateKeyJwk) {
+        console.error("Private key not found in session storage.");
+        return;
       }
 
-      // The string from session storage is a key pair object.
-      const keyPair = JSON.parse(privateKeyStr);
-      const privateKeyJwk = keyPair.privateKey; // This is the raw JWK for the private key.
+      const privateKeyStr = JSON.parse(privateKeyJwk);
 
       // The JWK must be imported into a CryptoKey object before it can be used.
       const privateKey = await crypto.subtle.importKey(
         "jwk",
-        privateKeyJwk,
+        privateKeyStr.privateKey,
         { name: "RSA-OAEP", hash: "SHA-256" },
         true,
         ["decrypt"]
@@ -439,7 +440,8 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
       {audioUrl && upload && (
         <AudioPlayer 
           ref={audioPlayerRef}
-          audioUrl={audioUrl} 
+          uploadId={upload.id}
+          uploadDuration={upload.duration_seconds}
           fileName={upload.file_name} 
           onTimeChange={setCurrentTime}
         />
