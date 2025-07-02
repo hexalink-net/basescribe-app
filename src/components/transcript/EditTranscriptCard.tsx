@@ -2,23 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pencil, Download, FileEdit, FolderUp, Trash2 } from 'lucide-react';
+import { FileEdit, FolderUp, Trash2 } from 'lucide-react';
 import { UploadDetail } from '@/types/DashboardInterface';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 
 interface EditTranscriptCardProps {
   upload: UploadDetail;
-  formatFileSize: (bytes: number) => string;
   onShowTimestampsChange?: (show: boolean) => void;
   showTimestamps?: boolean;
   onRenameUpload?: (upload: UploadDetail) => void;
   onMoveUpload?: (uploadId: string) => void;
   onDeleteUpload?: (upload: UploadDetail) => void;
-  onDownloadAudioFile?: () => void;
 }
 
-export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload, onDeleteUpload, onDownloadAudioFile }: EditTranscriptCardProps) {
+export function EditTranscriptCard({ upload, onShowTimestampsChange, showTimestamps: initialShowTimestamps = false, onRenameUpload, onMoveUpload, onDeleteUpload }: EditTranscriptCardProps) {
   const [showTimestamps, setShowTimestamps] = useState(initialShowTimestamps);
   
   const handleTimestampChange = (checked: boolean) => {
@@ -26,17 +24,6 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
     if (onShowTimestampsChange) {
       onShowTimestampsChange(checked);
     }
-  };
-
-  const handleDownloadAudio = async () => {
-    if (onDownloadAudioFile) {
-      onDownloadAudioFile();
-    }
-  };
-
-  const handleEditTranscript = () => {
-    alert('Edit transcript functionality will be coming soon!');
-    //create an independent edit dialog component in transcript folder
   };
 
   const handleRenameFile = () => {

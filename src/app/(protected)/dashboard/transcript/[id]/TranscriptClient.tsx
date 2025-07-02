@@ -195,46 +195,6 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
     return `${dateStr}, ${timeStr}`;
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const downloadAudioFile = async () => {
-    if (upload?.file_path) {
-      try {
-        const res = await fetch(audioUrl);
-        if (!res.ok) throw new Error(`Failed to fetch file: ${res.statusText}`);
-
-        const blob = await res.blob();
-        const downloadUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = upload.file_name;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(downloadUrl);
-      } catch (error) {
-        console.error('Error downloading file:', error);
-        toast({
-          title: "Error",
-          description: "Failed to download audio file.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      toast({
-        title: "Error",
-        description: "Audio file not available for download.",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Handle rename upload
   const handleRenameUpload = async () => {
     if (!uploadToRename) return;
@@ -420,13 +380,11 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
           {/* File Details Card Component */}
           <EditTranscriptCard 
             upload={upload} 
-            formatFileSize={formatFileSize}
             showTimestamps={showTimestamps}
             onShowTimestampsChange={setShowTimestamps}
             onRenameUpload={handleUploadRenameClick}
             onMoveUpload={handleUploadMoveClick}
             onDeleteUpload={handleUploadDeleteClick}
-            onDownloadAudioFile={downloadAudioFile}
           />
         </div>
       </div>
