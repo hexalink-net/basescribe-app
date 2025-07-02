@@ -80,40 +80,6 @@ export function EditTranscriptCard({ upload, formatFileSize, onShowTimestampsCha
           </label>
         </div>
         
-        {/* Edit Transcript */}
-        <Button 
-          variant="ghost" 
-          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={handleEditTranscript}
-        >
-          <div className="flex items-start gap-2 pl-1 mt-1">
-            <div className="flex items-center">
-              <Pencil className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span>Edit Transcript</span>
-              <span className="text-xs text-gray-400">Coming Soon</span>
-            </div>
-          </div>
-        </Button>
-        
-        {/* Download Audio */}
-        <Button 
-          variant="ghost" 
-          className="cursor-pointer w-full justify-start text-sm font-normal hover:bg-[#3a3a3a]/50 h-auto py-2 px-2"
-          onClick={handleDownloadAudio}
-        >
-          <div className="flex items-start gap-2 pl-1 mt-1">
-            <div className="flex items-center">
-              <Download className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span>Download Audio</span>
-              <span className="text-xs text-gray-400">{formatFileSize(upload.file_size)}</span>
-            </div>
-          </div>
-        </Button>
-        
         {/* Rename File */}
         <Button 
           variant="ghost" 
