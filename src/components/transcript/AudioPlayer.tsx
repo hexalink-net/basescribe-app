@@ -12,13 +12,16 @@ interface AudioPlayerProps {
   onTimeChange?: (time: number) => void;
 }
 
-function EncryptedAudioPlayer({ uploadId, handleTimeUpdate, handleLoadedMetadata, setIsPlaying, audioRef, setIsAudioReady }: { 
+function EncryptedAudioPlayer({ uploadId, uploadDuration, handleTimeUpdate, handleLoadedMetadata, setIsPlaying, audioRef, setIsAudioReady, onBufferStart, onBufferEnd }: { 
   uploadId: string, 
+  uploadDuration: number,
   handleTimeUpdate: () => void, 
   handleLoadedMetadata: () => void, 
   setIsPlaying: (isPlaying: boolean) => void, 
   audioRef: React.RefObject<HTMLAudioElement | null>,
-  setIsAudioReady: (ready: boolean) => void 
+  setIsAudioReady: (ready: boolean) => void, 
+  onBufferStart?: () => void,
+  onBufferEnd?: () => void
 }) {
   
   // Track whether we've already set up this audio player
@@ -46,16 +49,20 @@ function EncryptedAudioPlayer({ uploadId, handleTimeUpdate, handleLoadedMetadata
     
     // Set loading state to true when starting decryption
     setIsAudioReady(false);
-    console.log("Starting encrypted audio setup for:", uploadId);
-    
+
+    let cleanupPlayer: (() => void) | null = null;
+    let uiCleanup: (() => void) | null = null;
+
     // Setup the decrypted audio player
-    setupDecryptedAudioPlayer(uploadId, privateKeyStr.privateKey, audioRef.current)
-      .then(() => {
+    setupDecryptedAudioPlayer(uploadId, uploadDuration, privateKeyStr.privateKey, audioRef.current, onBufferStart, onBufferEnd)
+      .then((cleanup) => {
         console.log("Audio player setup completed successfully");
+
+        cleanupPlayer = cleanup as () => void;
         
         // Audio is now ready
         setIsAudioReady(true);
-        
+
         // Only add event listeners if we still have a valid audio element
         if (audioRef.current) {
           // Function references to use for both adding and cleanup
@@ -81,7 +88,7 @@ function EncryptedAudioPlayer({ uploadId, handleTimeUpdate, handleLoadedMetadata
           audioRef.current.addEventListener('error', errorHandler);
           
           // Cleanup function to remove event listeners when component unmounts
-          const cleanup = () => {
+          uiCleanup = () => {
             if (audioRef.current) {
               audioRef.current.removeEventListener('timeupdate', timeUpdateHandler);
               audioRef.current.removeEventListener('loadedmetadata', metadataHandler);
@@ -89,9 +96,6 @@ function EncryptedAudioPlayer({ uploadId, handleTimeUpdate, handleLoadedMetadata
               audioRef.current.removeEventListener('error', errorHandler);
             }
           };
-          
-          // Store cleanup function for when component unmounts
-          return cleanup;
         }
       })
       .catch(error => {
@@ -106,9 +110,18 @@ function EncryptedAudioPlayer({ uploadId, handleTimeUpdate, handleLoadedMetadata
         // Set audio as not ready on error
         setIsAudioReady(false);
       });
-  }, [uploadId, audioRef, setIsAudioReady]); // Added setIsAudioReady to dependencies
-  
-  return null; // We don't need to render anything
+
+      return () => {
+        if (cleanupPlayer) {
+          cleanupPlayer();
+        }
+        if (uiCleanup) {
+          uiCleanup();
+        }
+      };
+  }, [uploadId, audioRef, uploadDuration, handleTimeUpdate, handleLoadedMetadata, setIsPlaying, setIsAudioReady, onBufferStart, onBufferEnd]);
+
+  return null; // This component does not render anything itself
 }
 
 export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioPlayerProps>(
@@ -120,6 +133,7 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [showSpeedOptions, setShowSpeedOptions] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const speedMenuRef = useRef<HTMLDivElement>(null);
 
@@ -164,6 +178,9 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
       audioRef.current.playbackRate = playbackRate;
     }
   }, [playbackRate]);
+
+  const onBufferStart = () => setIsBuffering(true);
+  const onBufferEnd = () => setIsBuffering(false);
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
@@ -228,8 +245,14 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 border-t border-[#2a2a2a] p-3 py-4">
       <div className="max-w-3xl mx-auto flex flex-col gap-2">
-        <div className="text-sm text-center font-medium text-gray-300 mb-1">
-          {fileName}
+        <div className="flex items-center justify-center gap-2 text-sm font-medium text-gray-300 mb-1">
+          <span>{fileName}</span>
+          {isBuffering && (
+            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
         </div>
         
         {!isAudioReady && (
@@ -322,11 +345,14 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
       />
       <EncryptedAudioPlayer 
         uploadId={uploadId} 
+        uploadDuration={uploadDuration}
         handleTimeUpdate={handleTimeUpdate} 
         handleLoadedMetadata={handleLoadedMetadata} 
         setIsPlaying={setIsPlaying} 
         audioRef={audioRef}
         setIsAudioReady={setIsAudioReady}
+        onBufferStart={onBufferStart}
+        onBufferEnd={onBufferEnd}
       />
     </div>
   );
