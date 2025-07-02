@@ -77,7 +77,7 @@ export const getMediaDuration = (file: File): Promise<number> => {
     
     mediaElement.addEventListener('error', (e) => {
       URL.revokeObjectURL(url);
-      reject(new Error(`Error getting media duration: ${e.message}`));
+      reject(new Error(`Error getting media duration: ${e}`));
     });
     
     // Load the media file

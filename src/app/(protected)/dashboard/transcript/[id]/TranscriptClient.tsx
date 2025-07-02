@@ -158,11 +158,6 @@ export default function TranscriptClient({ upload, audioUrl, user, folders }: Tr
       const parsed = JSON.parse(privateKeyItem);
       if (Date.now() > parsed.expiresAt) {
         sessionStorage.removeItem("privateKey");
-        toast({
-          title: "Session Expired",
-          description: "Your encryption session has expired. Please unlock your files again.",
-          variant: "destructive",
-        });
         router.push('/dashboard');
         return;
       }
