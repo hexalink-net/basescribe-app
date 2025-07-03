@@ -26,20 +26,18 @@ export function FreeCard({user, userSubs} : Props) {
       )}
     >
       <div className={cn('flex flex-col rounded-lg rounded-b-none pricing-card-border')}>
-        <div className="px-8 pt-8 mb-2">
-          <h3 className="text-xl font-semibold">Free</h3>
-          <p className="text-sm text-muted-foreground">Free tier is available for all users.</p>
+        <div className="px-8 pt-8">
+          <span className="text-3xl font-semibold">FREE</span>
         </div>
         <div className="mt-6 flex flex-col px-8">
           <div className={cn('text-[80px] leading-[96px] tracking-[-1.6px] font-medium text-white')}>
-            FREE
+            $0
           </div>
           <div className={cn('font-medium leading-[12px] text-[12px] text-gray-400')}>per user/month</div>
         </div>
         <div className={'px-8'}>
           <Separator className={'bg-[#2a2a2a]'} />
         </div>
-        <div className={'px-8 text-[16px] leading-[24px] text-gray-300'}>Free tier is available for all users.</div>
       </div>
       <div className={'px-8 mt-8'}>
         {!currentUserId ? (
@@ -66,7 +64,7 @@ export function FreeCard({user, userSubs} : Props) {
             </form>
             <Button 
               variant="ghost" 
-              className="w-full text-[#F0F177] hover:text-[#d9e021] hover:bg-transparent transition-colors" 
+              className="w-full text-[#F0F177] hover:text-[#d9e021] hover:bg-transparent transition-colors mb-4" 
               asChild
             >
               <Link href="/auth">Sign up with email address</Link>
@@ -74,7 +72,7 @@ export function FreeCard({user, userSubs} : Props) {
           </div>
         ) : !isSubscribed ? (
           // User logged in but not subscribed - show "Current Plan"
-          <Button className="w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all" variant="outline">
+          <Button className="mt-2 mb-4 w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all" variant="outline">
             <span className="flex items-center justify-center gap-1">
               Current Plan
             </span>
@@ -86,10 +84,10 @@ export function FreeCard({user, userSubs} : Props) {
       </div>
       <div className="px-8 pb-8">
       <div className="text-sm font-medium mb-3">
-        {'Everything in Business, plus:'}
+        {'Perfect for those starting out and needing light transcription'}
       </div>
       <ul className="space-y-3">
-        {['Integrations', 'Unlimited workspaces', 'Advanced editing tools', 'Everything in Starter'].map((feature: string) => (
+        {['1 hour transcriptions per month', 'Max file size: 50 MB per upload', 'Single file upload', 'File and transcript encryption included'].map((feature: string) => (
           <li key={feature} className="flex items-start">
             <svg 
               className={cn(

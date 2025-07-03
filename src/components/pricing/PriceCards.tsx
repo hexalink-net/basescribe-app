@@ -52,7 +52,6 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
             <div className={'px-8'}>
               <Separator className={'bg-[#2a2a2a]'} />
             </div>
-            <div className={'px-8 text-[16px] leading-[24px] text-gray-300'}>{tier.description}</div>
           </div>
           <div className={'px-8 mt-8'}>
           {!user ? (
@@ -79,7 +78,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
               </form>
               <Button 
                 variant="ghost" 
-                className="w-full text-[#F0F177] hover:text-[#d9e021] hover:bg-transparent transition-colors" 
+                className="w-full text-[#F0F177] hover:text-[#d9e021] hover:bg-transparent transition-colors mb-4" 
                 asChild
               >
                 <Link href="/auth">Sign up with email address</Link>
@@ -89,14 +88,14 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
             // User logged in and has this subscription
             isYearly ? (
               // User has yearly subscription - show "Current Plan"
-              <Button className="w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all" variant="outline">
+              <Button className="mt-2 mb-4 w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all" variant="outline">
                 <span className="flex items-center justify-center gap-1">
                   Current Plan
                 </span>
               </Button>
             ) : (
               // User has monthly subscription - show discount message for annual plan
-              <Button className="w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all group" variant="outline" asChild>
+              <Button className="mt-2 mb-4 w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all group" variant="outline" asChild>
                 <Link href={`/checkout/${proAnnualPriceId}`}>
                   <span className="flex items-center justify-center gap-1">
                     Get 20% discount on our annual plan
@@ -107,7 +106,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
             )
           ) : (
             // User logged in but doesn't have this subscription - show "Get started"
-            <Button className="w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all group" variant="outline" asChild>
+            <Button className="mt-2 mb-4 w-full bg-[#222222]/50 hover:bg-[#2a2a2a] text-white border-[#3a3a3a] transition-all group" variant="outline" asChild>
               <Link href={`/checkout/${tier.priceId[frequency.value]}`}>
                 <span className="flex items-center justify-center gap-1">
                   Get started

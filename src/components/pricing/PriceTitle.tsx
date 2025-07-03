@@ -7,9 +7,8 @@ interface Props {
 export function PriceTitle({ tier }: Props) {
   const { name } = tier;
   return (
-    <div className="px-8 pt-8 mb-2">
-      <h3 className="text-xl font-semibold">{name}</h3>
-      <p className="text-sm text-muted-foreground">{tier.description}</p>
+    <div className="px-8 pt-8">
+      <span className="text-3xl font-semibold">{name}</span>
     </div>
   );
 }

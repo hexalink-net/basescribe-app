@@ -9,7 +9,7 @@ export function FeaturesList({ tier }: Props) {
   return (
     <div className="px-8 pb-8">
       <div className="text-sm font-medium mb-3">
-        {tier.featured ? 'Everything in Starter, plus:' : 'Everything in Business, plus:'}
+        For professionals who need more power, flexibility, and true privacy.
       </div>
       <ul className="space-y-3">
         {tier.features.map((feature: string) => (
