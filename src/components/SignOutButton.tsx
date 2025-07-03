@@ -14,6 +14,7 @@ export function SignOutButton() {
   const handleSignOut = async () => {
     try {
       setIsLoading(true);
+      sessionStorage.removeItem("privateKey");
       await signOut();
 
       router.push('/auth');

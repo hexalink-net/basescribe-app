@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { generateUserKeysAndEncryptPrivateKey } from '@/lib/encryption/client';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Shield, FileKey } from 'lucide-react';
+import { Eye, EyeOff, Lock, Shield, KeyRound } from 'lucide-react';
 import { useToast } from '@/components/ui/UseToast';
 import { 
   BlockingDialog, 
   BlockingDialogContent, 
-  BlockingDialogFooter, 
   BlockingDialogTitle 
 } from './BlockingDialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -32,7 +31,7 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
   const [currentStep, setCurrentStep] = useState(0);
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const [animating, setAnimating] = useState(false);
-  const totalSteps = 3; // Updated to match our 3 steps (welcome, info, password form)
+  const totalSteps = 2; // Updated to match our 2 steps (welcome, password form)
   
   const { toast } = useToast();
 
@@ -43,10 +42,44 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
     setIsSubmitting(true);
     
     // Validate passwords
+    // Check for minimum length
     if (password.length < 8) {
       toast({
         title: "Invalid Password",
         description: "Password must be at least 8 characters long",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      toast({
+        title: "Invalid Password",
+        description: "Password must contain at least one uppercase letter",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Check for lowercase letter
+    if (!/[a-z]/.test(password)) {
+      toast({
+        title: "Invalid Password",
+        description: "Password must contain at least one lowercase letter",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Check for number
+    if (!/[0-9]/.test(password)) {
+      toast({
+        title: "Invalid Password",
+        description: "Password must contain at least one number",
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -81,7 +114,7 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
         
         toast({
           title: "Success",
-          description: "Encryption password set successfully!",
+          description: "Master password set successfully!",
           variant: "default",
         });
         // Close dialog after 2 seconds
@@ -140,19 +173,19 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
 
   return (
     <BlockingDialog open={isOpen}>
-      <BlockingDialogContent className="sm:max-w-md w-[500px] p-0 overflow-hidden" style={{ height: '600px' }}>
+      <BlockingDialogContent className="max-w-2xl bg-[#1a1a1a] border-[#2a2a2a] text-white p-0" style={{ height: '650px', maxHeight: '90vh' }}>
         {/* Always include a title for accessibility */}
-        {currentStep < 2 && (
+        {currentStep === 0 && (
           <VisuallyHidden>
             <BlockingDialogTitle>
-              {currentStep === 0 ? "Welcome to BaseScribe" : "File Encryption Password"}
+              Welcome to BaseScribe
             </BlockingDialogTitle>
           </VisuallyHidden>
         )}
 
         {/* Step content with animation */}
-        <div className="p-6 relative overflow-y-auto" style={{ height: '450px', scrollbarWidth: 'thin' }}>
-          <style jsx global>{`
+        <div className="h-full w-full" style={{ height: '450px', scrollbarWidth: 'thin' }}>
+          <style jsx>{`
             @keyframes slideOutLeft {
               from { transform: translateX(0); opacity: 1; }
               to { transform: translateX(-30px); opacity: 0; }
@@ -177,173 +210,202 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
             }
             .content-container {
               transition: all 0.3s ease-in-out;
+              height: 100%;
+              display: flex;
+              flex-direction: column;
             }
           `}</style>
-          <div className={`content-container ${getAnimationClass()}`}>
+          {/* Slide indicator */}
+          <div className="absolute top-7 left-0 right-0 flex justify-center">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-1.5 rounded-sm ${currentStep === 0 ? 'bg-[#F0F177]' : 'bg-gray-700'}`}></div>
+              <div className={`w-10 h-1.5 rounded-sm ${currentStep === 1 ? 'bg-[#F0F177]' : 'bg-gray-700'}`}></div>
+            </div>
+          </div>
+          
+          <div className={`content-container ${getAnimationClass()} p-8`}>
           {currentStep === 0 ? (
             /* Introduction Step */
-            <div className="space-y-6 flex flex-col items-center justify-center h-full">
-              <div className="flex flex-col items-center text-center max-w-sm mt-30">
-                <h2 className="text-3xl mb-6 text-white font-sans">Welcome to BaseScribe 👋</h2>
-                <p className="text-gray-400 mb-3">We&apos;re glad to have you on board!</p>
-                <div className="text-gray-400 mb-3">Unlike any other AI transcription service, BaseScribe encrypts your files before they are stored in the cloud with <span className="font-bold text-[#F0F177]">YOUR</span> key.</div>
-                <p className="text-gray-400 mb-3">This means that only you can access your files, and no one else can.</p>
-                <p className="text-gray-400 mb-3">To get started, please click &quot;Next&quot;.</p>
+            <div className="flex flex-col items-center justify-center h-full mt-25">
+              <div className="flex flex-col items-center text-center w-full max-w-xl mx-auto">
+                <h2 className="text-3xl mb-2 text-white font-bold">Welcome to BaseScribe</h2>
+                <p className="text-lg text-gray-300 mb-6 max-w-2xl">
+                  Your privacy-first AI transcription service that keeps your files completely secure
+                </p>
+                
+                {/* Feature Cards */}
+                <div className="grid grid-cols-2 gap-7 w-full max-w-2xl mb-6">
+                  {/* End-to-End Encryption Card */}
+                  <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#3a3a3a] flex flex-col items-center text-center shadow-md">
+                    <div className="w-12 h-12 rounded-full bg-[#333333] flex items-center justify-center mb-2">
+                      <Shield className="h-8 w-8 text-[#F0F177]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-1">End-to-End Encryption</h3>
+                    <p className="text-gray-400">Your files are encrypted at rest and in transit</p>
+                  </div>
+                  
+                  {/* Master Password Protected Card */}
+                  <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#3a3a3a] flex flex-col items-center text-center shadow-md">
+                    <div className="w-12 h-12 rounded-full bg-[#333333] flex items-center justify-center mb-2">
+                      <Lock className="h-8 w-8 text-[#F0F177]" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-1">Master Password Protected</h3>
+                    <p className="text-gray-400">A separate encryption key that only you know</p>
+                  </div>
+                </div>
+                
+                {/* Explanation Box */}
+                <div className="bg-orange-950/30 p-4 rounded-lg border border-orange-900/50 w-full max-w-2xl mb-6 shadow-md">
+                  <p className="text-orange-400 font-semibold mb-1 text-sm">Why do we need a master password?</p>
+                  <p className="text-orange-100/90 text-sm">
+                    This is different from your login password. Your master password acts as the encryption key for your files,
+                    ensuring that even we cannot access your transcriptions. Only you can decrypt and view your files with this password.
+                  </p>
+                </div>
+                
+                {/* Get Started Button */}
+                <button 
+                  onClick={nextStep}
+                  className="cursor-pointer mt-4 bg-[#F0F177] hover:bg-[#F0F150] text-black font-medium py-2 px-8 rounded-md transition-all duration-300 shadow-md font-bold"
+                >
+                  Get Started <span className="ml-1">→</span>
+                </button>
               </div>
             </div>
-          ) : currentStep === 1 ? (
-            <div className="space-y-8 flex flex-col h-full justify-center">
-              <div className="flex flex-col items-center text-center mb-6">
-                <div className="h-20 w-20 bg-gradient-to-br from-green-500 to-emerald-700 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/20">
-                  <FileKey className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-emerald-600">File Encryption Password</h3>
-                <p className="text-gray-300 text-lg max-w-sm">
-                  Your files will be protected with encryption for maximum security.
+          ) : (
+            /* Password Form Step */
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto mt-6">
+              <div className="text-center mb-4">
+                <h2 className="text-3xl font-bold text-white mb-2">Set Your Master Password</h2>
+                <p className="text-gray-300 text-base">
+                  This password will encrypt all your files. Choose a strong password you'll remember.
                 </p>
               </div>
               
-              <div className="space-y-6 max-w-sm mx-auto bg-gray-900/30 p-6 rounded-xl">
-                <div className="flex items-start">
-                  <div className="bg-green-500/20 p-2 rounded-full mr-4">
-                    <Shield className="h-6 w-6 text-green-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-green-400">Enhanced Security</h4>
-                    <p className="text-gray-300">Your files are encrypted before storage, ensuring only you can access them.</p>
-                  </div>
+              {/* Warning box */}
+              <div className="bg-red-900/20 border border-red-800/30 rounded-lg p-4 flex gap-3 mb-4 shadow-md">
+                <div className="flex-shrink-0">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 9V14M12 21.41H5.94C2.47 21.41 1.02 18.93 2.7 15.9L5.82 10.28L8.76 5.00003C10.5 1.79003 13.5 1.79003 15.24 5.00003L18.18 10.29L21.3 15.91C22.98 18.94 21.52 21.42 18.06 21.42H12V21.41Z" stroke="#FCA5A5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M11.995 17H12.005" stroke="#FCA5A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
-                
-                <div className="flex items-start">
-                  <div className="bg-amber-500/20 p-2 rounded-full mr-4">
-                    <Lock className="h-6 w-6 text-amber-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-amber-400">Separate from Login</h4>
-                    <p className="text-gray-300">This password is different from your account password for added protection.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="bg-red-500/20 p-2 rounded-full mr-4">
-                    <ArrowRight className="h-6 w-6 text-red-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-red-400">Cannot Be Recovered</h4>
-                    <p className="text-gray-300">If you forget this password, we cannot recover your files. Please store it securely.</p>
-                  </div>
-                </div>
-
-                <div className="mt-8 pt-4 border-t border-gray-700/50 text-center">
-                  <p className="text-sm text-gray-400">
-                    To learn more about how we protect your data, please visit our <a href="https://basescribe.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline font-medium">Privacy Policy</a>.
+                <div>
+                  <p className="text-red-300 font-semibold">Important Notice</p>
+                  <p className="text-red-200/80 text-sm">
+                    Please remember this password carefully. It cannot be changed or recovered. If you forget it, you will lose access to all your encrypted files permanently.
                   </p>
                 </div>
               </div>
-            </div>
-          ): (
-            /* Password Form Step */
-            <form onSubmit={handleSubmit} className="space-y-2 max-w-sm mx-auto">
-              <div className="flex items-center gap-2 mb-6">
-                <Lock className="h-5 w-5 text-blue-500" />
-                <BlockingDialogTitle className="text-xl font-semibold">Set Your Encryption Password</BlockingDialogTitle>
-              </div>    
-              <div className="grid gap-3">
-                <Label htmlFor="password" className="text-gray-300 text-lg font-medium">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your encryption password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10 py-6 bg-gray-900/50 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20 text-lg"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleShowPassword}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-200"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
+              
+              {/* Password fields */}
+              <div className="space-y-1">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-300 font-medium">Master Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your master password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pr-10 py-3 bg-[#222222]/70 border-[#3a3a3a] focus:border-[#3a3a3a] focus:ring-[#3a3a3a]/20"
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowPassword}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-200"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid gap-3">
-                <Label htmlFor="confirmPassword" className="text-gray-300 text-lg font-medium">Confirm Password</Label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Confirm your encryption password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pr-10 py-6 bg-gray-900/50 border-gray-700 focus:border-blue-500 focus:ring-blue-500/20 text-lg"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={toggleShowPassword}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-200"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-gray-300 font-medium">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Confirm your master password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pr-10 py-3 bg-[#222222]/70 border-[#3a3a3a] focus:border-[#3a3a3a] focus:ring-[#3a3a3a]/20"
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleShowPassword}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-200"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="bg-blue-900/20 p-3 rounded-lg border border-blue-800/50 mt-2">
-                  <p className="text-sm text-blue-300">
-                    Make sure to use a strong password with at least 8 characters including numbers and special characters.  
-                  </p>
+                
+                {/* Password requirements */}
+                <div className="mt-4">
+                  <p className="text-[#F0F177] mb-3">Password Requirements:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-[#333333] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="#F0F177" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">At least 8 characters</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-[#333333] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="#F0F177" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">One uppercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-[#333333] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="#F0F177" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">One lowercase letter</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-[#333333] flex items-center justify-center">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 6L9 17L4 12" stroke="#F0F177" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm text-gray-300">One number</span>
+                    </div>
+                  </div>
                 </div>
               </div>
               
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="w-full mt-6 py-6 text-lg font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 transition-all duration-300 shadow-lg shadow-blue-700/30"
+                className="w-full py-3 text-lg font-medium bg-[#F0F177] hover:bg-[#F0F150] text-black transition-all duration-300 shadow-md mt-2"
               >
-                {isSubmitting ? "Setting Password..." : "Set Encryption Password"}
+                {isSubmitting ? "Setting Password..." : "Set Password & Continue"}
+                {isSubmitting ? null : <span><KeyRound className="ml-2 w-4 h-4" /></span>}
               </Button>
             </form>
           )}
           </div>
         </div>
-        
-        {/* Navigation buttons */}
-        <BlockingDialogFooter className="flex justify-between items-center p-6">
-          {currentStep > 0 ? (
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={prevStep}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </Button>
-          ) : (
-            <div></div>
-          )}
-          
-          {currentStep < totalSteps - 1 && currentStep !== 2 && (
-            <Button 
-              type="button" 
-              onClick={nextStep}
-              className="flex items-center gap-2 cursor-pointer hover:bg-[#2a2a2a]"
-            >
-              Next <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
-        </BlockingDialogFooter>
       </BlockingDialogContent>
     </BlockingDialog>
   );

@@ -88,7 +88,7 @@ export default function PrivateKeyDecryptionDialog({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Please enter your password to access the file."
+                placeholder="Please enter your masterpassword to access the file."
                 disabled={isSubmitting}
                 className='bg-[#1a1a1a] border-[#3a3a3a] focus:border-[#4a4a4a] placeholder:text-gray-500 text-white'
               />
