@@ -57,7 +57,7 @@ export function DashboardHeader({
             <Button 
               variant="outline" 
               className="cursor-pointer border-[#2a2a2a] bg-[#1a1a1a]/40 hover:bg-[#2a2a2a] text-gray-300 hover:text-white transition-all rounded-md px-3 py-0 h-7 text-xs"
-              onClick={() => window.open('https://forms.gle/example-feedback-form', '_blank')}
+              onClick={() => window.open('https://forms.gle/H9ixHkUKjegP35399', '_blank')}
             >
               Feedback
             </Button>
