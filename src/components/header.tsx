@@ -22,8 +22,8 @@ export async function Header({ variant = 'default' }: HeaderProps = {}) {
 
   return (
     <header className={cn(
-      "transition-all duration-300 sticky top-0 z-50",
-      variant === 'default' ? "border-b border-zinc-800/30 bg-zinc-900/80 backdrop-blur-md text-white" : 
+            "transition-all duration-300 fixed w-full top-0 z-50",
+      variant === 'default' ? "backdrop-blur-md text-white" : 
       "bg-transparent backdrop-blur-md text-white"
     )}>
       <div className="container mx-auto px-4 py-3 flex items-center">
@@ -44,14 +44,14 @@ export async function Header({ variant = 'default' }: HeaderProps = {}) {
         <nav className="hidden md:flex items-center justify-center gap-8 flex-1">
           <Link 
             href="/" 
-            className="text-sm font-medium text-white/80 hover:text-white transition-all relative group"
+            className="text-base font-medium text-white/80 hover:text-white transition-all relative group font-bold"
           >
             Home
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#F0F177] group-hover:w-full transition-all duration-300"></span>
           </Link>
           <Link 
             href="/pricing" 
-            className="text-sm font-medium text-white/80 hover:text-white transition-all relative group"
+            className="text-base font-medium text-white/80 hover:text-white transition-all relative group font-bold"
           >
             Pricing
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#F0F177] group-hover:w-full transition-all duration-300"></span>
@@ -65,16 +65,16 @@ export async function Header({ variant = 'default' }: HeaderProps = {}) {
             <>
               <Button 
                 variant="ghost" 
-                className="text-white hover:text-white hover:bg-white/10 transition-all rounded-full px-5"
+                className="text-white hover:text-white hover:bg-white/10 transition-all rounded-full px-5 text-base"
                 asChild
               >
                 <Link href="/auth">Sign In</Link>
               </Button>
               <Button 
-                className="bg-gradient-to-r from-[#F0F177] to-[#d9e021] hover:opacity-90 text-black font-medium transition-all rounded-full px-5 shadow-lg shadow-[#F0F177]/20"
+                className="bg-gradient-to-r from-[#F0F177] to-[#d9e021] hover:opacity-90 text-black font-medium transition-all rounded-full px-5 shadow-lg shadow-[#F0F177]/20 text-base"
                 asChild
               >
-                <Link href="/auth?mode=signup">Get Started</Link>
+                <Link href="/auth?mode=signup">Try for Free</Link>
               </Button>
             </>
           )}

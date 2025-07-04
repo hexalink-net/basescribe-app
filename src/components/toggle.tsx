@@ -21,7 +21,7 @@ export function Toggle({ setFrequency, frequency }: Props) {
             <TabsTrigger 
               key={billingFrequency.value} 
               value={billingFrequency.value}
-              className="data-[state=active]:bg-[#222222] data-[state=active]:text-white text-gray-300"
+              className="data-[state=active]:bg-[#222222] data-[state=active]:text-white text-gray-300 text-sm font-bold"
             >
               {billingFrequency.label}
             </TabsTrigger>

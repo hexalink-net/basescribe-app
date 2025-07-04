@@ -38,7 +38,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
             {'delay-100': index === 0, 'delay-200': index === 1}
           )}
         >
-          <Card className="group relative bg-gradient-to-b from-[#F5E960]/10 to-[#1F2833]/40 border-2 border-[#F5E960]/50 hover:border-[#F5E960] backdrop-blur-2xl p-10 transition-all duration-700 hover:scale-105 overflow-hidden">
+          <Card className="group relative bg-gradient-to-b from-[#F5E960]/10 to-[#1F2833]/40 border-2 border-[#F5E960]/50 hover:border-[#F5E960] backdrop-blur-2xl transition-all duration-700 hover:scale-105 overflow-hidden">
             {tier.featured && <FeaturedCardGradient />}
             <PriceHeader tier={tier} 
               loading={loading}

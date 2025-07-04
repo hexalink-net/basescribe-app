@@ -25,7 +25,7 @@ export function FreeCard({user, userSubs} : Props) {
         'animate-in fade-in-50'
       )}
     >
-      <Card className="group relative bg-[#1a1a1a] border border-[#2C2F33]/50 hover:border-[#F5E960]/30 p-10 transition-all duration-700 hover:scale-105 overflow-hidden">
+      <Card className="group relative bg-[#1a1a1a] border border-[#2C2F33]/50 hover:border-[#F5E960]/30 transition-all duration-700 hover:scale-105 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-b from-[#F5E960]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <CardHeader className="text-center pb-8 relative z-10">
                 <CardTitle className="text-4xl font-bold text-white mb-2">FREE</CardTitle>

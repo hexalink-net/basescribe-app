@@ -35,11 +35,16 @@ export function Pricing({ country, user, userSubs }: Props) {
   return (
     <div className="w-full p-4">
       <div className="w-full max-w-7xl mx-auto mb-8">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold mb-3">Simple, <span className="text-gradient">Transparent</span> Pricing</h1>
-          <p className="text-gray-400 max-w-2xl mx-auto">Choose the plan that works best for your transcription needs. All plans include our core features with different usage limits.</p>
-        </div>
-        
+        <div className="text-center mb-5">
+            <h2 className="text-2xl md:text-5xl font-bold mb-8 tracking-tight">
+              Simple, transparent
+              <br />
+              <span className="text-[#F5E960]">pricing</span>
+            </h2>
+            <p className="text-xl text-[#C5C6C7] max-w-4xl mx-auto leading-relaxed">
+              No hidden fees, no surprises. Just secure transcription that works.
+            </p>
+        </div>      
         <Toggle frequency={frequency} setFrequency={setFrequency} />
         <PriceCards frequency={frequency} loading={loading} priceMap={prices} user={user} userSubs={userSubs} />
       </div>
