@@ -41,7 +41,7 @@ export default function Home() {
                 AI Transcription
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-[#C5C6C7] mb-12 max-w-4xl mx-auto leading-relaxed font-light">
+            <p className="text-lg px-6 md:text-2xl text-[#C5C6C7] mb-12 max-w-4xl mx-auto leading-relaxed font-light">
               Keep your voice recordings and transcriptions protected with{" "}
               <span className="text-[#F5E960] font-medium">your own key</span>
               <br />
