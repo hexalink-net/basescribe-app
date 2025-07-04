@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/landing/footer';
-import { ChevronRight, Lock, Users, Zap, Key, Star } from 'lucide-react';
+import { ChevronRight, Lock, Users, Zap, Key } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {PricingContainer} from '@/components/pricing/PricingContainer';
 
@@ -103,7 +103,7 @@ export default function Home() {
             AI transcription tools?
           </h2>
           <p className="text-xl text-[#C5C6C7] mb-10 max-w-4xl mx-auto leading-relaxed">
-            You're not alone. Most transcription services have serious privacy concerns.
+            You&#39;re not alone. Most transcription services have serious privacy concerns.
           </p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -164,7 +164,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-xl text-[#C5C6C7] max-w-4xl mx-auto leading-relaxed">
-              True privacy isn't just a feature—it's our{" "}
+              True privacy isn&#39;t just a feature—it&#39;s our{" "}
               <span className="text-[#F5E960] font-semibold">foundation</span>.
             </p>
           </div>
@@ -217,7 +217,7 @@ export default function Home() {
               <span className="text-[#F5E960]">made simple</span>
             </h2>
             <p className="text-xl text-[#C5C6C7] max-w-4xl mx-auto leading-relaxed">
-              We handle the complex cryptography so you don't have to worry about it.
+              We handle the complex cryptography so you don&#39;t have to worry about it.
             </p>
           </div>
           <div className="grid md:grid-cols-2 gap-8">

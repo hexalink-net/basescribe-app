@@ -152,19 +152,6 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 0 && !animating) {
-      setDirection('backward');
-      setAnimating(true);
-      setTimeout(() => {
-        setCurrentStep(currentStep - 1);
-        setTimeout(() => {
-          setAnimating(false);
-        }, 300);
-      }, 300);
-    }
-  };
-  
   // Add animation class based on direction and animation state
   const getAnimationClass = () => {
     if (!animating) return '';
@@ -278,7 +265,7 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
               <div className="text-center mb-4">
                 <h2 className="text-3xl font-bold text-white mb-2">Set Your Master Password</h2>
                 <p className="text-gray-300 text-base">
-                  This password will encrypt all your files. Choose a strong password you'll remember.
+                  This password will encrypt all your files. Choose a strong password you&#39;ll remember.
                 </p>
               </div>
               
