@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
@@ -62,7 +63,7 @@ export default function Home() {
           </div>
 
           {/* Futuristic Product Demo Mockup */}
-          <div className="mt-20 relative group">
+          <div className="mt-20 relative group max-w-[550px] mx-auto text-center">
             <div className="absolute inset-0 bg-gradient-to-r from-[#F5E960]/20 to-[#FFD600]/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <div className="relative bg-gradient-to-b from-[#1F2833]/60 to-[#2C2F33]/60 rounded-3xl p-2 border border-[#F5E960]/20 shadow-2xl backdrop-blur-2xl hover:border-[#F5E960]/40 transition-all duration-700">
               <div className="bg-[#0B0C10]/80 rounded-2xl overflow-hidden backdrop-blur-xl">
@@ -84,8 +85,15 @@ export default function Home() {
                 </div>
 
                 {/* Futuristic App Interface */}
-                <div className="p-12 min-h-[500px] relative">
-                  
+                <div className="p-12 min-h-[300px] relative">
+                  <Image
+                    src="/basescribe.gif"
+                    alt="BaseScribe Product Demo GIF"
+                    fill
+                    objectFit="contain"
+                    unoptimized
+                    className="rounded-lg"
+                  />
                 </div>
               </div>
             </div>
