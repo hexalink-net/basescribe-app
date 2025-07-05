@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BaseScribe - Audio & Video Transcription",
-  description: "Automatically transcribe your audio and video files with timestamps",
+  title: "BaseScribe - Encrypted Audio & Video Transcription",
+  description: "Privacy focused audio & video transcription",
 };
 
 export default function RootLayout({
