@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           <ul>
             <li><strong>Personal Data:</strong> Name, email address, and other contact information you provide when creating an account.</li>
             <li><strong>Usage Data:</strong> Information about how you use our website and services.</li>
-            <li><strong>Content Data:</strong> Audio and video files you upload, and the resulting transcriptions.</li>
+            <li><strong>Content Data:</strong> Audio and video files you upload only to be processed by our AI transcription service, and the resulting transcriptions and audio files are stored encrypted and only accessible with your personal encryption password.</li>
             <li><strong>Payment Data:</strong> Information necessary to process your payment if you make purchases.</li>
           </ul>
           
@@ -37,6 +37,7 @@ export default function PrivacyPage() {
           
           <h2>4. Data Storage and Security</h2>
           <p>We use Supabase for authentication, database management, and file storage. Your data is stored securely and protected using industry-standard encryption and security practices. We implement appropriate technical and organizational measures to protect your personal data against unauthorized or unlawful processing, accidental loss, destruction, or damage.</p>
+          <p><strong>Encryption of Your Content:</strong> To provide an additional layer of security, all audio files and transcriptions you upload are encrypted at rest. We do not store any of your audio files or transcriptions in an unencrypted format. Access to this data requires your personal encryption password, which only you have access to.</p>
           
           <h2>5. Data Retention</h2>
           <p>We will retain your personal data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your data to the extent necessary to comply with our legal obligations, resolve disputes, and enforce our legal agreements and policies.</p>

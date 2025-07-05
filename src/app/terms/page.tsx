@@ -30,7 +30,7 @@ export default function TermsPage() {
           <p>The Service and its entire contents, features, and functionality (including but not limited to all information, software, text, displays, images, video, and audio, and the design, selection, and arrangement thereof), are owned by BaseScribe, its licensors, or other providers of such material and are protected by copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.</p>
           
           <h2>7. User Content</h2>
-          <p>You retain all rights in, and are solely responsible for, the content you upload to the Service. By uploading content to the Service, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, perform, display, distribute, and otherwise disclose to third parties any such material for the purpose of providing the Service.</p>
+          <p>You retain all rights in, and are solely responsible for, the content you upload to the Service. We are committed to the security of your content. All audio files and transcriptions are stored in an encrypted format and are only accessible by you using your personal encryption password. By uploading content to the Service, you grant us a limited, non-exclusive, royalty-free license to process your data to provide the transcription service. We will not access, view, or listen to your content, except as required for support and with your explicit permission.</p>
           
           <h2>8. Prohibited Uses</h2>
           <p>You may use the Service only for lawful purposes and in accordance with these Terms. You agree not to use the Service in any way that violates any applicable federal, state, local, or international law or regulation.</p>
