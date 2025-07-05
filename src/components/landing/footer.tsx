@@ -16,7 +16,7 @@ export function Footer() {
                   className="h-8 w-auto" 
                   priority
                 />
-                <p className="text-white/60">Automatic audio & video transcription</p>
+                <p className="text-white/60">Privacy focused audio & video transcription</p>
               </div>
             </div>
             
