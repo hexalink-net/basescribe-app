@@ -32,9 +32,11 @@ import {
 } from '@/components/ui/DropdownMenu';
 import PrivateKeyDecryptionDialog from '@/components/encryption/PrivateKeyDecryptionDialog';
 import { EncryptionData } from '@/types/DashboardInterface';
+import { revalidateUploadsTag } from '@/app/(protected)/dashboard/actions';
 
 interface FileTableProps {
   uploads: Uploads[];
+  userId: string;
   encryptionData?: EncryptionData;
   currentFolder: Folder | null;
   selectedUploads: string[];
@@ -306,6 +308,7 @@ import SkeletonTable from './SkeletonTable';
 // Main FileTable component with memoization
 const FileTable = ({
   uploads,
+  userId,
   encryptionData,
   currentFolder,
   selectedUploads,
@@ -341,6 +344,21 @@ const FileTable = ({
   
   // State for client-side rendering to avoid hydration mismatch
   const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const hasProcessingFiles = uploads.some(
+      (upload) => upload.status === 'processing'
+    );
+
+    if (hasProcessingFiles) {
+      const interval = setInterval(() => {
+        console.log('Polling for upload status updates...');
+        revalidateUploadsTag(userId);
+      }, 30000); // Poll every 30 seconds
+
+      return () => clearInterval(interval); // Cleanup on unmount or when uploads change
+    }
+  }, [uploads, userId]);
   
   // Pagination state
   const [page, setPage] = useState(1);

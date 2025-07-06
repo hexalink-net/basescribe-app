@@ -5,12 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Uploads, UserProfile, Folder, EncryptionData } from '@/types/DashboardInterface';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-import { deleteUpload, bulkDeleteUploads, renameUpload, revalidateUploadsTag } from './actions';
+import { deleteUpload, bulkDeleteUploads, renameUpload } from './actions';
 import { createFolder, moveUploadToFolder, deleteFolder, renameFolder, moveFolder } from './folder/actions';
 import { useToast } from '@/components/ui/UseToast';
 import dynamic from 'next/dynamic';
-import { useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 
 // Import the DashboardHeader component
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
@@ -87,33 +85,6 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
 
   // Check if user has set encryption password
   const [showEncryptionDialog, setShowEncryptionDialog] = useState(!encryptionData?.id);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel('table_db_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'uploads',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('Change received!', payload.new.user_id);
-          if (payload.new.user_id === user.id) {
-            revalidateUploadsTag(user.id);
-            router.refresh();
-          }
-        }
-      )
-      .subscribe();
-
-    // Cleanup on unmount
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user.id, router]);
 
   // Upload modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -704,6 +675,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
             <Suspense fallback={<SkeletonTable />}>
               <FileTable 
                 uploads={uploads}
+                userId={user.id}
                 encryptionData={encryptionData}
                 currentFolder={currentFolder}
                 selectedUploads={selectedUploads}
