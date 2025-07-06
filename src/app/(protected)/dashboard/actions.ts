@@ -458,6 +458,8 @@ export async function processUploadedFile(
       }
       throw new Error(`Failed to send message to queue`);
     }
+
+    supabase.functions.invoke('transcription_queue_handler')
     
     return;
 
