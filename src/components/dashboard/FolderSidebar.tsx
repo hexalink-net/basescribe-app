@@ -205,14 +205,14 @@ export default function FolderSidebar({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-md shadow-lg py-1 px-0 min-w-[160px]">
                             <DropdownMenuItem 
-                              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center"
+                              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
                               onClick={() => onRenameFolder(rootFolder)}
                             >
                               <Pencil className="h-3 w-3 mr-2" />
                               Rename
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center"
+                              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
                               onClick={() => onMoveFolder(rootFolder)}
                             >
                               <ArrowRight className="h-3 w-3 mr-2" />
@@ -321,6 +321,8 @@ export default function FolderSidebar({
             </div>
           )}
           <h3 className="text-sm font-semibold text-gray-400">Usage</h3>
+          
+          {userProfile && (
           <div>
             {/* Calculate usage percentage */}
             {(() => {
@@ -335,7 +337,7 @@ export default function FolderSidebar({
               return (
                 <>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="font-medium">
+                    <span className="font-medium text-white">
                       {formatDuration(userProfile.monthly_usage_seconds || 0)} / 
                       {userProfile.product_id === pro ? ` ${proDuration}:00:00` : ` ${freeDuration}:00:00`}
                     </span>
@@ -353,6 +355,7 @@ export default function FolderSidebar({
               );
             })()} 
           </div>
+          )}
           <div className="text-xs text-gray-400 mt-1">
             {userProfile.product_id === pro
               ? `Pro plan: ${proDuration} hours per month` 

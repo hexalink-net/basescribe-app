@@ -90,9 +90,8 @@ export default function Home() {
                     src="/basescribe.gif"
                     alt="BaseScribe Product Demo GIF"
                     fill
-                    objectFit="contain"
                     unoptimized
-                    className="rounded-lg"
+                    className="object-contain rounded-lg"
                   />
                 </div>
               </div>

@@ -236,14 +236,14 @@ export const FileRow = memo(({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-md shadow-lg py-1 px-0 min-w-[160px]">
             <DropdownMenuItem 
-              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center"
+              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
               onClick={() => onRenameUpload(upload)}
             >
               <Pencil className="h-4 w-4 mr-2" />
               Rename
             </DropdownMenuItem>
             <DropdownMenuItem 
-              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center"
+              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
               onClick={() => onMoveUpload(upload.id)}
             >
               <FolderUp className="h-4 w-4 mr-2" />

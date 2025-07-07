@@ -45,7 +45,7 @@ export async function uploadFile(
       // Ensure 100% is reported on success if callback exists
       onProgress?.(100);
       return;
-    } else if (fileSize > 6000 * 1000 && fileSize <= 5000000 * 1000) {
+    } else if (fileSize > 6000 * 1000 && fileSize <= 5370 * 1000 * 1000) {
       // TUS upload for larger files
       const uppy = new Uppy();
       const { data: { session } } = await supabase.auth.getSession();

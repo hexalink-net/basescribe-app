@@ -14,7 +14,7 @@ import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { pro } from '@/constants/PaddleProduct';
 
 // 50 MB max file size for free users
-const MAX_FILE_SIZE_FREE = 52 * 1000 * 1000;
+const MAX_FILE_SIZE_FREE = 210 * 1000 * 1000;
 // 5 GB max file size for pro users
 const MAX_FILE_SIZE_PRO = 5370 * 1000 * 1000;
 
