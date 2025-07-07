@@ -99,8 +99,6 @@ async function fetchMetadata(uploadId: string) {
         chunks: metadataJson.chunks,
     }
 
-    console.log(metadataResult)
-
     return metadataResult;
 }
 
