@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { EncryptionData } from '@/types/DashboardInterface';
 
@@ -79,6 +80,9 @@ export default function PrivateKeyDecryptionDialog({
               <h3 className="text-lg font-semibold">Unlock Encrypted Files</h3>
             </div>
           </DialogTitle>
+          <DialogDescription>
+          For your privacy, master password are kept only in memory and expire after 1 hour or when you close the tab.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-3">
@@ -88,7 +92,7 @@ export default function PrivateKeyDecryptionDialog({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Please enter your masterpassword to access the file."
+                placeholder="Please enter your master password"
                 disabled={isSubmitting}
                 className='bg-[#1a1a1a] border-[#3a3a3a] focus:border-[#4a4a4a] placeholder:text-gray-500 text-white'
               />
