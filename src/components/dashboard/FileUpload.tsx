@@ -184,18 +184,18 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         clearInterval(progressInterval);
         delete activeIntervalsRef.current[id];
       }
-      
+
       const errorMessage = error instanceof Error ? error.message : 'An error occurred during upload';
-      updateFileStatus(id, 'error', errorMessage);
-      
-      // Check if error is related to transcription limits
+
       const isLimitError = errorMessage.includes('quota exceeded') || 
-                          errorMessage.includes('Cancelled or past due') || 
-                          errorMessage.includes('Monthly usage quota');
+        errorMessage.includes('Cancelled or past due') || 
+        errorMessage.includes('Monthly usage quota');
+      
+      updateFileStatus(id, 'error', errorMessage);
       
       toast({
         title: isLimitError ? "Transcription Limit Exceeded" : "Upload failed",
-        description: `${file.name}: ${errorMessage}`,
+        description: isLimitError ? `${file.name}: ${errorMessage}`: `${file.name}: File upload failed either due to file size limit or transcription limit has been reached`,
         variant: "destructive",
       });
     }

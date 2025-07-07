@@ -74,7 +74,11 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       }
 
       // Check user subscription limit
-      await checkUserSubscriptionLimit(userId, durationSeconds);
+      const result = await checkUserSubscriptionLimit(userId, durationSeconds);
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
       // Upload to storage with progress reporting
       await uploadFile(file, sanitizeFilePath(filePath), fileSize, BucketNameUpload, onProgress);

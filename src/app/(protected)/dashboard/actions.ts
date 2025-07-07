@@ -348,11 +348,11 @@ export async function checkUploadRateLimit(userId: string) {
   return success;
 }
 
-export async function checkUserSubscriptionLimit(userId: string, usageSeconds: number) {
+export async function checkUserSubscriptionLimit(userId: string, usageSeconds: number): Promise<{ success: boolean; error?: string }> {
   const exceedLimit = await checkUploadRateLimit(userId);
 
   if (!exceedLimit) {
-    throw new Error("Too many requests. Please try again in a few minutes.");
+    return { success: false, error: "Too many requests. Please try again in a few minutes." };
   }
 
   const supabase = await createClient();
@@ -369,17 +369,15 @@ export async function checkUserSubscriptionLimit(userId: string, usageSeconds: n
       metadata: { userId, usageSeconds, error }
     });
 
-    if (error.message === 'Monthly usage quota exceeded') {
-      throw new Error(error.message);
-    } else if (error.message.includes('Daily uploads quota exceeded')) {
-      throw new Error(error.message);
-    } else if (error.message.includes('Cancelled or past due')) {
-      throw new Error(error.message);
+    if (error.message === 'Monthly usage quota exceeded' || 
+        error.message.includes('Daily uploads quota exceeded') || 
+        error.message.includes('Cancelled or past due')) {
+      return { success: false, error: error.message };
     }
-    throw new Error(`Failed to check user subscription limit`);
+    return { success: false, error: `Failed to check user subscription limit` };
   }
 
-  return;
+  return { success: true };
 }
 
 export async function processUploadedFile(
