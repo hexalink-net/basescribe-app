@@ -9,6 +9,7 @@ import { formatFileSize, validateAudioOrVideoFile, getMediaDuration } from '@/li
 import { useToast } from '@/components/ui/UseToast';
 import { validateBatchUpload } from '@/app/(protected)/dashboard/actions';
 import { pro } from '@/constants/PaddleProduct';
+import { useUploadStore } from '@/stores/UseUploadStore';
 
 interface FileUploadProps {
   userId: string;
@@ -31,7 +32,8 @@ interface FileWithStatus {
 }
 
 export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
-  const [files, setFiles] = useState<FileWithStatus[]>([]);
+  const queuedFiles = useUploadStore((state) => state.uploads);
+  const { addUpload, updateProgress, updateStatus, updateLanguage, removeUpload, removeAllUploads } = useUploadStore.getState();
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const totalFilesSizeRef = useRef(0);
@@ -92,12 +94,15 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
     if (validFiles.length > 0) {
       // If not multiple, replace existing files
       if (!multiple) {
-        setFiles([validFiles[0]]);
+        removeAllUploads();
+        addUpload(validFiles[0]);
       } else {
-        setFiles(prev => [...prev, ...validFiles]);
+        for (const file of validFiles) {
+          addUpload(file);
+        }
       }
     }
-  }, [maxSizeInBytes, toast, multiple]);
+  }, [maxSizeInBytes, toast, multiple, addUpload, removeAllUploads]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -119,18 +124,14 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         clearInterval(interval);
       });
     };
-  }, [files]);
+  }, [queuedFiles]);
 
   const updateFileProgress = (id: string, progress: number) => {
-    setFiles(prev => prev.map(f => 
-      f.id === id ? { ...f, progress } : f
-    ));
+    updateProgress(id, progress);
   };
 
   const updateFileStatus = (id: string, status: FileStatus, error?: string) => {
-    setFiles(prev => prev.map(f => 
-      f.id === id ? { ...f, status, error } : f
-    ));
+    updateStatus(id, status, error);
   };
 
   const uploadFile = async (fileWithStatus: FileWithStatus) => {
@@ -152,14 +153,13 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
       // As a fallback, still use a slow interval for progress in case real progress isn't working
       // This will be cleared once we get the first real progress update
       progressInterval = setInterval(() => {
-        setFiles(prev => prev.map(f => {
+        queuedFiles.map(f => {
           if (f.id === id && f.progress < 90) {
             // Smaller increments for smoother appearance
             const increment = 0.5;
-            return { ...f, progress: Math.min(f.progress + increment, 90) };
+            updateFileProgress(id, Math.min(f.progress + increment, 90));
           }
-          return f;
-        }));
+        });
       }, 500);
       
       // Store the interval in our ref for cleanup
@@ -202,13 +202,13 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
   };
   
   const handleUpload = async () => {
-    if (files.length === 0) return;
+    if (queuedFiles.length === 0) return;
     
     setUploading(true);
     
     try {
       // Filter only idle files
-      const filesToUpload = files.filter(f => f.status === 'idle');
+      const filesToUpload = queuedFiles.filter(f => f.status === 'idle');
       
       // Get the duration of each file
       const fileDurations = await Promise.all(
@@ -251,7 +251,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
 
     totalFilesSizeRef.current -= fileSize;
     
-    setFiles(prev => prev.filter(f => f.id !== id));
+    removeUpload(id);
   };
   
   const removeAllFiles = () => {
@@ -261,7 +261,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
     });
     activeIntervalsRef.current = {};
     
-    setFiles([]);
+    removeAllUploads();
 
     totalFilesSizeRef.current = 0;
   };
@@ -272,7 +272,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors w-full ${
           isDragActive ? 'border-primary bg-primary/10' : 'border-[#2a2a2a] hover:border-[#3a3a3a]'
-        } ${files.length > 0 ? 'mb-4' : ''}`}
+        } ${queuedFiles.length > 0 ? 'mb-4' : ''}`}
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center gap-2">
@@ -298,18 +298,18 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         </div>
       </div>
 
-      {files.length > 0 && (
+      {queuedFiles.length > 0 && (
         <div className="space-y-4">
           <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium">{multiple ? `Files to upload (${files.length})` : 'File to upload'}</h3>
+              <h3 className="font-medium">{multiple ? `Files to upload (${queuedFiles.length})` : 'File to upload'}</h3>
               <div className="flex gap-2">
                 {!uploading && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={removeAllFiles}
-                    className="text-gray-400 hover:text-destructive"
+                    className="text-gray-400 hover:text-destructive cursor-pointer"
                   >
                     {multiple ? 'Clear All' : 'Clear'}
                   </Button>
@@ -318,7 +318,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
                   onClick={handleUpload} 
                   className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white"
                   size="sm"
-                  disabled={uploading || files.every(f => f.status !== 'idle')}
+                  disabled={uploading || queuedFiles.every(f => f.status !== 'idle')}
                 >
                   {uploading ? 'Uploading...' : (multiple ? 'Upload All' : 'Upload')}
                 </Button>
@@ -326,7 +326,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
             </div>
             
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-              {files.map((fileWithStatus) => (
+              {queuedFiles.map((fileWithStatus) => (
                 <div key={fileWithStatus.id} className="border border-[#2a2a2a] rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -343,9 +343,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
                             className="bg-[#2a2a2a] border border-[#3a3a3a] rounded text-xs text-gray-300 py-1 px-2"
                             value={fileWithStatus.language}
                             onChange={(e) => {
-                              setFiles(prev => prev.map(f => 
-                                f.id === fileWithStatus.id ? { ...f, language: e.target.value } : f
-                              ));
+                              updateLanguage(fileWithStatus.id, e.target.value);
                             }}
                             disabled={uploading || fileWithStatus.status !== 'idle'}
                           >
