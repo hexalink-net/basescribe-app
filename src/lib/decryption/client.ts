@@ -324,7 +324,11 @@ async function loadChunks(sourceBuffer: SourceBuffer, metadata: MetadataResult, 
           }
           try {
             loadedChunks.add(i);
-            await processChunk(i, chunks[i].start_time, chunks[i].path, sourceBuffer, cryptoKey, baseNonce);
+            if (isSeek) {
+              await processChunk(i, chunks[i].path, sourceBuffer, cryptoKey, baseNonce, chunks[i].start_time);
+            } else {
+              await processChunk(i, chunks[i].path, sourceBuffer, cryptoKey, baseNonce);
+            }
           } catch (error) {
             console.error(`Failed to load chunk ${i}:`, error);
           }
@@ -336,7 +340,7 @@ async function loadChunks(sourceBuffer: SourceBuffer, metadata: MetadataResult, 
     };
 
     // Function to decrypt and append a single chunk
-    async function processChunk(index: number, startTime: number, path: string, sourceBuffer: SourceBuffer, key: CryptoKey, baseNonce: ArrayBuffer) {
+    async function processChunk(index: number, path: string, sourceBuffer: SourceBuffer, key: CryptoKey, baseNonce: ArrayBuffer, startTime?: number) {
       onBufferStart?.();
       try {
         // Fetch the encrypted chunk
@@ -364,10 +368,14 @@ async function loadChunks(sourceBuffer: SourceBuffer, metadata: MetadataResult, 
         );
 
         // printMagicHeader(decryptedData);
+        console.log("chunk", index, "startTime", startTime)
         
         // Important: wait for any pending buffer operations to complete
         await waitForSourceBuffer();
-        sourceBuffer.timestampOffset = startTime;
+        console.log("buffered", sourceBuffer.updating)
+        if (startTime) {
+          sourceBuffer.timestampOffset = startTime;
+        }
         sourceBuffer.appendBuffer(decryptedData);
         
         // Wait for append to complete
