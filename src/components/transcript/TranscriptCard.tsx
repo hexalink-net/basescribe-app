@@ -129,7 +129,7 @@ export function TranscriptCard({ upload, formatDate, showTimestamps = true, onSe
   };
 
   return (
-    <Card className="mb-6 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50">
+    <Card className="mb-6 bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>{upload.file_name}</span>

@@ -663,7 +663,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
         {/* Main Content - Optimized for LCP */}
         <div className="flex-1 overflow-auto p-6">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-white">
               {currentFolder ? currentFolder.name : 'All Files'}
             </h1>
             {/* Memoized Action Buttons */}

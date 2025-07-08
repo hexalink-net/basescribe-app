@@ -81,7 +81,7 @@ export function FileDetailsCard({ upload, decryptedTranscript }: FileDetailsCard
   };
 
   return (
-    <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50">
+    <Card className="bg-[#2a2a2a]/50 backdrop-blur-sm border-[#3a3a3a]/50 text-white">
       <CardHeader className="pb-2 pt-4 px-4">
         <CardTitle className="text-base">Export</CardTitle>
       </CardHeader>

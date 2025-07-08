@@ -271,7 +271,7 @@ export const AudioPlayer = forwardRef<{ seekTo: (time: number) => void }, AudioP
           <div className="flex items-center gap-4">
             <button 
               onClick={togglePlayPause}
-              className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors"
+              className="flex items-center justify-center h-8 w-8 rounded-full bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors text-white"
             >
               {isPlaying ? (
                 <Pause className="h-4 w-4" />

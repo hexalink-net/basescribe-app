@@ -122,7 +122,7 @@ export default function FolderSidebar({
         <div className="p-4">
           <Link href="/dashboard" className={`text-white flex items-center gap-2 p-2 rounded-md hover:bg-[#2a2a2a] ${!currentFolder ? 'bg-[#2a2a2a]' : ''}`}>
             <FolderIcon className="h-4 w-4" />
-            <span >All Files</span>
+            <span className="text-white">All Files</span>
           </Link>
         </div>
         
