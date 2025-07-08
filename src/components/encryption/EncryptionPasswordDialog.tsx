@@ -210,34 +210,34 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
             </div>
           </div>
           
-          <div className={`content-container ${getAnimationClass()} p-8`}>
+          <div className={`content-container ${getAnimationClass()} xs:px-2 sm:p-8`}>
           {currentStep === 0 ? (
             /* Introduction Step */
             <div className="flex flex-col items-center justify-center h-full mt-25">
               <div className="flex flex-col items-center text-center w-full max-w-xl mx-auto">
-                <h2 className="text-3xl mb-2 text-white font-bold">Welcome to BaseScribe</h2>
-                <p className="text-lg text-gray-300 mb-6 max-w-2xl">
+                <h2 className="text-xl sm:text-3xl mb-2 text-white font-bold">Welcome to BaseScribe</h2>
+                <p className="text-sm sm:text-lg text-gray-300 mb-6 max-w-2xl">
                   Your privacy-first AI transcription service that keeps your files completely secure
                 </p>
                 
                 {/* Feature Cards */}
                 <div className="grid grid-cols-2 gap-7 w-full max-w-2xl mb-6">
                   {/* End-to-End Encryption Card */}
-                  <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#3a3a3a] flex flex-col items-center text-center shadow-md">
+                  <div className="bg-[#1a1a1a] sm:p-4 p-2 rounded-lg border border-[#3a3a3a] flex flex-col items-center text-center shadow-md">
                     <div className="w-12 h-12 rounded-full bg-[#333333] flex items-center justify-center mb-2">
-                      <Shield className="h-8 w-8 text-[#F0F177]" />
+                      <Shield className="sm:h-8 sm:w-8 h-6 w-6 text-[#F0F177]" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">End-to-End Encryption</h3>
-                    <p className="text-gray-400">Your files are encrypted at rest and in transit</p>
+                    <h3 className="sm:text-lg text-sm font-semibold text-white mb-1">End-to-End Encryption</h3>
+                    <p className="text-gray-400 text-sm sm:text-base">Your files are encrypted at rest and in transit</p>
                   </div>
                   
                   {/* Master Password Protected Card */}
-                  <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#3a3a3a] flex flex-col items-center text-center shadow-md">
+                  <div className="bg-[#1a1a1a] sm:p-4 p-2 rounded-lg border border-[#3a3a3a] flex flex-col items-center text-center shadow-md">
                     <div className="w-12 h-12 rounded-full bg-[#333333] flex items-center justify-center mb-2">
-                      <Lock className="h-8 w-8 text-[#F0F177]" />
+                      <Lock className="sm:h-8 sm:w-8 h-6 w-6 text-[#F0F177]" />
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Master Password Protected</h3>
-                    <p className="text-gray-400">A separate encryption key that only you know</p>
+                    <h3 className="sm:text-lg text-sm font-semibold text-white mb-1">Master Password Protected</h3>
+                    <p className="text-gray-400 text-sm sm:text-base">A separate encryption key that only you know</p>
                   </div>
                 </div>
                 
@@ -261,16 +261,16 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
             </div>
           ) : (
             /* Password Form Step */
-            <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto mt-6">
+            <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto mt-12 sm:mt-6">
               <div className="text-center mb-4">
-                <h2 className="text-3xl font-bold text-white mb-2">Set Your Master Password</h2>
-                <p className="text-gray-300 text-base">
+                <h2 className="text-xl sm:text-3xl font-bold text-white mb-2">Set Your Master Password</h2>
+                <p className="text-gray-300 text-sm sm:text-base">
                   This password will encrypt all your files. Choose a strong password you&#39;ll remember.
                 </p>
               </div>
               
               {/* Warning box */}
-              <div className="bg-red-900/20 border border-red-800/30 rounded-lg p-4 flex gap-3 mb-4 shadow-md">
+              <div className="bg-red-900/20 border border-red-800/30 rounded-lg p-2 sm:p-4 flex gap-3 mb-4 shadow-md">
                 <div className="flex-shrink-0">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 9V14M12 21.41H5.94C2.47 21.41 1.02 18.93 2.7 15.9L5.82 10.28L8.76 5.00003C10.5 1.79003 13.5 1.79003 15.24 5.00003L18.18 10.29L21.3 15.91C22.98 18.94 21.52 21.42 18.06 21.42H12V21.41Z" stroke="#FCA5A5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -278,8 +278,8 @@ export default function EncryptionPasswordDialog({ isOpen, onClose, userId }: En
                   </svg>
                 </div>
                 <div>
-                  <p className="text-red-300 font-semibold">Important Notice</p>
-                  <p className="text-red-200/80 text-sm">
+                  <p className="text-red-300 font-semibold text-sm sm:text-base">Important Notice</p>
+                  <p className="text-red-200/80 text-xs sm:text-sm">
                     Please remember this password carefully. It cannot be changed or recovered. If you forget it, you will lose access to all your encrypted files permanently.
                   </p>
                 </div>
