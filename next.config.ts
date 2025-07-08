@@ -49,6 +49,9 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  env: {
+    NEXT_PUBLIC_APP_VERSION: "1.0.1",
+  },
 };
 
 export default nextConfig;

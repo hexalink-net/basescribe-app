@@ -37,7 +37,7 @@ export function FreeCard({user, userSubs} : Props) {
               </CardHeader>
               <CardContent className="space-y-8 relative z-10">
                 <div className="space-y-6">
-                  {['1 hour transcriptions per month', '99+ language support', 'Max file size: 50 MB per upload', 'Single file upload', 'File and transcript encryption included'].map((feature, index) => (
+                  {['1 hour transcriptions per month', '99+ language support', 'Max file size: 200 MB per upload', 'Single file upload', 'File and transcript encryption included'].map((feature, index) => (
                     <div key={index} className="flex items-center space-x-4 group">
                       <div className="relative">
                         <Check className="w-6 h-6 text-[#F5E960]" />
