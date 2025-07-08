@@ -26,32 +26,32 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=3600",
-          },
-          ...securityHeaders,
-        ],
-      },
-      {
-        source: "/api/webhook-5ca37fe",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store",
-          },
-        ],
-      },
-    ];
-  },
-  env: {
-    NEXT_PUBLIC_APP_VERSION: "1.0.1",
-  },
+  // async headers() {
+  //   return [
+  //     {
+  //       source: "/(.*)",
+  //       headers: [
+  //         {
+  //           key: "Cache-Control",
+  //           value: "public, max-age=3600",
+  //         },
+  //         ...securityHeaders,
+  //       ],
+  //     },
+  //     {
+  //       source: "/api/webhook-5ca37fe",
+  //       headers: [
+  //         {
+  //           key: "Cache-Control",
+  //           value: "no-store",
+  //         },
+  //       ],
+  //     },
+  //   ];
+  // },
+  // env: {
+  //   NEXT_PUBLIC_APP_VERSION: "1.0.2",
+  // },
 };
 
 export default nextConfig;

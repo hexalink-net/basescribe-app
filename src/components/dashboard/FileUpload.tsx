@@ -31,7 +31,7 @@ interface FileWithStatus {
   error?: string;
 }
 
-const MAX_FILE_SIZE_PRO_PER_FILE = 5370 * 1000 * 1000;
+const MAX_FILE_SIZE_PRO_PER_FILE = 1200 * 1000 * 1000;
 
 export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
   const queuedFiles = useUploadStore((state) => state.uploads);
@@ -46,38 +46,34 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const validFiles: FileWithStatus[] = [];
     const invalidFiles: { file: File; reason: string }[] = [];
-
-    for (const file of acceptedFiles) {
-      totalFilesSizeRef.current += file.size;
-    }
     
     for (const file of acceptedFiles) {
       const isValid = await validateAudioOrVideoFile(file);
       if (!isValid) {
         invalidFiles.push({ file, reason: 'Invalid file type' });
-        totalFilesSizeRef.current -= file.size;
         continue;
       }
 
       if (file.size > MAX_FILE_SIZE_PRO_PER_FILE) {
         invalidFiles.push({ file, reason: 'File too large. No more than 1 GB' });
-        totalFilesSizeRef.current -= file.size;
         continue;
       }
       
-      if (totalFilesSizeRef.current > maxSizeInBytes) {
+      if (totalFilesSizeRef.current + file.size > maxSizeInBytes) {
         invalidFiles.push({ file, reason: 'Total file trying to upload is too large. No more than 5 GB' });
-        totalFilesSizeRef.current -= file.size;
         continue;
       }
       
-      validFiles.push({
-        file,
-        id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        progress: 0,
-        status: 'idle',
-        language: 'english' // Default to English
-      });
+      if (totalFilesSizeRef.current + file.size < maxSizeInBytes) { 
+        validFiles.push({
+            file,
+            id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            progress: 0,
+            status: 'idle',
+          language: 'english' // Default to English
+        });
+        totalFilesSizeRef.current += file.size;
+      }
     }
     
     if (invalidFiles.length > 0) {
@@ -87,9 +83,13 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
       if (reasons.has('Invalid file type')) {
         message += 'Some files have invalid types. Please upload audio or video files only (mp3, mp4, wav, etc.). ';
       }
+
+      if (reasons.has('File too large. No more than 1 GB')) {
+        message += `Some files exceed the maximum size of ${formatFileSize(MAX_FILE_SIZE_PRO_PER_FILE)}. `;
+      }
       
-      if (reasons.has('File too large')) {
-        message += `Some files exceed the maximum size of ${formatFileSize(maxSizeInBytes)}. `;
+      if (reasons.has('Total file trying to upload is too large. No more than 5 GB')) {
+        message += `Total amount of files trying to upload exceed the maximum size of ${formatFileSize(maxSizeInBytes)}. `;
       }
       
       toast({
