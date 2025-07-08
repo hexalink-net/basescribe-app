@@ -9,7 +9,7 @@ export default function FeatureBanner() {
     },
     {
       icon: Globe,
-      text: "98+ Languages",
+      text: "99+ Languages",
       color: "text-green-400",
     },
     {
