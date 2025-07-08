@@ -6,6 +6,7 @@ import { Footer } from '@/components/landing/footer';
 import { ChevronRight, Lock, Users, Zap, Key } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {PricingContainer} from '@/components/pricing/PricingContainer';
+import FeatureBanner from '@/components/landing/feature-banner';
 
 export default function Home() {
   return (
@@ -48,10 +49,10 @@ export default function Home() {
               <br />
               even we can&#39;t access them.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center grid">
               <Button
                 size="lg"
-                className="relative bg-gradient-to-r from-[#F5E960] to-[#FFD600] text-black hover:from-[#FFD600] hover:to-[#F5E960] font-semibold px-10 py-5 text-lg rounded-2xl shadow-2xl shadow-[#F5E960]/30 hover:shadow-[#F5E960]/50 transition-all duration-500 group overflow-hidden"
+                className="relative bg-gradient-to-r from-[#F5E960] to-[#FFD600] text-black hover:from-[#FFD600] hover:to-[#F5E960] font-semibold px-10 py-5 text-lg rounded-2xl shadow-2xl shadow-[#F5E960]/30 hover:shadow-[#F5E960]/50 transition-all duration-500 group overflow-hidden grid-row-1 gap-0"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <span className="relative z-10 flex items-center">
@@ -59,8 +60,11 @@ export default function Home() {
                   <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
                 </span>
               </Button>
+              <p className="text-sm text-[#C5C6C7] grid-row-2">No credit card required</p>
             </div>
           </div>
+
+          <FeatureBanner />
 
           {/* Futuristic Product Demo Mockup */}
           <div className="mt-20 relative group max-w-[550px] mx-auto text-center">
