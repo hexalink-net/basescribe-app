@@ -283,10 +283,25 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
     
     // Delete the file from storage if it exists
     if (upload?.file_path) {
+      // Remove '/metadata.json' from the path if it exists
+      const filePath = upload.file_path.replace('/metadata.json', '');
+      const { data:list, error } = await supabase.storage.from(BucketNameUpload).list(filePath);
+      if (error || !list) {
+        log({
+          logLevel: 'error',
+          action: 'deleteUserUploadSSR.deleteStorageFile',
+          message: 'Error deleting file from storage, but DB record deleted',
+          metadata: { userId, uploadId, storagePath: upload.file_path, error }
+        });
+        return { success: false, error: error };
+      }
+
+      const filesToRemove = list.map((x) => `${filePath}/${x.name}`);
+
       const { error: storageError } = await supabase
         .storage
         .from(BucketNameUpload)
-        .remove([upload.file_path]);
+        .remove(filesToRemove);
       
       if (storageError) {
         log({
@@ -295,6 +310,7 @@ export async function getUserUploadSSR(supabase: SupabaseClient, userId: string,
           message: 'Error deleting file from storage, but DB record deleted',
           metadata: { userId, uploadId, storagePath: upload.file_path, error: storageError }
         });
+        return { success: false, error: storageError };
       }
     }
     

@@ -31,6 +31,8 @@ interface FileWithStatus {
   error?: string;
 }
 
+const MAX_FILE_SIZE_PRO_PER_FILE = 5370 * 1000 * 1000;
+
 export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
   const queuedFiles = useUploadStore((state) => state.uploads);
   const { addUpload, updateProgress, updateStatus, updateLanguage, removeUpload, removeAllUploads } = useUploadStore.getState();
@@ -56,9 +58,15 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         totalFilesSizeRef.current -= file.size;
         continue;
       }
+
+      if (file.size > MAX_FILE_SIZE_PRO_PER_FILE) {
+        invalidFiles.push({ file, reason: 'File too large. No more than 1 GB' });
+        totalFilesSizeRef.current -= file.size;
+        continue;
+      }
       
       if (totalFilesSizeRef.current > maxSizeInBytes) {
-        invalidFiles.push({ file, reason: 'File too large' });
+        invalidFiles.push({ file, reason: 'Total file trying to upload is too large. No more than 5 GB' });
         totalFilesSizeRef.current -= file.size;
         continue;
       }

@@ -77,7 +77,7 @@ function AuthContent() {
       <div className="w-full max-w-md mx-auto mb-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Welcome to <span className="text-gradient">BaseScribe</span></h1>
-          <p className="text-gray-400">Audio transcription designed for teams and individuals</p>
+          <p className="text-gray-400">The most secure AI transcription tool</p>
         </div>
         
         <Card className="bg-[#1a1a1a]/50 backdrop-blur-sm border-[#2a2a2a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70 shadow-xl animate-in fade-in-50">
