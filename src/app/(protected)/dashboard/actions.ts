@@ -473,3 +473,21 @@ export async function processUploadedFile(
     throw error;
   }
 }
+
+export async function refreshAllRevalidate(userId: string) {
+  try {
+    revalidateTag(`uploads-${userId}`)
+    revalidateTag(`folders-${userId}`)
+    revalidateTag(`profile-${userId}`)
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log({
+      logLevel: 'error',
+      action: 'refreshAllRevalidate',
+      message: 'Error revalidating all tags',
+      metadata: { userId, error: errorMessage }
+    });
+    return { success: false, error: 'Failed to revalidate uploads' };
+  }
+}

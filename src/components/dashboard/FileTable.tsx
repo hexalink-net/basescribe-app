@@ -352,7 +352,6 @@ const FileTable = ({
 
     if (hasProcessingFiles) {
       const interval = setInterval(() => {
-        console.log('Polling for upload status updates...');
         revalidateUploadsTag(userId);
       }, 30000); // Poll every 30 seconds
 
