@@ -151,116 +151,119 @@ export const FileRow = memo(({
 
   // Create the row element
   const rowElement = (
-    <tr className={`border-b border-[#2a2a2a] hover:bg-[#2a2a2a] ${isSelected ? 'bg-[#2a2a2a]' : ''}`}>
-      <td className="hidden md:table-cell px-4 py-3">
-        <input 
-          type="checkbox" 
-          className="rounded bg-[#2a2a2a] border-none" 
-          checked={isSelected}
-          onChange={() => onSelectUpload(upload.id)}
-        />
-      </td>
-      <td className="px-4 py-3 md:w-[30%]">
-        <Link 
-          href={`/dashboard/transcript/${upload.id}`} 
-          className="text-white hover:underline"
-          onClick={(e) => {
-            // Check if private key exists in session storage
-            const privateKeyItem = sessionStorage.getItem("privateKey");
-            if (!privateKeyItem) {
-              e.preventDefault();
-              setShowEncryptionDialog(true);
-              return;
-            }
-            
-            // Check if the key has expired
-            try {
-              const parsed = JSON.parse(privateKeyItem);
-              if (Date.now() > parsed.expiresAt) {
-                e.preventDefault();
-                sessionStorage.removeItem("privateKey");
-                setShowEncryptionDialog(true);
-              }
-            } catch (error) {
-              e.preventDefault();
-              sessionStorage.removeItem("privateKey");
-              setShowEncryptionDialog(true);
-              console.error(error);
-            }
-          }}
-        >
-          {upload.file_name}
-        </Link>
-      </td>
-      <td className="hidden md:table-cell px-4 py-3 md:w-[20%] text-white">
-        {formattedDateTime}
-      </td>
-      <td className="hidden md:table-cell px-4 py-3 md:w-[10%] text-white">
-        {duration}
-      </td>
-      <td className="px-4 py-3 text-gray-400 text-sm md:w-[15%] text-white">
-        {upload.language}
-      </td>
-      <td className="px-4 py-3 md:w-[15%]">
-        <div className="flex items-center">
-          {upload.status === 'processing' ? (
-            <>
-              <div className="h-4 w-4 text-blue-500 mr-1 flex items-center justify-center">
-                <Loader2 className="h-3 w-3 animate-spin" />
-              </div>
-              <span className="text-blue-500 text-sm">Transcribing...</span>
-            </>
-          ) : upload.status === 'failed' ? (
-            <>
-              <div className="h-4 w-4 text-red-500 mr-1 flex items-center justify-center">
-                <XCircle className="h-3 w-3" />
-              </div>
-              <span className="text-red-500 text-sm">Failed</span>
-            </>
-          ) : (
-            <>
-              <div className="h-4 w-4 text-green-500 mr-1 flex items-center justify-center">
-                <CheckCircle2 className="h-3 w-3" />
-              </div>
-              <span className="text-green-500 text-sm">Completed</span>
-            </>
-          )}
-        </div>
-      </td>
-      <td className="px-4 py-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#2a2a2a] cursor-pointer">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-md shadow-lg py-1 px-0 min-w-[160px]">
-            <DropdownMenuItem 
-              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
-              onClick={() => onRenameUpload(upload)}
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
-              onClick={() => onMoveUpload(upload.id)}
-            >
-              <FolderUp className="h-4 w-4 mr-2" />
-              Move to Folder
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
-            <DropdownMenuItem 
-              className="text-red-500 hover:text-white hover:bg-red-600 cursor-pointer focus:bg-red-600 focus:text-white px-3 py-2 text-sm font-medium transition-colors flex items-center"
-              disabled={isDeleting}
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </td>
+    <tr 
+      className={`cursor-pointer border-b border-[#2a2a2a] hover:bg-[#2a2a2a] ${isSelected ? 'bg-[#2a2a2a]' : ''}`}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('input[type="checkbox"], button, a[role="button"], .no-row-click')) {
+          return;
+        }
+
+        // Check if private key exists in session storage
+        const privateKeyItem = sessionStorage.getItem("privateKey");
+        if (!privateKeyItem) {
+          e.preventDefault();
+          setShowEncryptionDialog(true);
+          return;
+        }
+        
+        // Check if the key has expired
+        try {
+          const parsed = JSON.parse(privateKeyItem);
+          if (Date.now() > parsed.expiresAt) {
+            e.preventDefault();
+            sessionStorage.removeItem("privateKey");
+            setShowEncryptionDialog(true);
+            return;
+          }
+          // Navigate to the transcript page
+          window.open(`/dashboard/transcript/${upload.id}`, '_blank');
+        } catch (error) {
+          e.preventDefault();
+          sessionStorage.removeItem("privateKey");
+          setShowEncryptionDialog(true);
+          console.error(error);
+        }
+      }}>
+        <td className="hidden md:table-cell px-4 py-3">
+          <input 
+            type="checkbox" 
+            className="rounded bg-[#2a2a2a] border-none" 
+            checked={isSelected}
+            onChange={() => onSelectUpload(upload.id)}
+          />
+        </td>
+        <td className="px-4 py-3 md:w-[30%]">
+            {upload.file_name}
+        </td>
+        <td className="hidden md:table-cell px-4 py-3 md:w-[20%] text-white">
+          {formattedDateTime}
+        </td>
+        <td className="hidden md:table-cell px-4 py-3 md:w-[10%] text-white">
+          {duration}
+        </td>
+        <td className="px-4 py-3 text-gray-400 text-sm md:w-[15%] text-white">
+          {upload.language}
+        </td>
+        <td className="px-4 py-3 md:w-[15%]">
+          <div className="flex items-center">
+            {upload.status === 'processing' ? (
+              <>
+                <div className="h-4 w-4 text-blue-500 mr-1 flex items-center justify-center">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                </div>
+                <span className="text-blue-500 text-sm">Transcribing...</span>
+              </>
+            ) : upload.status === 'failed' ? (
+              <>
+                <div className="h-4 w-4 text-red-500 mr-1 flex items-center justify-center">
+                  <XCircle className="h-3 w-3" />
+                </div>
+                <span className="text-red-500 text-sm">Failed</span>
+              </>
+            ) : (
+              <>
+                <div className="h-4 w-4 text-green-500 mr-1 flex items-center justify-center">
+                  <CheckCircle2 className="h-3 w-3" />
+                </div>
+                <span className="text-green-500 text-sm">Completed</span>
+              </>
+            )}
+          </div>
+        </td>
+        <td className="px-4 py-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-[#2a2a2a] cursor-pointer">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-md shadow-lg py-1 px-0 min-w-[160px]">
+              <DropdownMenuItem 
+                className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
+                onClick={(e) => {e.stopPropagation(); onRenameUpload(upload);}}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="hover:bg-[#2a2a2a] cursor-pointer px-3 py-2 text-sm font-medium transition-colors flex items-center text-white"
+                onClick={(e) => {e.stopPropagation(); onMoveUpload(upload.id);}}
+              >
+                <FolderUp className="h-4 w-4 mr-2" />
+                Move to Folder
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-[#2a2a2a] my-1" />
+              <DropdownMenuItem 
+                className="text-red-500 hover:text-white hover:bg-red-600 cursor-pointer focus:bg-red-600 focus:text-white px-3 py-2 text-sm font-medium transition-colors flex items-center"
+                disabled={isDeleting}
+                onClick={(e) => {e.stopPropagation(); setShowDeleteDialog(true);}}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </td>
     </tr>
   );
 
@@ -293,7 +296,7 @@ export const FileRow = memo(({
           }));
           
           // Navigate to the transcript page
-          window.location.href = `/dashboard/transcript/${upload.id}`;
+          window.open(`/dashboard/transcript/${upload.id}`, '_blank');
         }}
       />
     </>

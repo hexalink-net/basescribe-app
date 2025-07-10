@@ -368,11 +368,9 @@ async function loadChunks(sourceBuffer: SourceBuffer, metadata: MetadataResult, 
         );
 
         // printMagicHeader(decryptedData);
-        console.log("chunk", index, "startTime", startTime)
         
         // Important: wait for any pending buffer operations to complete
         await waitForSourceBuffer();
-        console.log("buffered", sourceBuffer.updating)
         if (startTime) {
           sourceBuffer.timestampOffset = startTime;
         }
