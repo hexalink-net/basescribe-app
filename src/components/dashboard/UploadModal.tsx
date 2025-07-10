@@ -101,10 +101,10 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Upload Audio {multiple ? 'Files' : 'File'}
+            Transcribe Audio {multiple ? 'Files' : 'File'}
           </DialogTitle>
           <DialogDescription>
-            Upload audio files to transcribe. Supported formats: MP3, WAV, M4A, FLAC.
+            Upload audio or video files to transcribe. Supported formats: MP3, WAV, M4A, FLAC.
           </DialogDescription>
         </DialogHeader>
         <div className="w-full overflow-y-auto flex-grow">

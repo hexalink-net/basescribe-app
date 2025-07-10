@@ -335,7 +335,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
         <div className="space-y-4">
           <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium">{multiple ? `Files to upload (${queuedFiles.length})` : 'File to upload'}</h3>
+              <h3 className="font-medium">{multiple ? `Files to transcribe (${queuedFiles.length})` : 'File to transcribe'}</h3>
               <div className="flex gap-2">
                 {!uploading && (
                   <Button
@@ -353,7 +353,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
                   size="sm"
                   disabled={uploading || queuedFiles.every(f => f.status !== 'idle')}
                 >
-                  {uploading ? 'Uploading...' : (multiple ? 'Upload All' : 'Upload')}
+                  {uploading ? 'Uploading...' : (multiple ? 'Transcribe All' : 'Transcribe')}
                 </Button>
               </div>
             </div>
