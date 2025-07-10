@@ -2,6 +2,7 @@
 
 import { useState, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
+import { UploadProgressToast } from "@/components/dashboard/UploadProgressToast";
 import { Uploads, UserProfile, Folder, EncryptionData } from '@/types/DashboardInterface';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
@@ -787,6 +788,7 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
           userId={user.id}
         />
       )}
+      <UploadProgressToast />
     </div>
   );
 }

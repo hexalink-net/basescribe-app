@@ -8,12 +8,15 @@ type FileWithStatus = {
   progress: number;
   status: FileStatus;
   language: string;
+  size: string;
   duration: number;
   error?: string;
 }
 
 type UploadStore = {
   uploads: FileWithStatus[];
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
   addUpload: (upload: FileWithStatus) => void;
   updateProgress: (id: string, progress: number) => void;
   updateStatus: (id: string, status: FileStatus, error?: string) => void;
@@ -24,6 +27,8 @@ type UploadStore = {
 
 export const useUploadStore = create<UploadStore>((set) => ({
   uploads: [],
+  isSidebarOpen: false,
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
   addUpload: (upload: FileWithStatus) => set((state) => ({ uploads: [...state.uploads, upload] })),
   updateProgress: (id: string, progress: number) => set((state) => ({
     uploads: state.uploads.map((upload) =>

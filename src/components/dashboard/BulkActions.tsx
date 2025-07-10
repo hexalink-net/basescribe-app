@@ -22,14 +22,14 @@ export default function BulkActions({
 
   return (
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg shadow-lg py-3 px-4 flex items-center gap-4 z-50">
-      <div className="text-sm font-medium">
+      <div className="text-sm font-medium text-white">
         {selectedUploads.length} item{selectedUploads.length !== 1 ? 's' : ''} selected
       </div>
       <div className="flex gap-2">
         <Button 
           variant="outline" 
           size="sm" 
-          className="border-[#3a3a3a] hover:bg-[#2a2a2a] flex items-center gap-1"
+          className="border-[#3a3a3a] hover:bg-[#2a2a2a] flex items-center gap-1 text-white"
           onClick={onShowMoveDialog}
         >
           <FolderUp className="h-4 w-4" />

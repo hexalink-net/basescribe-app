@@ -79,12 +79,6 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
 
       // Process the upload
       await processUploadedFile(userId, fileName, sanitizeFilePath(filePath), fileSize, durationSeconds, language, folderId);
-    
-      // Show success message
-      toast({
-          title: "File uploaded successfully",
-          description: `${file.name} has been uploaded and is ready for transcription.`,
-      });
 
       router.refresh();
 

@@ -29,6 +29,7 @@ interface FileWithStatus {
   id: string;
   progress: number;
   status: FileStatus;
+  size: string;
   language: string;
   duration: number;
   error?: string;
@@ -40,8 +41,8 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
   const queuedFiles = useUploadStore((state) => state.uploads);
   const { addUpload, updateProgress, updateStatus, updateLanguage, removeUpload, removeAllUploads } = useUploadStore.getState();
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
   const totalFilesSizeRef = useRef(0);
+  const { toast } = useToast();
   
   // Use a ref to track all active progress intervals for cleanup
   const activeIntervalsRef = useRef<{[id: string]: NodeJS.Timeout}>({});
@@ -91,6 +92,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
             progress: 0,
             status: 'idle',
             language: 'english', // Default to English
+            size: formatFileSize(file.size),
             duration: durationSeconds,
         });
         totalFilesSizeRef.current += file.size;
@@ -224,13 +226,11 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
         errorMessage.includes('Cancelled or past due') || 
         errorMessage.includes('Monthly usage quota');
       
-      updateFileStatus(id, 'error', errorMessage);
-      
-      toast({
-        title: isLimitError ? "Transcription Limit Exceeded" : "Upload failed",
-        description: isLimitError ? `${file.name}: ${errorMessage}`: `${file.name}: File upload failed either due to file size limit or transcription limit has been reached`,
-        variant: "destructive",
-      });
+      if (isLimitError) {
+        updateFileStatus(id, 'error', errorMessage);
+      } else {
+        updateFileStatus(id, 'error', 'File upload failed either due to file size limit or transcription limit has been reached');
+      }
     }
   };
   
@@ -253,11 +253,6 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
         const isWithinLimit = await validateBatchUpload(userId, fileDurations);
         
         if (!isWithinLimit) {
-            toast({
-              title: "Transcription limit exceeded",
-              description: "You have reached your monthly transcription limit. Please upgrade your plan for more transcription minutes.",
-              variant: "destructive",
-            });
             throw new Error(`Transcription limit exceeded.`);
         }
       }
@@ -368,7 +363,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{fileWithStatus.file.name}</p>
-                        <p className="text-sm text-gray-400">{formatFileSize(fileWithStatus.file.size)}</p>
+                        <p className="text-sm text-gray-400">{fileWithStatus.size}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Globe className="h-3 w-3 text-gray-400" />
                           <p className="text-xs text-gray-400">Language</p>
