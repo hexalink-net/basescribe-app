@@ -9,3 +9,6 @@ export const proMonthlyPriceId = 'pri_01jragknw1mfnjevbszq7tt089';
 //Duration
 export const proDuration = "20";
 export const freeDuration = "01";
+
+export const proDurationLimitNumberInSeconds = 72000;
+export const freeDurationLimitNumberInSeconds = 3600;

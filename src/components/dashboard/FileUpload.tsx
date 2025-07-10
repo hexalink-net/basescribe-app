@@ -10,11 +10,13 @@ import { useToast } from '@/components/ui/UseToast';
 import { validateBatchUpload } from '@/app/(protected)/dashboard/actions';
 import { pro } from '@/constants/PaddleProduct';
 import { useUploadStore } from '@/stores/UseUploadStore';
+import { proDurationLimitNumberInSeconds, freeDurationLimitNumberInSeconds } from '@/constants/PaddleProduct';
 
 interface FileUploadProps {
   userId: string;
   productId: string | null | undefined;
-  onFileSelected: (file: File, language: string, onProgress?: (percentage: number) => void) => Promise<void>;
+  monthlyUsage: number | undefined;
+  onFileSelected: (file: File, language: string, duration: number, onProgress?: (percentage: number) => void) => Promise<void>;
   maxSizeInBytes: number;
   disabled?: boolean;
   multiple?: boolean;
@@ -28,12 +30,13 @@ interface FileWithStatus {
   progress: number;
   status: FileStatus;
   language: string;
+  duration: number;
   error?: string;
 }
 
 const MAX_FILE_SIZE_PRO_PER_FILE = 1200 * 1000 * 1000;
 
-export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
+export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
   const queuedFiles = useUploadStore((state) => state.uploads);
   const { addUpload, updateProgress, updateStatus, updateLanguage, removeUpload, removeAllUploads } = useUploadStore.getState();
   const [uploading, setUploading] = useState(false);
@@ -49,6 +52,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
     
     for (const file of acceptedFiles) {
       const isValid = await validateAudioOrVideoFile(file);
+      
       if (!isValid) {
         invalidFiles.push({ file, reason: 'Invalid file type' });
         continue;
@@ -63,6 +67,22 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
         invalidFiles.push({ file, reason: 'Total file trying to upload is too large. No more than 5 GB' });
         continue;
       }
+
+      let durationSeconds = await getMediaDuration(file);
+      if (durationSeconds === null) {
+        durationSeconds = Math.max(1, Math.round((file.size / (128 * 1024 / 8 * 60))));
+      }
+
+      if (monthlyUsage !== undefined) {
+        let durationLimitNumberInSeconds = productId === pro ? proDurationLimitNumberInSeconds : freeDurationLimitNumberInSeconds;
+        if (durationSeconds + monthlyUsage > durationLimitNumberInSeconds) {
+          invalidFiles.push({ file, reason: 'You exceeded your monthly transcription limit' });
+          continue;
+        }
+      } else {
+        invalidFiles.push({ file, reason: 'You exceeded your monthly transcription limit' });
+        continue;
+      }
       
       if (totalFilesSizeRef.current + file.size < maxSizeInBytes) { 
         validFiles.push({
@@ -70,7 +90,8 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
             id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             progress: 0,
             status: 'idle',
-          language: 'english' // Default to English
+            language: 'english', // Default to English
+            duration: durationSeconds,
         });
         totalFilesSizeRef.current += file.size;
       }
@@ -90,6 +111,10 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
       
       if (reasons.has('Total file trying to upload is too large. No more than 5 GB')) {
         message += `Total amount of files trying to upload exceed the maximum size of ${formatFileSize(maxSizeInBytes)}. `;
+      }
+
+      if (reasons.has('You exceeded your monthly transcription limit')) {
+        message += 'You have reached your monthly transcription limit. Please upgrade your plan for more transcription minutes. ';
       }
       
       toast({
@@ -143,7 +168,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
   };
 
   const uploadFile = async (fileWithStatus: FileWithStatus) => {
-    const { file, id, language } = fileWithStatus;
+    const { file, id, language, duration } = fileWithStatus;
     let progressInterval: NodeJS.Timeout | null = null;
     
     try {
@@ -174,7 +199,7 @@ export function FileUpload({ userId, productId, onFileSelected, maxSizeInBytes, 
       activeIntervalsRef.current[id] = progressInterval;
       
       // Call the parent component's upload function with our progress callback
-      await onFileSelected(file, language, handleProgress);
+      await onFileSelected(file, language, duration, handleProgress);
       
       // Clear and remove the interval
       if (progressInterval) {

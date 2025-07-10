@@ -48,7 +48,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleFileUpload = async (file: File, language: string, onProgress?: (percentage: number) => void): Promise<void> => {
+  const handleFileUpload = async (file: File, language: string, durationSeconds: number, onProgress?: (percentage: number) => void): Promise<void> => {
     if (!userId) {
       toast({
         title: "Authentication required",
@@ -66,12 +66,6 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
     
     try {
       setLoading(true);
-
-      let durationSeconds = await getMediaDuration(file);
-
-      if (durationSeconds === null) {
-        durationSeconds = Math.max(1, Math.round((fileSize / (128 * 1024 / 8 * 60))));
-      }
 
       // Check user subscription limit
       const result = await checkUserSubscriptionLimit(userId, durationSeconds);
@@ -117,6 +111,7 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
           <FileUpload 
             userId={userId}
             productId = {userProfile?.product_id}
+            monthlyUsage = {userProfile?.monthly_usage_seconds}
             onFileSelected={handleFileUpload} 
             maxSizeInBytes={userProfile?.product_id === pro ? MAX_FILE_SIZE_PRO : MAX_FILE_SIZE_FREE}
             disabled={loading}

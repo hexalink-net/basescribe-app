@@ -8,6 +8,7 @@ type FileWithStatus = {
   progress: number;
   status: FileStatus;
   language: string;
+  duration: number;
   error?: string;
 }
 
