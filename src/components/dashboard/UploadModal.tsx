@@ -8,7 +8,6 @@ import { Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { UserProfile } from '@/types/DashboardInterface';
 import { uploadFile } from '@/lib/UploadUtils';
-import { getMediaDuration } from '@/lib/MediaUtils';
 import { processUploadedFile, checkUserSubscriptionLimit } from '@/app/(protected)/dashboard/actions';
 import { BucketNameUpload } from '@/constants/SupabaseBucket';
 import { pro } from '@/constants/PaddleProduct';

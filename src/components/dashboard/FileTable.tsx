@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, memo, useMemo, useEffect, useRef, useCallback } from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import dynamic from 'next/dynamic';

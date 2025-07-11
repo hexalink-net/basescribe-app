@@ -75,7 +75,7 @@ export function FileUpload({ productId, monthlyUsage, onFileSelected, maxSizeInB
       }
 
       if (monthlyUsage !== undefined) {
-        let durationLimitNumberInSeconds = productId === pro ? proDurationLimitNumberInSeconds : freeDurationLimitNumberInSeconds;
+        const durationLimitNumberInSeconds = productId === pro ? proDurationLimitNumberInSeconds : freeDurationLimitNumberInSeconds;
         if (durationSeconds + monthlyUsage > durationLimitNumberInSeconds) {
           invalidFiles.push({ file, reason: 'You exceeded your monthly transcription limit' });
           continue;
@@ -137,7 +137,7 @@ export function FileUpload({ productId, monthlyUsage, onFileSelected, maxSizeInB
         }
       }
     }
-  }, [maxSizeInBytes, toast, multiple, addPendingUpload, removeAllPendingUploads]);
+  }, [maxSizeInBytes, toast, multiple, addPendingUpload, removeAllPendingUploads, monthlyUsage, productId]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

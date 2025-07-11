@@ -24,13 +24,6 @@ const uploadSchema = z.object({
   folderId: z.string().uuid().nullable()
 })
 
-interface UserWithProductLimit {
-  monthly_usage_seconds: number;
-  product: {
-    transcription_limit_seconds_per_month: number;
-  };
-}
-
 /**
  * Fetch all dashboard data in parallel
  * This helps improve performance by fetching user profile, uploads, and folders concurrently

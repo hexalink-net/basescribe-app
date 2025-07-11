@@ -206,13 +206,3 @@ export function UploadProgressToast() {
     </>
   );
 }
-
-function getStatusColor(status: FileStatus): string {
-  switch (status) {
-    case 'idle': return 'bg-gray-500/10';
-    case 'uploading': return 'bg-blue-500/10';
-    case 'success': return 'bg-green-500/10';
-    case 'error': return 'bg-red-500/10';
-  }
-  return '';
-}
