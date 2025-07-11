@@ -66,7 +66,8 @@ export async function fetchDashboardData(userId: string) {
       userProfile: null,
       uploads: [],
       folders: [],
-      error: 'Failed to load dashboard data'
+      error: 'Failed to load dashboard data',
+      encryptionData: null
     };
   }
 }

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { log } from "@/lib/logger";
 import { encryptionRateLimiter } from "@/lib/upstash/ratelimit";
+import { EncryptionData } from "@/types/DashboardInterface";
 
 // Rate Limiter
 async function checkEncryptionRateLimit(userId: string) {
@@ -41,16 +42,14 @@ export const setUserEncryptionData = async (userId: string, userPublicKey: strin
     // Create server client
     const supabase = await createClient();
 
-    const { error } = await supabase.functions.invoke('set-encryption-data', {
-      body: JSON.stringify({ 
-        userId: userId,
-        userPublicKey: userPublicKey,
-        encryptedUserPrivateKey: encryptedUserPrivateKey,
-        salt: salt,
-        iterations: iterations,
-        hashAlgorithm: hashAlgorithm,
-        iv: iv
-      })
+    const { error } = await supabase.from('user_encryptions').insert({
+      user_id: userId,
+      user_public_key_b64: userPublicKey,
+      encrypted_private_key_b64: encryptedUserPrivateKey,
+      salt_b64: salt,
+      pbkdf2_iterations: iterations,
+      pbkdf2_hash_algorithm: hashAlgorithm,
+      iv_b64: iv
     })
     
     if (error) {
@@ -66,13 +65,11 @@ export const setUserEncryptionData = async (userId: string, userPublicKey: strin
     return { success: true };
 }
 
-export const getUserEncryptionData = async (userIdParam: string) => {
+export const getUserEncryptionData = async (userIdParam: string): Promise<{ data: EncryptionData | null; error: any }> => {
     // Create server client
     const supabase = await createClient();
 
-    const { data, error } = await supabase.functions.invoke('get-encryption-data', {
-      body: JSON.stringify({ userId: userIdParam })
-    })
+    const { data, error } = await supabase.from('user_encryptions').select('*').eq('user_id', userIdParam);
     
     if (error) {
       log({
@@ -83,5 +80,9 @@ export const getUserEncryptionData = async (userIdParam: string) => {
       });
     }
 
-    return { data, error };
+    if (data && data.length > 0) {
+      return { data: data[0] as EncryptionData, error: null };
+    }
+
+    return { data: null, error: null };
 }

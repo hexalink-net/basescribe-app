@@ -78,7 +78,7 @@ interface DashboardClientProps {
   uploads: Uploads[];
   folders: Folder[];
   currentFolder: Folder | null;
-  encryptionData?: EncryptionData;
+  encryptionData: EncryptionData | null;
 }
 
 export default function DashboardClient({ user, userProfile, uploads, folders, currentFolder, encryptionData }: DashboardClientProps) {

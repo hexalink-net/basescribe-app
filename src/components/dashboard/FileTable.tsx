@@ -36,7 +36,7 @@ import { revalidateUploadsTag } from '@/app/(protected)/dashboard/actions';
 interface FileTableProps {
   uploads: Uploads[];
   userId: string;
-  encryptionData?: EncryptionData;
+  encryptionData: EncryptionData | null;
   currentFolder: Folder | null;
   selectedUploads: string[];
   isDeleting: Record<string, boolean>;
@@ -122,7 +122,7 @@ export const FileRow = memo(({
   onRenameUpload
 }: { 
   upload: Uploads, 
-  encryptionData?: EncryptionData,
+  encryptionData: EncryptionData | null,
   isSelected: boolean,
   isDeleting: boolean,
   formatDate: (dateString: string) => string,
