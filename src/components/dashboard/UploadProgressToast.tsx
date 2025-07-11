@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useUploadStore } from "@/stores/UseUploadStore";
-import { X, ChevronRight, ChevronLeft, Upload as UploadIcon, CheckCircle, AlertCircle, Globe, RefreshCw, Loader2 } from "lucide-react";
+import { useUploadingStore } from "@/stores/UseUploadStore";
+import { X, ChevronRight, ChevronLeft, CheckCircle, AlertCircle, Globe, RefreshCw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 
@@ -22,9 +22,11 @@ function getStatusIcon(status: FileStatus) {
 }
 
 export function UploadProgressToast() {
-  const { uploads, isSidebarOpen, toggleSidebar, removeAllUploads } = useUploadStore();
+  const { uploads, isSidebarOpen, toggleSidebar, removeAllUploading } = useUploadingStore();
   const [isVisible, setIsVisible] = useState(true);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  console.log('Uploads:', uploads)
 
   // Show toast when there are uploads
   useEffect(() => {
@@ -98,7 +100,7 @@ export function UploadProgressToast() {
                     size="icon"
                     className="h-6 w-6"
                     onClick={() => {
-                      removeAllUploads();
+                      removeAllUploading();
                       setIsVisible(false);
                     }}
                   >
@@ -120,7 +122,7 @@ export function UploadProgressToast() {
           />
           <div 
             ref={sidebarRef}
-            className={`fixed top-0 right-0 h-full w-96 bg-[#2a2a2a] shadow-2xl border-l border-[#2a2a2a] shadow-[0_0_15px_rgba(255,255,255,0.2)] z-50 transform transition-transform duration-300 ${
+            className={`fixed top-0 right-0 h-full w-96 bg-[#1a1a1a] shadow-2xl border-l border-[#2a2a2a] shadow-[0_0_15px_rgba(255,255,255,0.2)] z-50 transform transition-transform duration-300 ${
               isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
@@ -190,7 +192,7 @@ export function UploadProgressToast() {
                   variant="outline"
                   className="mt-4 hover:bg-[#3a3a3a] cursor-pointer"
                   onClick={() => {
-                    removeAllUploads();
+                    removeAllUploading();
                     setIsVisible(false);
                   }}
                 >

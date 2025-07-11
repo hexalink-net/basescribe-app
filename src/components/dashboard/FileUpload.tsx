@@ -7,13 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { formatFileSize, validateAudioOrVideoFile, getMediaDuration } from '@/lib/MediaUtils';
 import { useToast } from '@/components/ui/UseToast';
-import { validateBatchUpload } from '@/app/(protected)/dashboard/actions';
 import { pro } from '@/constants/PaddleProduct';
-import { useUploadStore } from '@/stores/UseUploadStore';
+import { useUploadingStore, usePendingUploadStore } from '@/stores/UseUploadStore';
 import { proDurationLimitNumberInSeconds, freeDurationLimitNumberInSeconds } from '@/constants/PaddleProduct';
 
 interface FileUploadProps {
-  userId: string;
   productId: string | null | undefined;
   monthlyUsage: number | undefined;
   onFileSelected: (file: File, language: string, duration: number, onProgress?: (percentage: number) => void) => Promise<void>;
@@ -37,9 +35,11 @@ interface FileWithStatus {
 
 const MAX_FILE_SIZE_PRO_PER_FILE = 1200 * 1000 * 1000;
 
-export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
-  const queuedFiles = useUploadStore((state) => state.uploads);
-  const { addUpload, updateProgress, updateStatus, updateLanguage, removeUpload, removeAllUploads } = useUploadStore.getState();
+export function FileUpload({ productId, monthlyUsage, onFileSelected, maxSizeInBytes, disabled = false, multiple = true }: FileUploadProps) {
+  const pendingFiles = usePendingUploadStore((state) => state.pendingUploads);
+  const uploadingFiles = useUploadingStore((state) => state.uploads);
+  const { addPendingUpload, updateLanguage, removePendingUpload, removeAllPendingUploads } = usePendingUploadStore.getState();
+  const { addUploading, updateProgress, updateStatus } = useUploadingStore.getState();
   const [uploading, setUploading] = useState(false);
   const totalFilesSizeRef = useRef(0);
   const { toast } = useToast();
@@ -129,15 +129,15 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
     if (validFiles.length > 0) {
       // If not multiple, replace existing files
       if (!multiple) {
-        removeAllUploads();
-        addUpload(validFiles[0]);
+        removeAllPendingUploads();
+        addPendingUpload(validFiles[0]);
       } else {
         for (const file of validFiles) {
-          addUpload(file);
+          addPendingUpload(file);
         }
       }
     }
-  }, [maxSizeInBytes, toast, multiple, addUpload, removeAllUploads]);
+  }, [maxSizeInBytes, toast, multiple, addPendingUpload, removeAllPendingUploads]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -159,7 +159,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
         clearInterval(interval);
       });
     };
-  }, [queuedFiles]);
+  }, [uploadingFiles]);
 
   const updateFileProgress = (id: string, progress: number) => {
     updateProgress(id, progress);
@@ -188,7 +188,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
       // As a fallback, still use a slow interval for progress in case real progress isn't working
       // This will be cleared once we get the first real progress update
       progressInterval = setInterval(() => {
-        queuedFiles.map(f => {
+        uploadingFiles.map(f => {
           if (f.id === id && f.progress < 90) {
             // Smaller increments for smoother appearance
             const increment = 0.5;
@@ -235,31 +235,25 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
   };
   
   const handleUpload = async () => {
-    if (queuedFiles.length === 0) return;
+    if (pendingFiles.length === 0) return;
     
     setUploading(true);
     
     try {
-      // Filter only idle files
-      const filesToUpload = queuedFiles.filter(f => f.status === 'idle');
+      // First, get all pending files
+      const filesToUpload = [...pendingFiles];
       
-      // Get the duration of each file
-      const fileDurations = await Promise.all(
-        filesToUpload.map(async (f) => await getMediaDuration(f.file))
-      );
+      // Move all files to uploading state
+      filesToUpload.forEach(file => {
+        addUploading(file);
+      });
       
-      // Check if the user has enough transcription limit remaining using server action
-      if (productId === pro) {
-        const isWithinLimit = await validateBatchUpload(userId, fileDurations);
-        
-        if (!isWithinLimit) {
-            throw new Error(`Transcription limit exceeded.`);
-        }
-      }
+      // Remove from pending state
+      removeAllPendingUploads();
       
       // Start all uploads in parallel
-      const uploadPromises = filesToUpload.map(fileWithStatus => 
-        uploadFile(fileWithStatus)
+      const uploadPromises = filesToUpload.map(file => 
+        uploadFile(file)
       );
       
       await Promise.all(uploadPromises);
@@ -279,7 +273,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
 
     totalFilesSizeRef.current -= fileSize;
     
-    removeUpload(id);
+    removePendingUpload(id);
   };
   
   const removeAllFiles = () => {
@@ -289,7 +283,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
     });
     activeIntervalsRef.current = {};
     
-    removeAllUploads();
+    removeAllPendingUploads();
 
     totalFilesSizeRef.current = 0;
   };
@@ -300,7 +294,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors w-full ${
           isDragActive ? 'border-primary bg-primary/10' : 'border-[#2a2a2a] hover:border-[#3a3a3a]'
-        } ${queuedFiles.length > 0 ? 'mb-4' : ''}`}
+        } ${pendingFiles.length > 0 ? 'mb-4' : ''}`}
       >
         <input {...getInputProps()} />
         <div className="flex flex-col items-center justify-center gap-2">
@@ -326,11 +320,11 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
         </div>
       </div>
 
-      {queuedFiles.length > 0 && (
+      {pendingFiles.length > 0 && (
         <div className="space-y-4">
           <div className="border border-[#2a2a2a] rounded-lg p-4 w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium">{multiple ? `Files to transcribe (${queuedFiles.length})` : 'File to transcribe'}</h3>
+              <h3 className="font-medium">{multiple ? `Files to transcribe (${pendingFiles.length})` : 'File to transcribe'}</h3>
               <div className="flex gap-2">
                 {!uploading && (
                   <Button
@@ -346,7 +340,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
                   onClick={handleUpload} 
                   className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white"
                   size="sm"
-                  disabled={uploading || queuedFiles.every(f => f.status !== 'idle')}
+                  disabled={uploading || pendingFiles.every(f => f.status !== 'idle')}
                 >
                   {uploading ? 'Uploading...' : (multiple ? 'Transcribe All' : 'Transcribe')}
                 </Button>
@@ -354,7 +348,7 @@ export function FileUpload({ userId, productId, monthlyUsage, onFileSelected, ma
             </div>
             
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-              {queuedFiles.map((fileWithStatus) => (
+              {pendingFiles.map((fileWithStatus) => (
                 <div key={fileWithStatus.id} className="border border-[#2a2a2a] rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">

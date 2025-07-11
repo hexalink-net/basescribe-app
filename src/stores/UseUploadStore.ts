@@ -17,19 +17,17 @@ type UploadStore = {
   uploads: FileWithStatus[];
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
-  addUpload: (upload: FileWithStatus) => void;
+  addUploading: (upload: FileWithStatus) => void;
   updateProgress: (id: string, progress: number) => void;
   updateStatus: (id: string, status: FileStatus, error?: string) => void;
-  updateLanguage: (id: string, language: string) => void;
-  removeUpload: (id: string) => void;
-  removeAllUploads: () => void;
+  removeAllUploading: () => void;
 }
 
-export const useUploadStore = create<UploadStore>((set) => ({
+export const useUploadingStore = create<UploadStore>((set) => ({
   uploads: [],
   isSidebarOpen: false,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
-  addUpload: (upload: FileWithStatus) => set((state) => ({ uploads: [...state.uploads, upload] })),
+  addUploading: (upload: FileWithStatus) => set((state) => ({ uploads: [...state.uploads, upload] })),
   updateProgress: (id: string, progress: number) => set((state) => ({
     uploads: state.uploads.map((upload) =>
       upload.id === id ? { ...upload, progress } : upload
@@ -40,15 +38,32 @@ export const useUploadStore = create<UploadStore>((set) => ({
       upload.id === id ? { ...upload, status, error } : upload
     )
   })),
-  updateLanguage: (id: string, language: string) => set((state) => ({
-    uploads: state.uploads.map((upload) =>
-      upload.id === id ? { ...upload, language } : upload
-    )
-  })),
-  removeUpload: (id: string) => set((state) => ({
-    uploads: state.uploads.filter((upload) => upload.id !== id)
-  })),
-  removeAllUploads: () => set(() => ({
+  removeAllUploading: () => set(() => ({
     uploads: []
   })) 
 }));
+
+type PendingUploadStore = {
+  pendingUploads: FileWithStatus[];
+  addPendingUpload: (upload: FileWithStatus) => void;
+  updateLanguage: (id: string, language: string) => void;
+  removePendingUpload: (id: string) => void;
+  removeAllPendingUploads: () => void;
+}
+
+export const usePendingUploadStore = create<PendingUploadStore>((set) => ({
+  pendingUploads: [],
+  addPendingUpload: (upload: FileWithStatus) => set((state) => ({ pendingUploads: [...state.pendingUploads, upload] })),
+  updateLanguage: (id: string, language: string) => set((state) => ({
+    pendingUploads: state.pendingUploads.map((upload) =>
+      upload.id === id ? { ...upload, language } : upload
+    )
+  })),
+  removePendingUpload: (id: string) => set((state) => ({
+    pendingUploads: state.pendingUploads.filter((upload) => upload.id !== id)
+  })),
+  removeAllPendingUploads: () => set(() => ({
+    pendingUploads: []
+  })) 
+}));
+

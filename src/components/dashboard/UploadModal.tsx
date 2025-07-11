@@ -58,6 +58,9 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
       return;
     }
 
+    // Close the modal immediately when upload starts
+    onClose();
+
     // Create a new upload record
     const fileName = file.name.replace(/\.[^/.]+$/, '');
     const fileSize = file.size;
@@ -103,7 +106,6 @@ export default function UploadModal({ userId, userProfile, isOpen, onClose, fold
         </DialogHeader>
         <div className="w-full overflow-y-auto flex-grow">
           <FileUpload 
-            userId={userId}
             productId = {userProfile?.product_id}
             monthlyUsage = {userProfile?.monthly_usage_seconds}
             onFileSelected={handleFileUpload} 

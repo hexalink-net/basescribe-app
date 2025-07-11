@@ -289,43 +289,6 @@ export async function renameUpload(uploadId: string, newFileName: string, userId
   }
 }
 
-export async function validateBatchUpload(userId: string, fileDurations: number[]): Promise<boolean> {
-  try {
-    // Calculate total duration of all files
-    const totalDuration = fileDurations.reduce((acc, duration) => acc + duration, 0);
-    
-    // Get user's product ID and transcription limit from database
-    const supabase = await createClient();
-    const { data, error } = await supabase
-    .from('users')
-    .select(`
-      monthly_usage_seconds,
-      product:product_id(transcription_limit_seconds_per_month)
-    `)
-    .eq('id', userId)
-    .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!data || !data.product) return false;
-
-    const { monthly_usage_seconds, product } = data as unknown as UserWithProductLimit;
-
-    const limitDuration = product.transcription_limit_seconds_per_month;
-    return monthly_usage_seconds + totalDuration <= limitDuration;
-  } catch (error: unknown) {
-    log({
-      logLevel: 'error',
-      action: 'checkUserTranscriptionLimit',
-      message: 'Error checking transcription limit',
-      metadata: {error}
-    })
-    return false;
-  }
-}
-
 export async function revalidateUploadsTag(userId: string) {
   try {
     revalidateTag(`uploads-${userId}`);
@@ -457,7 +420,7 @@ export async function processUploadedFile(
       throw new Error(`Failed to send message to queue`);
     }
 
-    // supabase.functions.invoke('transcription_queue_handler')
+    supabase.functions.invoke('transcription_queue_handler')
     
     return;
 
