@@ -12,7 +12,7 @@ type FileStatus = 'idle' | 'uploading' | 'success' | 'error';
 function getStatusIcon(status: FileStatus) {
     switch (status) {
       case 'uploading': 
-        return <RefreshCw className="h-4 w-4 text-gray-800 dark:text-gray-200 animate-spin" />;
+        return <RefreshCw className="h-4 w-4 text-gray-200 animate-spin" />;
       case 'success': 
         return <CheckCircle className="h-6 w-6 text-green-600" />;
       case 'error': 
@@ -70,7 +70,7 @@ export function UploadProgressToast() {
                 uploads.some(u => u.status === 'error') ? 'error' : 
                 allCompletedOrFailed ? 'success' : 'idle'
               )}
-              <h3 className="font-medium text-sm text-gray-800 dark:text-gray-200">
+              <h3 className="font-medium text-sm text-gray-200">
                 {hasActiveUploads 
                   ? `Uploading ${activeUploads.length} file${activeUploads.length > 1 ? 's' : ''}...`
                   : uploads.some(u => u.status === 'error')
@@ -81,7 +81,7 @@ export function UploadProgressToast() {
                 }
               </h3>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-white">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -126,7 +126,7 @@ export function UploadProgressToast() {
               isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
-            <div className="p-4 h-full flex flex-col">
+            <div className="p-4 h-full flex flex-col text-gray-200">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Upload Progress</h2>
                 <Button

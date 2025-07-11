@@ -192,7 +192,7 @@ export const FileRow = memo(({
             onChange={() => onSelectUpload(upload.id)}
           />
         </td>
-        <td className="px-4 py-3 md:w-[30%]">
+        <td className="px-4 py-3 md:w-[30%] text-white">
             {upload.file_name}
         </td>
         <td className="hidden md:table-cell px-4 py-3 md:w-[20%] text-white">
