@@ -23,7 +23,7 @@ export function PriceHeader({ loading, priceMap, priceSuffix, tier, value }: Pro
             <Skeleton className="h-[96px] w-full bg-border" />
           ) : (
             <>
-              <div className={cn('bg-gradient-to-r from-[#F5E960] to-[#FFD600] bg-clip-text text-transparent')}>
+              <div className={cn('bg-gradient-to-r from-[#F5E960] to-[#FFD600] bg-clip-text text-transparent hidden')}>
                 {value === 'year' ? (
                   <span>
                   {`$${(
@@ -38,7 +38,7 @@ export function PriceHeader({ loading, priceMap, priceSuffix, tier, value }: Pro
                 <span className="text-xl text-[#C5C6C7]">{priceSuffix}</span>
               </div>
               {value === 'year' ? (
-                <p className="text-[#F5E960] font-semibold mt-2 text-lg">Billed annually ({priceMap[tier.priceId[value]].replace(/\.00$/, '')}/year)</p>
+                <p className="text-[#F5E960] font-semibold mt-2 text-lg hidden">Billed annually ({priceMap[tier.priceId[value]].replace(/\.00$/, '')}/year)</p>
               ) : null}
             </>
           )}
