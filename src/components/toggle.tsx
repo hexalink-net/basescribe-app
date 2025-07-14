@@ -28,11 +28,11 @@ export function Toggle({ setFrequency, frequency }: Props) {
           ))}
         </TabsList>
       </Tabs>
-      <div>
+      {/* <div>
         <p className="bg-gradient-to-r from-green-600 to-green-700 text-white text-xs px-3 py-1 shadow-lg font-bold rounded-sm">
           SAVE 20% ON ANNUAL PLAN
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }

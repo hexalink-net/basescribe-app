@@ -15,7 +15,7 @@ export function PriceHeader({ loading, priceMap, priceSuffix, tier, value }: Pro
   const { name, description } = tier;
   return (
     <CardHeader className="text-center pb-8 relative z-10">
-      <CardTitle className="text-4xl font-bold text-white mb-2">{name}</CardTitle>
+      <CardTitle className="text-4xl font-bold text-white mb-2">{name} <span className="text-[#C5C6C7]">(COMING SOON)</span></CardTitle>
       <p className="text-[#C5C6C7] text-xl"> {description}</p>
       <div className="text-5xl font-bold mt-6">
       <div>
