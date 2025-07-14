@@ -13,7 +13,7 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' https://apis.google.com ${PADDLE_CDN} ${DATADOG_BROWSER_AGENT};
+      script-src 'self' 'unsafe-inline' https://apis.google.com ${PADDLE_CDN} ${DATADOG_BROWSER_AGENT} https://cdn.paddle.com;
       style-src 'self' 'unsafe-inline' ${PADDLE_CDN};
       img-src 'self' data: blob: ${GOOGLE_USER_CONTENT};
       font-src 'self' data:;
@@ -25,32 +25,32 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  async headers() {
-    return [
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=3600",
-          },
-          ...securityHeaders,
-        ],
-      },
-      {
-        source: "/api/webhook-5ca37fe",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store",
-          },
-        ],
-      },
-    ];
-  },
-  env: {
-    NEXT_PUBLIC_APP_VERSION: "1.0.4",
-  },
+  // async headers() {
+  //   return [
+  //     {
+  //       source: "/(.*)",
+  //       headers: [
+  //         {
+  //           key: "Cache-Control",
+  //           value: "public, max-age=3600",
+  //         },
+  //         ...securityHeaders,
+  //       ],
+  //     },
+  //     {
+  //       source: "/api/webhook-5ca37fe",
+  //       headers: [
+  //         {
+  //           key: "Cache-Control",
+  //           value: "no-store",
+  //         },
+  //       ],
+  //     },
+  //   ];
+  // },
+  // env: {
+  //   NEXT_PUBLIC_APP_VERSION: "1.0.4",
+  // },
 };
 
 export default nextConfig;
