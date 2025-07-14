@@ -12,14 +12,14 @@ export default function FeatureBanner() {
       text: "99+ Languages",
       color: "text-green-400",
     },
-    {
-      icon: Clock,
-      text: "20 Hours of Uploads",
-      color: "text-yellow-400",
-    },
+    // {
+    //   icon: Clock,
+    //   text: "20 Hours of Uploads",
+    //   color: "text-yellow-400",
+    // },
     {
       icon: Shield,
-      text: "End-to-End Encrypted Storage",
+      text: "Military Grade Encryption",
       color: "text-cyan-400",
     },
   ]

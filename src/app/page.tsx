@@ -34,20 +34,26 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto text-center">
-          <div className="mb-12">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 leading-[0.85] tracking-tight">
-              <span className="inline-block hover:scale-105 transition-transform duration-500">Truly</span>{" "}
-              <span className="inline-block hover:scale-105 transition-transform duration-500 delay-75">Private</span>
+          <div className="mb-12 space-y-4 max-w-4xl mt-8">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              <span>Transcribe</span>{" "}
+              <span>Audio</span>{" "}
+              <span>&</span>{" "}
+              <span>Video</span>
               <br />
-              <span className="bg-gradient-to-r from-[#F5E960] via-[#FFD600] to-[#F5E960] bg-clip-text text-transparent inline-block hover:scale-105 transition-transform duration-500 delay-150">
-                AI Transcription
+              <span>
+                with
+              </span>{" "}
+              <span className="bg-gradient-to-r from-yellow-400 via-orange-200 to-orange-400 bg-clip-text text-transparent hover:scale-105 transition-transform duration-500 delay-150">
+                Military-Grade
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-orange-500 via-red-200 to-red-500 bg-clip-text text-transparent hover:scale-105 transition-transform duration-500 delay-150">
+                Privacy
               </span>
             </h1>
-            <p className="text-lg px-6 md:text-2xl text-[#C5C6C7] mb-12 max-w-4xl mx-auto leading-relaxed font-light">
-              Keep your voice recordings and transcriptions protected with{" "}
-              <span className="text-[#F5E960] font-medium">your own key</span>
-              <br />
-              even we can&#39;t access them.
+            <p className="mx-auto max-w-xl sm:max-w-2xl text-xs sm:text-xl text-gray-300 md:text-2xl mb-6">
+                Protect yourself from data leaks, voice cloning, identity theft.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center grid">
               <Button
@@ -189,13 +195,18 @@ export default function Home() {
               {
                 emoji: "🙅",
                 title: "We can't access your data — even if we wanted to",
-                desc: "Zero-knowledge storage ensures your privacy. We literally cannot see your content.",
+                desc: "Zero-knowledge storage ensures your privacy. We store your data encrypted.",
               },
               {
                 emoji: "🧠",
                 title: "Your voice, your words, your recordings stay truly private",
-                desc: "Never used for training, never shared with third parties, never stored unencrypted.",
+                desc: "Never used for training, never shared with third parties.",
               },
+              {
+                emoji: "🔏",
+                title: "Private — Without Compromise",
+                desc: "Enjoy military-grade privacy without sacrificing transcription accuracy. Powered by our self-hosted AI model."
+              }
             ].map((feature, index) => (
               <div
                 key={index}
@@ -233,10 +244,10 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {[
-              { icon: "🔒", title: "Hybrid Encryption (RSA + AES)", desc: "We combine the speed of AES with the security of RSA, the same method trusted by banks and military" },
-              { icon: "🔐", title: "SHA-256 Hashing", desc: "Industry standard encryption algorithm" },
-              { icon: "🧩", title: "Encryption for Large Files", desc: "Our unique technology splits large files into 4MB encrypted chunks" },
-              { icon: "🕵️", title: "Zero-knowledge Storage", desc: "We never see your content" },
+              { icon: "🔒", title: "Hybrid Encryption (RSA + AES)", desc: "Combines the speed of AES with the asymmetric security of RSA — trusted by banks and the military." },
+              { icon: "🔐", title: "SHA-256 Hashing", desc: "Ensures every file remains tamper-proof using SHA-256, the same hashing used in blockchain security." },
+              { icon: "🧩", title: "Chunked File Encryption", desc: "Large files are split into secure 4MB chunks — optimized for performance and scalability." },
+              { icon: "🕵️", title: "Zero-knowledge Storage", desc: "We can’t access your files — only you hold the keys to decrypt your data." },
             ].map((feature, index) => (
               <div
                 key={index}
