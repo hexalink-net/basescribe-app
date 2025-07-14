@@ -65,7 +65,7 @@ export const setUserEncryptionData = async (userId: string, userPublicKey: strin
     return { success: true };
 }
 
-export const getUserEncryptionData = async (userIdParam: string): Promise<{ data: EncryptionData | null; error: any }> => {
+export const getUserEncryptionData = async (userIdParam: string): Promise<{ data: EncryptionData | null; error: Error | null }> => {
     // Create server client
     const supabase = await createClient();
 
