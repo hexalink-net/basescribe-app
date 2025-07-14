@@ -7,6 +7,49 @@ import { ChevronRight, Lock, Users, Zap, Key } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import {PricingContainer} from '@/components/pricing/PricingContainer';
 import FeatureBanner from '@/components/landing/feature-banner';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'BaseScribe - Privacy-Focused Audio & Video Transcription',
+  description: 'Transcribe audio and video files with military-grade privacy. End-to-end encryption ensures your data stays private.',
+  keywords: 'audio transcription, video transcription, privacy, encryption, AI transcription',
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    title: 'BaseScribe - Privacy-Focused Audio & Video Transcription',
+    description: 'Transcribe audio and video files with military-grade privacy. End-to-end encryption ensures your data stays private.',
+    url: 'https://basescribe.com',
+    siteName: 'BaseScribe',
+    images: [
+      {
+        url: '/basescribe-logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'BaseScribe - Privacy-Focused Transcription',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BaseScribe - Privacy-Focused Audio & Video Transcription',
+    description: 'Transcribe audio and video files with military-grade privacy. End-to-end encryption ensures your data stays private.',
+    images: ['/og-image.png'],
+  },
+};
 
 export default function Home() {
   return (
