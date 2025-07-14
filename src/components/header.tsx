@@ -45,7 +45,7 @@ export async function Header({ variant = 'default' }: HeaderProps = {}) {
               className="h-8 w-auto block md:hidden" 
               priority
             />
-            <span className="mt-2 text-[#F0F177] text-xs font-bold border border-[#2a2a2a] px-1 py-0 rounded-sm border-[#F0F177] opacity-80">BETA</span>
+            <span className="mt-2 text-[#F0F177] text-xs font-bold border border-[#2a2a2a] px-1 py-0 rounded-sm border-[#F0F177] opacity-80">BETA test</span>
           </Link>
         </div>
 

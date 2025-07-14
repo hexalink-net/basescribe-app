@@ -3,10 +3,9 @@ import type { NextConfig } from "next";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const UPSTASH_URL = "https://*.upstash.io"; 
 const PADDLE_URL = "https://*.paddle.com";
-const PADDLE_CDN = "https://cdn.paddle.com";
-const PADDLE_SANDBOX_CDN = "https://sandbox-cdn.paddle.com";
-const GOOGLE_USER_CONTENT = "https://lh3.googleusercontent.com";
-const PADDLE_CHECKOUT = "https://sandbox-buy.paddle.com/";
+const PADDLE_CDN = process.env.PADDLE_CDN;
+const GOOGLE_USER_CONTENT = process.env.GOOGLE_USER_CONTENT;
+const PADDLE_CHECKOUT = process.env.PADDLE_CHECKOUT;
 const DATADOG_BROWSER_AGENT = "https://www.datadoghq-browser-agent.com";
 
 const securityHeaders = [
@@ -15,7 +14,7 @@ const securityHeaders = [
     value: `
       default-src 'self';
       script-src 'self' 'unsafe-inline' https://apis.google.com ${PADDLE_CDN} ${DATADOG_BROWSER_AGENT};
-      style-src 'self' 'unsafe-inline' ${PADDLE_CDN} ${PADDLE_SANDBOX_CDN};
+      style-src 'self' 'unsafe-inline' ${PADDLE_CDN};
       img-src 'self' data: blob: ${GOOGLE_USER_CONTENT};
       font-src 'self' data:;
       media-src 'self' blob:;
