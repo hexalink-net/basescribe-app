@@ -64,7 +64,7 @@ function AuthContent() {
       }
     } catch (error: unknown) {
       toast({
-        title: "Error",
+        title: "Authentication Failed",
         description: error instanceof Error ? error.message : "An error occurred during authentication",
         variant: "destructive",
       });
@@ -79,7 +79,7 @@ function AuthContent() {
       await signInWithGoogle();
     } catch (error: unknown) {
       toast({
-        title: "Error",
+        title: "Authentication Failed",
         description: error instanceof Error ? error.message : "An error occurred during authentication",
         variant: "destructive",
       });

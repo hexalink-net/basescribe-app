@@ -100,6 +100,12 @@ const NewFolderDialog = memo(({ isOpen, onOpenChange, folderName, setFolderName,
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
             className="bg-[#2a2a2a] border-[#3a3a3a]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                document.getElementById('create-folder-button')?.click();
+                onOpenChange(false)
+              }
+            }}
           />
         </div>
         <DialogFooter>
@@ -110,7 +116,7 @@ const NewFolderDialog = memo(({ isOpen, onOpenChange, folderName, setFolderName,
           >
             Cancel
           </Button>
-          <Button onClick={handleCreate} className="cursor-pointer">
+          <Button id="create-folder-button" onClick={handleCreate} className="cursor-pointer">
             Create Folder
           </Button>
         </DialogFooter>
@@ -140,6 +146,12 @@ const RenameFolderDialog = memo(({ isOpen, onOpenChange, folder, newName, setNew
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             className="bg-[#2a2a2a] border-[#3a3a3a]"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                document.getElementById('rename-folder-button')?.click();
+                onOpenChange(false)
+              }
+            }}
           />
         </div>
         <DialogFooter>
@@ -150,7 +162,7 @@ const RenameFolderDialog = memo(({ isOpen, onOpenChange, folder, newName, setNew
           >
             Cancel
           </Button>
-          <Button onClick={handleRename} className="cursor-pointer">
+          <Button id="rename-folder-button" onClick={handleRename} className="cursor-pointer">
             Rename Folder
           </Button>
         </DialogFooter>

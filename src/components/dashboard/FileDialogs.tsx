@@ -144,6 +144,12 @@ export default function FileDialogs({
               value={newUploadName}
               onChange={(e) => setNewUploadName(e.target.value)}
               className="bg-[#2a2a2a] border-[#3a3a3a]"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  document.getElementById('rename-upload-button')?.click();
+                  setIsRenameUploadModalOpen(false)
+                }
+              }}
             />
           </div>
           <DialogFooter>
@@ -154,7 +160,7 @@ export default function FileDialogs({
             >
               Cancel
             </Button>
-            <Button onClick={handleRenameUpload} className="cursor-pointer">
+            <Button id="rename-upload-button" onClick={handleRenameUpload} className="cursor-pointer">
               Rename File
             </Button>
           </DialogFooter>

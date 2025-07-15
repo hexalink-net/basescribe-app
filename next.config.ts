@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
     ];
   },
   env: {
-    NEXT_PUBLIC_APP_VERSION: "1.0.5",
+    NEXT_PUBLIC_APP_VERSION: "1.0.6",
   },
 };
 
