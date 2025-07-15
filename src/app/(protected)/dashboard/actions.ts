@@ -66,7 +66,8 @@ export async function fetchDashboardData(userId: string) {
       userProfile: null,
       uploads: [],
       folders: [],
-      error: 'Failed to load dashboard data'
+      error: 'Failed to load dashboard data',
+      encryptionData: null
     };
   }
 }
@@ -389,7 +390,7 @@ export async function processUploadedFile(
 
     const { error: queueError } = await supabase.schema('pgmq_public').rpc('send', {
       queue_name: 'transcribe_queue',
-      message: { userId: userId, uploadId: resultUpload?.data?.[0].id, s3fileurl: data?.signedUrl, language: language }
+      message: { userId: userId, uploadId: resultUpload?.data?.[0].id, s3fileurl: data?.signedUrl, language: language, size: fileSize }
     })
 
     if (queueError) {

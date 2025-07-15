@@ -7,13 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/UseToast';
 import { signInWithGoogle, signInWithEmailPassword, signUpWithEmailPassword } from './action';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader } from 'lucide-react';
 
 function AuthContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
   
@@ -72,12 +73,27 @@ function AuthContent() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (error: unknown) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred during authentication",
+        variant: "destructive",
+      });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#111111] to-[#0a0a0a] text-white p-4">
       <div className="w-full max-w-md mx-auto mb-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Welcome to <span className="text-gradient">BaseScribe</span></h1>
-          <p className="text-gray-400">The most secure AI transcription tool</p>
+          <p className="text-gray-400">Privacy focused audio & video transcription</p>
         </div>
         
         <Card className="bg-[#1a1a1a]/50 backdrop-blur-sm border-[#2a2a2a]/50 text-white overflow-hidden transition-all duration-300 hover:border-[#3a3a3a]/70 shadow-xl animate-in fade-in-50">
@@ -131,16 +147,16 @@ function AuthContent() {
               
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-[#F0F177] to-[#d9e021] hover:from-[#e8e96f] hover:to-[#c7ce1f] transition-all shadow-lg hover:shadow-[#F0F177]/20 text-black font-medium" 
+                className="w-full bg-gradient-to-r from-[#F0F177] to-[#d9e021] hover:from-[#e8e96f] hover:to-[#c7ce1f] transition-all shadow-lg hover:shadow-[#F0F177]/20 text-black font-medium cursor-pointer" 
                 disabled={loading}
               >
                 {loading ? (
                   <span className="flex items-center justify-center text-black">
+                    Loading...
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Loading...
                   </span>
                 ) : (
                   <span className="flex items-center justify-center gap-1 group">
@@ -164,8 +180,9 @@ function AuthContent() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-[#3a3a3a] bg-[#222222]/50 hover:bg-[#2a2a2a] text-white hover:text-white transition-all"
-                onClick={signInWithGoogle}
+                className="w-full border-[#3a3a3a] bg-[#222222]/50 hover:bg-[#2a2a2a] text-white hover:text-white transition-all cursor-pointer"
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading}
               >
                 <span className="flex items-center justify-center gap-2">
                   <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -175,6 +192,7 @@ function AuthContent() {
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                   </svg>
                   Google
+                  {googleLoading && <Loader className="h-4 w-4 animate-spin" />}
                 </span>
               </Button>
             </CardContent>

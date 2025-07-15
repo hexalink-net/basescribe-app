@@ -19,7 +19,7 @@ import { EncryptionData } from '@/types/DashboardInterface';
 interface PrivateKeyDecryptionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  encryptionData?: EncryptionData;
+  encryptionData: EncryptionData | null;
   onSuccess: (decryptedKey: JsonWebKey) => void;
 }
 

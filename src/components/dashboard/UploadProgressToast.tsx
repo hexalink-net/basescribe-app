@@ -26,8 +26,6 @@ export function UploadProgressToast() {
   const [isVisible, setIsVisible] = useState(true);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  console.log('Uploads:', uploads)
-
   // Show toast when there are uploads
   useEffect(() => {
     if (uploads.length > 0) {

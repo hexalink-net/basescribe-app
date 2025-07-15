@@ -660,7 +660,8 @@ export async function fetchFolderData(userId: string, folderId: string) {
         uploads: [],
         userProfile: userProfileResult?.data as UserProfile,
         folders: foldersResult.data || [],
-        error: 'Failed to fetch uploads in this folder'
+        error: 'Failed to fetch uploads in this folder',
+        encryptionData: encryptionDataResult
       };
     }
     
@@ -686,7 +687,8 @@ export async function fetchFolderData(userId: string, folderId: string) {
       uploads: [],
       userProfile: null,
       folders: [],
-      error: 'Failed to load folder data'
+      error: 'Failed to load folder data',
+      encryptionData: null
     };
   }
 }

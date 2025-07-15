@@ -1,16 +1,16 @@
 import { PricingTier } from '@/constants/PricingTier';
 import { IBillingFrequency } from '@/constants/BillingFrequency';
-import { FeaturesList } from '@/components/pricing/FeaturesList';
 import { cn } from '@/lib/StyleUtils';
-import { Button } from '@/components/ui/button';
 import { PriceHeader } from '@/components/pricing/PriceHeader';
 import { FeaturedCardGradient } from '@/components/pricing/FeaturedCardGradient';
-import Link from 'next/link';
-import { signInWithGoogle } from '@/app/auth/action';
-import Image from 'next/image';
+// import { FeaturesList } from '@/components/pricing/FeaturesList';
+// import { Button } from '@/components/ui/button';
+// import Link from 'next/link';
+// import { signInWithGoogle } from '@/app/auth/action';
+// import Image from 'next/image';
+// import { ArrowRight } from 'lucide-react';
 import { FreeCard } from '@/components/pricing/FreeCard';
-import { pro, proAnnualPriceId } from '@/constants/PaddleProduct';
-import { ArrowRight } from 'lucide-react';
+// import { pro, proAnnualPriceId } from '@/constants/PaddleProduct';
 import { Card, CardContent } from '@/components/landing/card';
 
 interface Props {
@@ -22,8 +22,8 @@ interface Props {
 }
 
 export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Props) {
-  const isSubscribed = userSubs?.product_id === pro;
-  const isYearly = userSubs?.price_id === proAnnualPriceId;
+  // const isSubscribed = userSubs?.product_id === pro;
+  // const isYearly = userSubs?.price_id === proAnnualPriceId;
 
   return (
     <div className="isolate mx-auto grid grid-cols-1 gap-8 md:grid-cols-2 lg:mx-0 lg:max-w-none">
@@ -38,7 +38,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
             {'delay-100': index === 0, 'delay-200': index === 1}
           )}
         >
-          <Card className="group relative bg-gradient-to-b from-[#F5E960]/10 to-[#1F2833]/40 border-2 border-[#F5E960]/50 hover:border-[#F5E960] backdrop-blur-2xl transition-all duration-700 hover:scale-105 overflow-hidden">
+          <Card className="group relative bg-gradient-to-b from-[#F5E960]/10 to-[#1F2833]/40 border-2 border-[#F5E960]/50 hover:border-[#F5E960] backdrop-blur-2xl transition-all duration-700 hover:scale-105 overflow-hidden h-full">
             {tier.featured && <FeaturedCardGradient />}
             <PriceHeader tier={tier} 
               loading={loading}
@@ -46,7 +46,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
               value={frequency.value}
               priceSuffix={frequency.priceSuffix}/>
             <CardContent className="space-y-8 relative z-10">
-              <FeaturesList tier={tier} />
+              {/* <FeaturesList tier={tier} />
               <div className={'px-8 mt-8'}>
                 {!user ? (
                   // User not logged in - show sign up buttons
@@ -109,7 +109,7 @@ export function PriceCards({ loading, frequency, priceMap, user, userSubs }: Pro
                     </Link>
                   </Button>
                 )}
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>

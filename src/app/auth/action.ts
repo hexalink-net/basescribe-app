@@ -6,7 +6,7 @@ import { z } from "zod";
 import { authRateLimiter } from "@/lib/upstash/ratelimit";
 import { headers } from "next/headers";
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'http://localhost:3000';
+const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'https://basescribe-app.vercel.app';
 
 const userLoginSchema = z.object({
     email: z.string().email(),

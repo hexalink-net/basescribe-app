@@ -15,7 +15,7 @@ export function PriceHeader({ loading, priceMap, priceSuffix, tier, value }: Pro
   const { name, description } = tier;
   return (
     <CardHeader className="text-center pb-8 relative z-10">
-      <CardTitle className="text-4xl font-bold text-white mb-2">{name}</CardTitle>
+      <CardTitle className="text-4xl font-bold text-white mb-2">{name} <span className="text-[#C5C6C7]">(COMING SOON)</span></CardTitle>
       <p className="text-[#C5C6C7] text-xl"> {description}</p>
       <div className="text-5xl font-bold mt-6">
       <div>
@@ -23,7 +23,7 @@ export function PriceHeader({ loading, priceMap, priceSuffix, tier, value }: Pro
             <Skeleton className="h-[96px] w-full bg-border" />
           ) : (
             <>
-              <div className={cn('bg-gradient-to-r from-[#F5E960] to-[#FFD600] bg-clip-text text-transparent')}>
+              <div className={cn('bg-gradient-to-r from-[#F5E960] to-[#FFD600] bg-clip-text text-transparent hidden')}>
                 {value === 'year' ? (
                   <span>
                   {`$${(
@@ -38,7 +38,7 @@ export function PriceHeader({ loading, priceMap, priceSuffix, tier, value }: Pro
                 <span className="text-xl text-[#C5C6C7]">{priceSuffix}</span>
               </div>
               {value === 'year' ? (
-                <p className="text-[#F5E960] font-semibold mt-2 text-lg">Billed annually ({priceMap[tier.priceId[value]].replace(/\.00$/, '')}/year)</p>
+                <p className="text-[#F5E960] font-semibold mt-2 text-lg hidden">Billed annually ({priceMap[tier.priceId[value]].replace(/\.00$/, '')}/year)</p>
               ) : null}
             </>
           )}
