@@ -268,13 +268,12 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     // Close the modal and show immediate feedback
     setIsNewFolderModalOpen(false);
     
-    // Show a loading toast
-    toast({
-      title: "Creating folder...",
-      description: `Creating ${newFolderName}`,
-    });
-    
     try {
+      toast({
+        title: "Creating folder...",
+        description: `Creating ${newFolderName}`,
+      });
+      
       // Perform the actual operation
       const result = await createFolder(newFolderName, currentFolder?.id || null);
       
@@ -322,6 +321,10 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     }
     
     try {
+      toast({
+        title: "Renaming folder...",
+        description: "Please wait while the folder is being renamed.",
+      });
       const result = await renameFolder(folderToRename.id, newFolderRename);
       
       if (result.success) {
@@ -406,6 +409,11 @@ export default function DashboardClient({ user, userProfile, uploads, folders, c
     }
     
     try {
+      toast({
+        title: "Renaming file...",
+        description: "Please wait while the file is being renamed.",
+      });
+
       const result = await renameUpload(uploadToRename.id, newUploadName, user.id);
       
       if (result.success) {

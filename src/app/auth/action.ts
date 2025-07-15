@@ -6,7 +6,7 @@ import { z } from "zod";
 import { authRateLimiter } from "@/lib/upstash/ratelimit";
 import { headers } from "next/headers";
 
-const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'https://basescribe-app.vercel.app';
+const PUBLIC_URL = process.env.NEXT_PUBLIC_WEBSITE_URL ? process.env.NEXT_PUBLIC_WEBSITE_URL : 'http://localhost:3000';
 
 const userLoginSchema = z.object({
     email: z.string().email(),
@@ -90,7 +90,7 @@ export async function signInWithEmailPassword(formData: FormData) {
             message: error.message
         })
         
-        return { error: error.message }
+        return { error: "Please create an account first in the sign up page" }
     }
   
     // We don't need to set cookies manually in server actions

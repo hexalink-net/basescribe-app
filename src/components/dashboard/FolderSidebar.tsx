@@ -64,6 +64,10 @@ export default function FolderSidebar({
     }
     
     try {
+      toast({
+        title: "Creating folder...",
+        description: `Creating ${newFolderName}`,
+      });
       // Always create at root level (null parent_id)
       const result = await createFolder(newFolderName, null);
       
@@ -380,6 +384,13 @@ export default function FolderSidebar({
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 className="bg-[#2a2a2a] border-[#3a3a3a]"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    document.getElementById('create-folder-button')?.click();
+                    setIsNewFolderModalOpen(false);
+                    setNewFolderName('');
+                  }
+                }}
               />
             </div>
             <DialogFooter>
@@ -393,7 +404,7 @@ export default function FolderSidebar({
               >
                 Cancel
               </Button>
-              <Button onClick={handleCreateFolder} className="cursor-pointer">
+              <Button id="create-folder-button" onClick={handleCreateFolder} className="cursor-pointer">
                 Create Folder
               </Button>
             </DialogFooter>
