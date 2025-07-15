@@ -1,4 +1,4 @@
-import { Target, Globe, Clock, Shield } from "lucide-react"
+import { Target, Globe, Shield } from "lucide-react"
 
 export default function FeatureBanner() {
   const features = [
